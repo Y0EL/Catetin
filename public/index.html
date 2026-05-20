@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Catetin</title>
+    <meta name="description" content="Catetan lo, gak ribet. Catat dari mana aja lewat WhatsApp, Telegram, atau aplikasi." />
+    <meta property="og:title" content="Catetin" />
+    <meta property="og:description" content="Catetan lo, gak ribet." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#4f46e5" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>
+      :root { color-scheme: light dark }
+      * { box-sizing: border-box }
+      html, body { margin: 0; padding: 0; height: 100% }
+      body {
+        font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+        background: #ffffff;
+        color: #09090b;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      @media (prefers-color-scheme: dark) {
+        body { background: #09090b; color: #fafafa }
+        .card { background: #18181b !important; border-color: #27272a !important }
+      }
+      main { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 48px 24px; max-width: 720px; margin: 0 auto; width: 100% }
+      .brand { font-size: 56px; font-weight: 800; color: #4f46e5; letter-spacing: -0.03em; margin: 0 }
+      .tagline { font-size: 18px; color: #71717a; margin-top: 12px; text-align: center }
+      .card { margin-top: 48px; width: 100%; border: 1px solid #e4e4e7; border-radius: 16px; padding: 24px; background: #fafafa }
+      .card h2 { margin: 0 0 12px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; color: #71717a; font-weight: 600 }
+      .card p { margin: 0; font-size: 16px; line-height: 1.5 }
+      footer { text-align: center; padding: 24px; color: #a1a1aa; font-size: 13px }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1 class="brand">Catetin</h1>
+      <p class="tagline">Catetan lo, gak ribet. Catat dari mana aja, lihat di sini.</p>
+      <section class="card">
+        <h2>Status</h2>
+        <p>Lagi finalisasi MVP. Mobile app, bot Telegram, dan bot WhatsApp siap menyusul.</p>
+      </section>
+    </main>
+    <footer>Catetin &middot; catetin-ya.web.app</footer>
+  </body>
+</html>

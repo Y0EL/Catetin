@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "catetin-id"
+  },
+  "targets": {
+    "catetin-id": {
+      "hosting": {
+        "marketing": ["catetin-ya"]
+      }
+    }
+  }
+}

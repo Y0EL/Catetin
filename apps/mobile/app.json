@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Catetin",
+    "slug": "catetin",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "catetin",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#4f46e5"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.catetin.app"
+    },
+    "android": {
+      "package": "com.catetin.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#4f46e5"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-image-picker",
+      "expo-av"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
