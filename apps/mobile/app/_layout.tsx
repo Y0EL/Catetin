@@ -1,14 +1,18 @@
+import '~/lib/reanimated-init'
 import '../global.css'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import { colorScheme, useColorScheme } from 'nativewind'
 import { useEffect } from 'react'
-import { ActivityIndicator, Platform, useColorScheme, View } from 'react-native'
+import { ActivityIndicator, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { useAuth } from '~/hooks/use-auth'
 import { getFirebaseAuth } from '~/lib/firebase'
 import { configurePurchases } from '~/lib/revenuecat'
+
+colorScheme.set('system')
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,16 +21,6 @@ const queryClient = new QueryClient({
 })
 
 const REVENUECAT_KEY = process.env.EXPO_PUBLIC_REVENUECAT_PUBLIC_SDK_KEY ?? ''
-
-function useWebDarkClass(scheme: 'light' | 'dark' | null | undefined) {
-  useEffect(() => {
-    if (Platform.OS !== 'web') return
-    if (typeof document === 'undefined') return
-    const root = document.documentElement
-    if (scheme === 'dark') root.classList.add('dark')
-    else root.classList.remove('dark')
-  }, [scheme])
-}
 
 function AuthGate() {
   const { user, loading } = useAuth()
@@ -41,7 +35,7 @@ function AuthGate() {
       return
     }
     if (user && inAuthGroup) {
-      router.replace('/')
+      router.replace('/(tabs)/index')
     }
   }, [user, loading, segments, router])
 
@@ -53,12 +47,20 @@ function AuthGate() {
     )
   }
 
-  return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }} />
+  return (
+    <Stack screenOptions={{ headerShown: false, animation: 'fade', animationDuration: 200 }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen
+        name="add-modal"
+        options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+      />
+    </Stack>
+  )
 }
 
 export default function RootLayout() {
-  const scheme = useColorScheme()
-  useWebDarkClass(scheme)
+  const { colorScheme: scheme } = useColorScheme()
 
   useEffect(() => {
     getFirebaseAuth()
@@ -70,7 +72,7 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaProvider>
           <AuthGate />
-          <StatusBar style="auto" />
+          <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
         </SafeAreaProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>

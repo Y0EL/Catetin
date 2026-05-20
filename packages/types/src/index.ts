@@ -71,7 +71,10 @@ export const createWalletSchema = z.object({
   name: z.string().min(1).max(50),
   type: walletTypeSchema,
   icon: z.string().optional(),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional(),
   initialBalance: z.number().int().default(0),
 })
 
@@ -86,6 +89,99 @@ export const createBudgetSchema = z.object({
 })
 
 export type CreateBudgetInput = z.infer<typeof createBudgetSchema>
+
+export const createCategorySchema = z.object({
+  name: z.string().min(1).max(40),
+  kind: categoryKindSchema,
+  icon: z.string().optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional(),
+})
+
+export type CreateCategoryInput = z.infer<typeof createCategorySchema>
+
+export const listTransactionsQuerySchema = z.object({
+  from: z.string().datetime().optional(),
+  to: z.string().datetime().optional(),
+  category: z.string().uuid().optional(),
+  wallet: z.string().uuid().optional(),
+  q: z.string().max(120).optional(),
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+})
+
+export type ListTransactionsQuery = z.infer<typeof listTransactionsQuerySchema>
+
+export const summaryQuerySchema = z.object({
+  month: z.string().regex(/^\d{4}-\d{2}$/),
+})
+
+export type SummaryQuery = z.infer<typeof summaryQuerySchema>
+
+export const userProfileSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().nullable(),
+  name: z.string().nullable(),
+  locale: z.string(),
+  isSubscribed: z.boolean(),
+})
+
+export type UserProfile = z.infer<typeof userProfileSchema>
+
+export const walletSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  type: walletTypeSchema,
+  icon: z.string().nullable(),
+  color: z.string().nullable(),
+  initialBalance: z.number(),
+  isArchived: z.boolean(),
+})
+
+export type Wallet = z.infer<typeof walletSchema>
+
+export const categorySchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  kind: categoryKindSchema,
+  icon: z.string().nullable(),
+  color: z.string().nullable(),
+  isPreset: z.boolean(),
+})
+
+export type Category = z.infer<typeof categorySchema>
+
+export const transactionSchema = z.object({
+  id: z.string().uuid(),
+  walletId: z.string().uuid(),
+  categoryId: z.string().uuid(),
+  kind: transactionKindSchema,
+  amount: z.number(),
+  description: z.string().nullable(),
+  merchant: z.string().nullable(),
+  occurredAt: z.string(),
+  source: transactionSourceSchema,
+})
+
+export type TransactionDto = z.infer<typeof transactionSchema>
+
+export const categoryTotalSchema = z.object({
+  categoryId: z.string().uuid(),
+  name: z.string(),
+  total: z.number(),
+})
+
+export const monthSummarySchema = z.object({
+  month: z.string(),
+  income: z.number(),
+  expense: z.number(),
+  net: z.number(),
+  byCategory: z.array(categoryTotalSchema),
+})
+
+export type MonthSummary = z.infer<typeof monthSummarySchema>
 
 export const validCategoryNames = [
   'makanan',

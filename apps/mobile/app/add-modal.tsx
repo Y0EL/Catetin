@@ -1,0 +1,264 @@
+import { useRouter } from 'expo-router'
+import { ArrowDownLeft, ArrowUpRight, X } from 'lucide-react-native'
+import { useMemo, useState } from 'react'
+import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { parseQuickAddText } from '@catetin/chat-core'
+import { categoryList, type CategoryKey } from '~/lib/categories'
+
+const wallets = [
+  { key: 'cash', label: 'Cash' },
+  { key: 'bca', label: 'BCA' },
+  { key: 'gopay', label: 'GoPay' },
+]
+
+function formatRupiahInput(raw: string): string {
+  const digits = raw.replace(/[^0-9]/g, '')
+  if (!digits) return ''
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
+
+function parseDigits(formatted: string): number {
+  const digits = formatted.replace(/[^0-9]/g, '')
+  if (!digits) return 0
+  return Number.parseInt(digits, 10)
+}
+
+export default function AddModal() {
+  const router = useRouter()
+  const [kind, setKind] = useState<'expense' | 'income'>('expense')
+  const [amountText, setAmountText] = useState('')
+  const [category, setCategory] = useState<CategoryKey>('makanan')
+  const [wallet, setWallet] = useState('cash')
+  const [description, setDescription] = useState('')
+
+  const amount = useMemo(() => parseDigits(amountText), [amountText])
+
+  function close() {
+    if (router.canGoBack()) router.back()
+    else router.replace('/(tabs)/index')
+  }
+
+  function applyTextHint(text: string) {
+    setDescription(text)
+    const parsed = parseQuickAddText(text)
+    if (!parsed) return
+    setAmountText(formatRupiahInput(String(parsed.amount)))
+    if (categoryList.some((c) => c.key === parsed.category)) {
+      setCategory(parsed.category as CategoryKey)
+    }
+  }
+
+  function onSave() {
+    if (amount <= 0) {
+      Alert.alert('Nominal kosong', 'Isi dulu jumlah duitnya ya.')
+      return
+    }
+    Alert.alert(
+      'Tercatat ya',
+      `${kind === 'expense' ? '-' : '+'}Rp ${formatRupiahInput(String(amount))} buat ${category}. (Belum nyimpen ke server.)`,
+      [{ text: 'Sip', onPress: close }],
+    )
+  }
+
+  return (
+    <SafeAreaView className="flex-1 bg-zinc-50 dark:bg-zinc-950" edges={['top', 'bottom']}>
+      <View className="items-center pt-2">
+        <View className="h-1.5 w-10 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+      </View>
+
+      <View className="flex-row items-center justify-between px-4 pt-4">
+        <Text className="font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
+          Catat cepat
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Tutup"
+          onPress={close}
+          className="h-10 w-10 items-center justify-center rounded-full bg-white active:opacity-70 dark:bg-zinc-900"
+        >
+          <X size={18} color="#71717a" />
+        </Pressable>
+      </View>
+
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="px-4 pb-40 pt-6 gap-6"
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="flex-row gap-2">
+          <KindToggle
+            active={kind === 'expense'}
+            onPress={() => setKind('expense')}
+            icon={<ArrowDownLeft size={16} color={kind === 'expense' ? '#ffffff' : '#dc2626'} />}
+            label="Keluar"
+            activeClass="bg-danger"
+          />
+          <KindToggle
+            active={kind === 'income'}
+            onPress={() => setKind('income')}
+            icon={<ArrowUpRight size={16} color={kind === 'income' ? '#ffffff' : '#16a34a'} />}
+            label="Masuk"
+            activeClass="bg-success"
+          />
+        </View>
+
+        <View className="rounded-3xl bg-primary-600 p-6">
+          <Text className="font-sans text-xs font-medium uppercase tracking-widest text-primary-200">
+            Jumlah
+          </Text>
+          <View className="mt-2 flex-row items-baseline gap-2">
+            <Text className="font-display text-2xl font-bold text-primary-200">Rp</Text>
+            <TextInput
+              value={amountText}
+              onChangeText={(t) => setAmountText(formatRupiahInput(t))}
+              keyboardType="number-pad"
+              placeholder="0"
+              placeholderTextColor="#c7d2fe"
+              className="flex-1 font-display text-5xl font-extrabold text-white"
+              style={{ paddingVertical: 0, fontVariant: ['tabular-nums'] }}
+            />
+          </View>
+        </View>
+
+        <View>
+          <Label>Kategori</Label>
+          <View className="mt-3 flex-row flex-wrap gap-2">
+            {categoryList.map((c) => {
+              const active = c.key === category
+              const Icon = c.icon
+              return (
+                <Pressable
+                  key={c.key}
+                  onPress={() => setCategory(c.key)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Kategori ${c.label}`}
+                  className={
+                    active
+                      ? 'flex-row items-center gap-2 rounded-full bg-primary-600 px-4 py-2.5'
+                      : 'flex-row items-center gap-2 rounded-full bg-white px-4 py-2.5 active:opacity-70 dark:bg-zinc-900'
+                  }
+                >
+                  <Icon size={15} color={active ? '#ffffff' : c.tint} />
+                  <Text
+                    className={
+                      active
+                        ? 'font-sans text-sm font-semibold text-white'
+                        : 'font-sans text-sm font-medium text-zinc-700 dark:text-zinc-200'
+                    }
+                  >
+                    {c.label}
+                  </Text>
+                </Pressable>
+              )
+            })}
+          </View>
+        </View>
+
+        <View>
+          <Label>Wallet</Label>
+          <View className="mt-3 flex-row gap-2">
+            {wallets.map((w) => {
+              const active = w.key === wallet
+              return (
+                <Pressable
+                  key={w.key}
+                  onPress={() => setWallet(w.key)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Wallet ${w.label}`}
+                  className={
+                    active
+                      ? 'rounded-full bg-zinc-900 px-5 py-2.5 dark:bg-zinc-100'
+                      : 'rounded-full bg-white px-5 py-2.5 active:opacity-70 dark:bg-zinc-900'
+                  }
+                >
+                  <Text
+                    className={
+                      active
+                        ? 'font-sans text-sm font-semibold text-white dark:text-zinc-900'
+                        : 'font-sans text-sm font-medium text-zinc-700 dark:text-zinc-200'
+                    }
+                  >
+                    {w.label}
+                  </Text>
+                </Pressable>
+              )
+            })}
+          </View>
+        </View>
+
+        <View>
+          <Label>Catatan</Label>
+          <TextInput
+            value={description}
+            onChangeText={applyTextHint}
+            placeholder='Contoh: "kopi 25rb di starbucks"'
+            placeholderTextColor="#a1a1aa"
+            className="mt-3 rounded-input bg-white px-4 py-3.5 font-sans text-base text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100"
+          />
+          <Text className="mt-2 font-sans text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+            Tulis bebas, Catetin coba detect angka dan kategori otomatis.
+          </Text>
+        </View>
+      </ScrollView>
+
+      <View className="absolute bottom-0 left-0 right-0 border-t border-zinc-200 bg-zinc-50 px-4 pb-8 pt-3 dark:border-zinc-800 dark:bg-zinc-950">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Catat sekarang"
+          onPress={onSave}
+          className="items-center rounded-full bg-primary-600 py-4 active:opacity-90"
+        >
+          <Text className="font-sans text-base font-semibold text-white">Catat sekarang</Text>
+        </Pressable>
+      </View>
+    </SafeAreaView>
+  )
+}
+
+function Label({ children }: { children: React.ReactNode }) {
+  return (
+    <Text className="font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+      {children}
+    </Text>
+  )
+}
+
+function KindToggle({
+  active,
+  onPress,
+  icon,
+  label,
+  activeClass,
+}: {
+  active: boolean
+  onPress: () => void
+  icon: React.ReactNode
+  label: string
+  activeClass: string
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={active ? { selected: true } : {}}
+      className={
+        active
+          ? `flex-1 flex-row items-center justify-center gap-2 rounded-full py-3 ${activeClass}`
+          : 'flex-1 flex-row items-center justify-center gap-2 rounded-full bg-white py-3 active:opacity-70 dark:bg-zinc-900'
+      }
+    >
+      {icon}
+      <Text
+        className={
+          active
+            ? 'font-sans text-sm font-semibold text-white'
+            : 'font-sans text-sm font-medium text-zinc-700 dark:text-zinc-200'
+        }
+      >
+        {label}
+      </Text>
+    </Pressable>
+  )
+}

@@ -24,13 +24,9 @@
       "bundler": "metro",
       "output": "single"
     },
-    "plugins": [
-      "expo-router",
-      "expo-image-picker",
-      "expo-av"
-    ],
+    "plugins": ["expo-router", "expo-image-picker", "expo-av"],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": false
     }
   }
 }

@@ -6,10 +6,8 @@ export function PaywallButton() {
 
   if (loading) {
     return (
-      <View className="rounded-xl bg-zinc-100 px-4 py-3 dark:bg-zinc-800">
-        <Text className="text-center text-sm text-zinc-500 dark:text-zinc-400">
-          Memuat status langganan
-        </Text>
+      <View className="self-start rounded-full bg-white/15 px-5 py-2.5">
+        <Text className="font-sans text-sm text-white/70">Memuat</Text>
       </View>
     )
   }
@@ -18,15 +16,13 @@ export function PaywallButton() {
     return (
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Kelola langganan Catetin Pro"
+        accessibilityLabel="Kelola Catetin Pro"
         onPress={() => {
           openCustomerCenter().catch(() => {})
         }}
-        className="rounded-xl bg-zinc-900 px-4 py-3 active:opacity-90 dark:bg-white"
+        className="self-start rounded-full bg-white px-5 py-2.5 active:opacity-90"
       >
-        <Text className="text-center text-sm font-semibold text-white dark:text-zinc-900">
-          Kelola Catetin Pro
-        </Text>
+        <Text className="font-sans text-sm font-semibold text-primary-700">Kelola Pro</Text>
       </Pressable>
     )
   }
@@ -38,9 +34,9 @@ export function PaywallButton() {
       onPress={() => {
         openPaywall().catch(() => {})
       }}
-      className="rounded-xl bg-primary-600 px-4 py-3 active:opacity-90"
+      className="self-start rounded-full bg-white px-5 py-2.5 active:opacity-90"
     >
-      <Text className="text-center text-sm font-semibold text-white">Coba Catetin Pro</Text>
+      <Text className="font-sans text-sm font-semibold text-primary-700">Coba 7 hari gratis</Text>
     </Pressable>
   )
 }
