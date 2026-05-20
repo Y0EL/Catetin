@@ -1,5 +1,6 @@
 import LottieView from 'lottie-react-native'
-import { Pressable, View } from 'react-native'
+import { useState } from 'react'
+import { Pressable, View, type LayoutChangeEvent } from 'react-native'
 import orbSource from '../assets/lottie/catetin-orb.json'
 
 type Props = {
@@ -10,12 +11,18 @@ type Props = {
 
 export function CatetinOrb({ size = 250, active = false, onPress }: Props) {
   const frame = size * 1.3
+  const [ready, setReady] = useState(false)
+
+  function onLayout(e: LayoutChangeEvent) {
+    if (e.nativeEvent.layout.width > 0 && !ready) setReady(true)
+  }
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={active ? 'Hentikan obrolan' : 'Mulai ngobrol dengan Catetin'}
       onPress={onPress}
+      onLayout={onLayout}
       style={{ width: frame, height: frame, alignItems: 'center', justifyContent: 'center' }}
     >
       <View
@@ -34,14 +41,18 @@ export function CatetinOrb({ size = 250, active = false, onPress }: Props) {
           elevation: 0,
         }}
       />
-      <LottieView
-        source={orbSource}
-        autoPlay
-        loop
-        speed={active ? 1.5 : 0.85}
-        resizeMode="contain"
-        style={{ width: size, height: size }}
-      />
+      {ready ? (
+        <LottieView
+          source={orbSource}
+          autoPlay
+          loop
+          speed={active ? 1.5 : 0.85}
+          resizeMode="contain"
+          style={{ width: size, height: size }}
+        />
+      ) : (
+        <View style={{ width: size, height: size }} />
+      )}
     </Pressable>
   )
 }

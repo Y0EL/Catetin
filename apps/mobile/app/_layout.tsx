@@ -9,6 +9,7 @@ import { ActivityIndicator, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { useAuth } from '~/hooks/use-auth'
+import { useBootstrapSession } from '~/hooks/use-bootstrap-session'
 import { getFirebaseAuth } from '~/lib/firebase'
 import { configurePurchases } from '~/lib/revenuecat'
 
@@ -26,6 +27,8 @@ function AuthGate() {
   const { user, loading } = useAuth()
   const segments = useSegments()
   const router = useRouter()
+
+  useBootstrapSession(Boolean(user))
 
   useEffect(() => {
     if (loading) return

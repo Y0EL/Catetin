@@ -4,13 +4,11 @@ import { useMemo, useState } from 'react'
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { parseQuickAddText } from '@catetin/chat-core'
-import { categoryList, type CategoryKey } from '~/lib/categories'
-
-const wallets = [
-  { key: 'cash', label: 'Cash' },
-  { key: 'bca', label: 'BCA' },
-  { key: 'gopay', label: 'GoPay' },
-]
+import { useCategories } from '~/hooks/use-categories'
+import { useCreateTransaction } from '~/hooks/use-create-transaction'
+import { useWallets } from '~/hooks/use-wallets'
+import { apiErrorMessage } from '~/lib/api'
+import { getCategoryMeta, type CategoryKey } from '~/lib/categories'
 
 function formatRupiahInput(raw: string): string {
   const digits = raw.replace(/[^0-9]/g, '')
@@ -24,15 +22,32 @@ function parseDigits(formatted: string): number {
   return Number.parseInt(digits, 10)
 }
 
+function titleCase(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
 export default function AddModal() {
   const router = useRouter()
+  const wallets = useWallets()
+  const categories = useCategories()
+  const createTx = useCreateTransaction()
+
   const [kind, setKind] = useState<'expense' | 'income'>('expense')
   const [amountText, setAmountText] = useState('')
-  const [category, setCategory] = useState<CategoryKey>('makanan')
-  const [wallet, setWallet] = useState('cash')
+  const [walletId, setWalletId] = useState<string | null>(null)
+  const [categoryId, setCategoryId] = useState<string | null>(null)
   const [description, setDescription] = useState('')
 
   const amount = useMemo(() => parseDigits(amountText), [amountText])
+  const walletList = wallets.data ?? []
+  const catList = useMemo(
+    () => (categories.data ?? []).filter((c) => c.kind === kind),
+    [categories.data, kind],
+  )
+
+  const effectiveWalletId = walletId ?? walletList[0]?.id ?? null
+  const effectiveCategoryId =
+    categoryId && catList.some((c) => c.id === categoryId) ? categoryId : (catList[0]?.id ?? null)
 
   function close() {
     if (router.canGoBack()) router.back()
@@ -44,9 +59,9 @@ export default function AddModal() {
     const parsed = parseQuickAddText(text)
     if (!parsed) return
     setAmountText(formatRupiahInput(String(parsed.amount)))
-    if (categoryList.some((c) => c.key === parsed.category)) {
-      setCategory(parsed.category as CategoryKey)
-    }
+    setKind('expense')
+    const match = (categories.data ?? []).find((c) => c.name === parsed.category)
+    if (match) setCategoryId(match.id)
   }
 
   function onSave() {
@@ -54,10 +69,24 @@ export default function AddModal() {
       Alert.alert('Nominal kosong', 'Isi dulu jumlah duitnya ya.')
       return
     }
-    Alert.alert(
-      'Tercatat ya',
-      `${kind === 'expense' ? '-' : '+'}Rp ${formatRupiahInput(String(amount))} buat ${category}. (Belum nyimpen ke server.)`,
-      [{ text: 'Sip', onPress: close }],
+    if (!effectiveWalletId || !effectiveCategoryId) {
+      Alert.alert('Sebentar ya', 'Wallet atau kategori belum siap. Coba lagi sebentar.')
+      return
+    }
+    createTx.mutate(
+      {
+        walletId: effectiveWalletId,
+        categoryId: effectiveCategoryId,
+        kind,
+        amount,
+        description: description.trim() ? description.trim() : undefined,
+        occurredAt: new Date().toISOString(),
+        source: 'mobile',
+      },
+      {
+        onSuccess: close,
+        onError: (err) => Alert.alert('Gagal nyimpen', apiErrorMessage(err)),
+      },
     )
   }
 
@@ -125,22 +154,23 @@ export default function AddModal() {
         <View>
           <Label>Kategori</Label>
           <View className="mt-3 flex-row flex-wrap gap-2">
-            {categoryList.map((c) => {
-              const active = c.key === category
-              const Icon = c.icon
+            {catList.map((c) => {
+              const meta = getCategoryMeta(c.name as CategoryKey)
+              const Icon = meta.icon
+              const active = c.id === effectiveCategoryId
               return (
                 <Pressable
-                  key={c.key}
-                  onPress={() => setCategory(c.key)}
+                  key={c.id}
+                  onPress={() => setCategoryId(c.id)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Kategori ${c.label}`}
+                  accessibilityLabel={`Kategori ${c.name}`}
                   className={
                     active
                       ? 'flex-row items-center gap-2 rounded-full bg-primary-600 px-4 py-2.5'
                       : 'flex-row items-center gap-2 rounded-full bg-white px-4 py-2.5 active:opacity-70 dark:bg-zinc-900'
                   }
                 >
-                  <Icon size={15} color={active ? '#ffffff' : c.tint} />
+                  <Icon size={15} color={active ? '#ffffff' : meta.tint} />
                   <Text
                     className={
                       active
@@ -148,7 +178,7 @@ export default function AddModal() {
                         : 'font-sans text-sm font-medium text-zinc-700 dark:text-zinc-200'
                     }
                   >
-                    {c.label}
+                    {titleCase(c.name)}
                   </Text>
                 </Pressable>
               )
@@ -158,15 +188,15 @@ export default function AddModal() {
 
         <View>
           <Label>Wallet</Label>
-          <View className="mt-3 flex-row gap-2">
-            {wallets.map((w) => {
-              const active = w.key === wallet
+          <View className="mt-3 flex-row flex-wrap gap-2">
+            {walletList.map((w) => {
+              const active = w.id === effectiveWalletId
               return (
                 <Pressable
-                  key={w.key}
-                  onPress={() => setWallet(w.key)}
+                  key={w.id}
+                  onPress={() => setWalletId(w.id)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Wallet ${w.label}`}
+                  accessibilityLabel={`Wallet ${w.name}`}
                   className={
                     active
                       ? 'rounded-full bg-zinc-900 px-5 py-2.5 dark:bg-zinc-100'
@@ -180,7 +210,7 @@ export default function AddModal() {
                         : 'font-sans text-sm font-medium text-zinc-700 dark:text-zinc-200'
                     }
                   >
-                    {w.label}
+                    {w.name}
                   </Text>
                 </Pressable>
               )
@@ -207,10 +237,13 @@ export default function AddModal() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Catat sekarang"
+          disabled={createTx.isPending}
           onPress={onSave}
-          className="items-center rounded-full bg-primary-600 py-4 active:opacity-90"
+          className="items-center rounded-full bg-primary-600 py-4 active:opacity-90 disabled:opacity-50"
         >
-          <Text className="font-sans text-base font-semibold text-white">Catat sekarang</Text>
+          <Text className="font-sans text-base font-semibold text-white">
+            {createTx.isPending ? 'Nyimpen' : 'Catat sekarang'}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>
