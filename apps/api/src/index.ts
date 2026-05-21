@@ -7,6 +7,7 @@ import { loadEnv } from './env'
 import { HttpError } from './errors'
 import { logger } from './logger'
 import { authRouter } from './routes/auth'
+import { budgetsRouter } from './routes/budgets'
 import { categoriesRouter } from './routes/categories'
 import { healthRouter } from './routes/health'
 import { linkingRouter } from './routes/linking'
@@ -54,6 +55,7 @@ app.route('/v1/transactions', transactionsRouter)
 app.route('/v1/reports', reportsRouter)
 app.route('/v1/linking', linkingRouter)
 app.route('/v1/ocr', ocrRouter)
+app.route('/v1/budgets', budgetsRouter)
 
 const bot = createTelegramBot(env.TELEGRAM_BOT_TOKEN)
 

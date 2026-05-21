@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router'
 import {
   Bell,
   ChevronRight,
@@ -9,6 +10,7 @@ import {
   Shield,
   Sparkles,
   Sun,
+  Target,
 } from 'lucide-react-native'
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -20,6 +22,7 @@ import { signOutUser } from '~/lib/auth'
 import { useThemeStore, type ThemePref } from '~/lib/theme'
 
 export default function SettingsTab() {
+  const router = useRouter()
   const { user } = useAuth()
   const initial = (user?.displayName ?? user?.email ?? 'C').charAt(0).toUpperCase()
 
@@ -68,6 +71,15 @@ export default function SettingsTab() {
               <PaywallButton />
             </View>
           </View>
+
+          <Section title="Keuangan">
+            <Row
+              icon={<Target size={18} color="#71717a" />}
+              label="Budget per kategori"
+              hint="Atur batas bulanan atau mingguan"
+              onPress={() => router.push('/budgets')}
+            />
+          </Section>
 
           <Section title="Channel">
             <TelegramLinkRow />
@@ -186,15 +198,18 @@ function Row({
   hint,
   cta,
   muted,
+  onPress,
 }: {
   icon: React.ReactNode
   label: string
   hint?: string
   cta?: string
   muted?: boolean
+  onPress?: () => void
 }) {
   return (
     <Pressable
+      onPress={onPress}
       className={
         muted
           ? 'flex-row items-center gap-3 px-4 py-3.5 opacity-55'

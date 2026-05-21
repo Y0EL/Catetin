@@ -98,6 +98,28 @@ export const createBudgetSchema = z.object({
 
 export type CreateBudgetInput = z.infer<typeof createBudgetSchema>
 
+export const updateBudgetSchema = z.object({
+  amount: z.number().int().positive().optional(),
+  alertThreshold: z.number().int().min(1).max(100).optional(),
+  period: budgetPeriodSchema.optional(),
+})
+
+export type UpdateBudgetInput = z.infer<typeof updateBudgetSchema>
+
+export const budgetWithStatusSchema = z.object({
+  id: z.string().uuid(),
+  categoryId: z.string().uuid(),
+  categoryName: z.string(),
+  period: budgetPeriodSchema,
+  amount: z.number().int().nonnegative(),
+  alertThreshold: z.number().int(),
+  spent: z.number().int().nonnegative(),
+  periodStart: z.string().datetime(),
+  periodEnd: z.string().datetime(),
+})
+
+export type BudgetWithStatus = z.infer<typeof budgetWithStatusSchema>
+
 export const createCategorySchema = z.object({
   name: z.string().min(1).max(40),
   kind: categoryKindSchema,
