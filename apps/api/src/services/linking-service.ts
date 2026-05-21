@@ -30,6 +30,20 @@ export async function createLinkingCode(
   return { code, expiresAt }
 }
 
+export async function listLinkedChannels(
+  db: Database,
+  userId: string,
+): Promise<{ telegram: boolean; whatsapp: boolean }> {
+  const rows = await db
+    .select({ channel: channelLinks.channel })
+    .from(channelLinks)
+    .where(eq(channelLinks.userId, userId))
+  return {
+    telegram: rows.some((r) => r.channel === 'telegram'),
+    whatsapp: rows.some((r) => r.channel === 'whatsapp'),
+  }
+}
+
 export async function resolveUserByChannel(
   db: Database,
   channel: ChannelName,

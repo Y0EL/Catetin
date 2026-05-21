@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { ArrowDownLeft, ArrowUpRight, Bell, Camera, Plus, Sparkles } from 'lucide-react-native'
 import { useCallback, useMemo } from 'react'
-import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native'
+import { Linking, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { CardGlow } from '~/components/card-glow'
 import { CategoryBreakdown } from '~/components/category-breakdown'
@@ -13,6 +13,7 @@ import { TransactionCard } from '~/components/transaction-card'
 import { TrendChart } from '~/components/trend-chart'
 import { useAuth } from '~/hooks/use-auth'
 import { useCategories } from '~/hooks/use-categories'
+import { useChannelStatus } from '~/hooks/use-channel-status'
 import { useSummary, currentMonth } from '~/hooks/use-summary'
 import { useTransactions } from '~/hooks/use-transactions'
 import { useTrend } from '~/hooks/use-trend'
@@ -55,6 +56,7 @@ export default function HomeTab() {
     useCallback(() => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
       queryClient.invalidateQueries({ queryKey: ['summary'] })
+      queryClient.invalidateQueries({ queryKey: ['channel-status'] })
     }, [queryClient]),
   )
 
@@ -256,7 +258,7 @@ export default function HomeTab() {
               Catat lewat chat
             </Text>
             <View className="mt-3 gap-3">
-              <ChannelCard name="Telegram" handle="@catetindobot" cta="Sambungin" />
+              <TelegramChannelCard onSambungin={() => router.push('/(tabs)/settings')} />
               <ChannelCard name="WhatsApp" handle="Coming soon" muted />
             </View>
           </View>
@@ -289,6 +291,51 @@ function QuickAction({
         {label}
       </Text>
     </Pressable>
+  )
+}
+
+function TelegramChannelCard({ onSambungin }: { onSambungin: () => void }) {
+  const status = useChannelStatus()
+  const linked = status.data?.telegram === true
+
+  function openBot() {
+    Linking.openURL('https://t.me/catetindobot').catch(() => {})
+  }
+
+  return (
+    <View className="flex-row items-center justify-between rounded-card bg-white px-4 py-4 dark:bg-zinc-800">
+      <View>
+        <Text className="font-sans text-base font-semibold text-zinc-900 dark:text-zinc-100">
+          Telegram
+        </Text>
+        <Text className="mt-0.5 font-sans text-xs text-zinc-500 dark:text-zinc-400">
+          @catetindobot
+        </Text>
+      </View>
+      {linked ? (
+        <Pressable
+          onPress={openBot}
+          accessibilityRole="button"
+          accessibilityLabel="Buka chat Telegram"
+          className="rounded-full bg-zinc-900 px-4 py-2 active:opacity-80 dark:bg-white"
+        >
+          <Text className="font-sans text-sm font-semibold text-white dark:text-zinc-900">
+            Chat
+          </Text>
+        </Pressable>
+      ) : (
+        <Pressable
+          onPress={onSambungin}
+          accessibilityRole="button"
+          accessibilityLabel="Sambungin Telegram"
+          className="rounded-full bg-primary-50 px-4 py-2 active:opacity-70 dark:bg-primary-950"
+        >
+          <Text className="font-sans text-sm font-semibold text-primary-600 dark:text-primary-300">
+            Sambungin
+          </Text>
+        </Pressable>
+      )}
+    </View>
   )
 }
 

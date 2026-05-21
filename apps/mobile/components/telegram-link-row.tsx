@@ -1,5 +1,6 @@
-import { ExternalLink, MessageCircle } from 'lucide-react-native'
+import { Check, ExternalLink, MessageCircle } from 'lucide-react-native'
 import { ActivityIndicator, Linking, Pressable, Text, View } from 'react-native'
+import { useChannelStatus } from '~/hooks/use-channel-status'
 import { useLinkTelegram } from '~/hooks/use-link-telegram'
 import { apiErrorMessage } from '~/lib/api'
 import { useAccentColor } from '~/lib/use-accent-color'
@@ -7,6 +8,8 @@ import { useAccentColor } from '~/lib/use-accent-color'
 export function TelegramLinkRow() {
   const link = useLinkTelegram()
   const accent = useAccentColor()
+  const status = useChannelStatus()
+  const linked = status.data?.telegram === true
   const data = link.data
 
   function onOpen() {
@@ -14,12 +17,16 @@ export function TelegramLinkRow() {
     Linking.openURL(data.telegramUrl).catch(() => {})
   }
 
+  function onChat() {
+    Linking.openURL('https://t.me/catetindobot').catch(() => {})
+  }
+
   return (
     <View>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Sambungin Telegram"
-        onPress={() => link.mutate()}
+        accessibilityLabel={linked ? 'Buka chat Telegram' : 'Sambungin Telegram'}
+        onPress={() => (linked ? onChat() : link.mutate())}
         disabled={link.isPending}
         className="flex-row items-center gap-3 px-4 py-3.5 active:bg-zinc-50 dark:active:bg-zinc-800"
       >
@@ -34,6 +41,11 @@ export function TelegramLinkRow() {
         </View>
         {link.isPending ? (
           <ActivityIndicator size="small" color={accent} />
+        ) : linked ? (
+          <View className="flex-row items-center gap-1 rounded-full bg-success/15 px-2.5 py-1">
+            <Check size={12} color="#16a34a" />
+            <Text className="font-sans text-xs font-semibold text-success">Tersambung</Text>
+          </View>
         ) : (
           <Text className="font-sans text-sm font-semibold text-primary-600 dark:text-primary-200">
             {data ? 'Kode baru' : 'Sambungin'}
