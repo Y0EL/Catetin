@@ -68,6 +68,13 @@ export const ocrReceiptResponseSchema = z.object({
 
 export type OcrReceiptResponse = z.infer<typeof ocrReceiptResponseSchema>
 
+export const ocrRequestSchema = z.object({
+  image: z.string().min(1),
+  mimeType: z.string().default('image/jpeg'),
+})
+
+export type OcrRequest = z.infer<typeof ocrRequestSchema>
+
 export const createWalletSchema = z.object({
   name: z.string().min(1).max(50),
   type: walletTypeSchema,

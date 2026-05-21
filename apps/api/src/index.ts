@@ -10,6 +10,7 @@ import { authRouter } from './routes/auth'
 import { categoriesRouter } from './routes/categories'
 import { healthRouter } from './routes/health'
 import { linkingRouter } from './routes/linking'
+import { ocrRouter } from './routes/ocr'
 import { reportsRouter } from './routes/reports'
 import { transactionsRouter } from './routes/transactions'
 import { walletsRouter } from './routes/wallets'
@@ -52,6 +53,7 @@ app.route('/v1/categories', categoriesRouter)
 app.route('/v1/transactions', transactionsRouter)
 app.route('/v1/reports', reportsRouter)
 app.route('/v1/linking', linkingRouter)
+app.route('/v1/ocr', ocrRouter)
 
 const bot = createTelegramBot(env.TELEGRAM_BOT_TOKEN)
 

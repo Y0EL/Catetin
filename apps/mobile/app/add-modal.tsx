@@ -1,11 +1,30 @@
 import { useRouter } from 'expo-router'
-import { ArrowDownLeft, ArrowUpRight, Skull, X } from 'lucide-react-native'
+import * as ImagePicker from 'expo-image-picker'
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Camera,
+  Images,
+  Skull,
+  Sparkles,
+  X,
+} from 'lucide-react-native'
 import { useMemo, useState } from 'react'
-import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { parseQuickAddText } from '@catetin/chat-core'
 import { useCategories } from '~/hooks/use-categories'
 import { useCreateTransaction } from '~/hooks/use-create-transaction'
+import { useOcrReceipt } from '~/hooks/use-ocr-receipt'
 import { useWallets } from '~/hooks/use-wallets'
 import { apiErrorMessage } from '~/lib/api'
 import { getCategoryMeta, type CategoryKey } from '~/lib/categories'
@@ -42,6 +61,7 @@ export default function AddModal() {
   const wallets = useWallets()
   const categories = useCategories()
   const createTx = useCreateTransaction()
+  const ocr = useOcrReceipt()
 
   const [kind, setKind] = useState<'expense' | 'income'>('expense')
   const [amountText, setAmountText] = useState('')
@@ -74,6 +94,51 @@ export default function AddModal() {
     setKind('expense')
     const match = (categories.data ?? []).find((c) => c.name === parsed.category)
     if (match) setCategoryId(match.id)
+  }
+
+  function applyDraft(draft: Awaited<ReturnType<typeof ocr.mutateAsync>>) {
+    setKind('expense')
+    if (draft.total > 0) setAmountText(formatRupiahInput(String(draft.total)))
+    if (draft.merchant) setDescription(draft.merchant)
+    const catName = draft.items[0]?.category
+    if (catName) {
+      const match = (categories.data ?? []).find((c) => c.name === catName && c.kind === 'expense')
+      if (match) setCategoryId(match.id)
+    }
+    if (draft.confidence === 'low') {
+      Alert.alert(
+        'Struk kurang jelas',
+        'Hasil scan agak ragu. Cek lagi angkanya sebelum simpan ya.',
+      )
+    }
+  }
+
+  async function scanReceipt(useCamera: boolean) {
+    try {
+      if (useCamera) {
+        const perm = await ImagePicker.requestCameraPermissionsAsync()
+        if (!perm.granted) {
+          Alert.alert('Izin kamera', 'Catetin butuh akses kamera buat scan struk.')
+          return
+        }
+      }
+      const picker = useCamera ? ImagePicker.launchCameraAsync : ImagePicker.launchImageLibraryAsync
+      const result = await picker({ mediaTypes: ['images'], quality: 0.6, base64: true })
+      if (result.canceled) return
+      const asset = result.assets[0]
+      const base64 = asset?.base64
+      if (!base64) {
+        Alert.alert('Gagal ambil gambar', 'Coba lagi ya.')
+        return
+      }
+      const draft = await ocr.mutateAsync({
+        image: base64,
+        mimeType: asset.mimeType ?? 'image/jpeg',
+      })
+      applyDraft(draft)
+    } catch (err) {
+      Alert.alert('Gagal scan struk', apiErrorMessage(err))
+    }
   }
 
   function onSave() {
@@ -138,6 +203,36 @@ export default function AddModal() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        <View className="overflow-hidden rounded-card bg-primary-600 p-4">
+          <View className="flex-row items-center gap-2">
+            <Sparkles size={16} color="#ffffff" />
+            <Text className="font-display text-sm font-bold text-white">Scan struk pakai AI</Text>
+          </View>
+          <Text className="mt-1 font-sans text-xs leading-5 text-primary-100">
+            Foto struknya, Catetin baca total dan kategorinya otomatis.
+          </Text>
+          <View className="mt-3 flex-row gap-2">
+            <ScanButton
+              icon={<Camera size={16} color="#18181b" />}
+              label="Kamera"
+              onPress={() => scanReceipt(true)}
+              disabled={ocr.isPending}
+            />
+            <ScanButton
+              icon={<Images size={16} color="#18181b" />}
+              label="Galeri"
+              onPress={() => scanReceipt(false)}
+              disabled={ocr.isPending}
+            />
+          </View>
+          {ocr.isPending ? (
+            <View className="mt-3 flex-row items-center gap-2">
+              <ActivityIndicator size="small" color="#ffffff" />
+              <Text className="font-sans text-xs text-primary-100">Lagi baca struk...</Text>
+            </View>
+          ) : null}
+        </View>
+
         <View className="flex-row gap-2">
           <KindToggle
             active={kind === 'expense'}
@@ -317,6 +412,31 @@ export default function AddModal() {
         </View>
       </Modal>
     </SafeAreaView>
+  )
+}
+
+function ScanButton({
+  icon,
+  label,
+  onPress,
+  disabled,
+}: {
+  icon: React.ReactNode
+  label: string
+  onPress: () => void
+  disabled?: boolean
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      disabled={disabled}
+      className="flex-1 flex-row items-center justify-center gap-2 rounded-full bg-white py-2.5 active:opacity-80 disabled:opacity-50"
+    >
+      {icon}
+      <Text className="font-sans text-sm font-semibold text-zinc-900">{label}</Text>
+    </Pressable>
   )
 }
 
