@@ -149,7 +149,7 @@ export default function HomeTab() {
                   onPress={() => router.push('/(tabs)/transactions')}
                   className="active:opacity-60"
                 >
-                  <Text className="font-sans text-sm font-semibold text-primary-600">
+                  <Text className="font-sans text-sm font-semibold text-primary-600 dark:text-primary-200">
                     Lihat semua
                   </Text>
                 </Pressable>

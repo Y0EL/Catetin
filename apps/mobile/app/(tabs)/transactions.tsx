@@ -104,7 +104,7 @@ export default function TransactionsTab() {
                 disabled={transactions.isFetchingNextPage}
                 className="mt-4 items-center rounded-full bg-white py-3 active:opacity-70 dark:bg-zinc-800"
               >
-                <Text className="font-sans text-sm font-semibold text-primary-600">
+                <Text className="font-sans text-sm font-semibold text-primary-600 dark:text-primary-200">
                   {transactions.isFetchingNextPage ? 'Memuat' : 'Muat lagi'}
                 </Text>
               </Pressable>

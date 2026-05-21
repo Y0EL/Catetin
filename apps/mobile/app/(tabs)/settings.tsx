@@ -211,7 +211,9 @@ function Row({
         ) : null}
       </View>
       {cta ? (
-        <Text className="font-sans text-sm font-semibold text-primary-600">{cta}</Text>
+        <Text className="font-sans text-sm font-semibold text-primary-600 dark:text-primary-200">
+          {cta}
+        </Text>
       ) : (
         <ChevronRight size={16} color="#a1a1aa" />
       )}

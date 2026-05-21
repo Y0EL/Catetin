@@ -48,7 +48,9 @@ export default function CompanionTab() {
               <Text className="font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
                 Kuota hari ini
               </Text>
-              <Text className="font-sans text-xs font-semibold text-primary-600">Free</Text>
+              <Text className="font-sans text-xs font-semibold text-primary-600 dark:text-primary-200">
+                Free
+              </Text>
             </View>
             <View className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
               <View className="h-full w-full rounded-full bg-primary-600" />

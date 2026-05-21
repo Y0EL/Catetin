@@ -35,7 +35,7 @@ export function TelegramLinkRow() {
         {link.isPending ? (
           <ActivityIndicator size="small" color={accent} />
         ) : (
-          <Text className="font-sans text-sm font-semibold text-primary-600">
+          <Text className="font-sans text-sm font-semibold text-primary-600 dark:text-primary-200">
             {data ? 'Kode baru' : 'Sambungin'}
           </Text>
         )}
