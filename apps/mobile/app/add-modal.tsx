@@ -240,7 +240,7 @@ export default function AddModal() {
           <View className="overflow-hidden rounded-card bg-primary-600 p-4">
             <View className="flex-row items-center gap-2">
               <Sparkles size={16} color="#ffffff" />
-              <Text className="font-display text-sm font-bold text-white">Scan struk pakai AI</Text>
+              <Text className="font-display text-sm font-bold text-white">Scan struk lo</Text>
             </View>
             <Text className="mt-1 font-sans text-xs leading-5 text-primary-100">
               Foto struknya, Catetin baca total dan kategorinya otomatis.
@@ -456,10 +456,10 @@ export default function AddModal() {
             <View className="w-full items-center rounded-3xl bg-white p-6 dark:bg-zinc-900">
               <LoadingLottie size={140} />
               <Text className="mt-2 font-display text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                Catetin lagi baca struk lo
+                Catetin Manager lagi nyatet
               </Text>
               <Text className="mt-1 text-center font-sans text-sm leading-5 text-zinc-500 dark:text-zinc-400">
-                Bentar, gue ekstrak total, merchant, sama kategorinya pakai AI.
+                Bentar yak..
               </Text>
             </View>
           ) : draftPreview ? (
