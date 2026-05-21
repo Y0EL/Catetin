@@ -1,9 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 import {
+  AlertCircle,
   ArrowDownLeft,
   ArrowUpRight,
   Camera,
+  CheckCircle2,
   Images,
   Skull,
   Sparkles,
@@ -21,7 +23,8 @@ import {
   View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { parseQuickAddText } from '@catetin/chat-core'
+import { formatRupiah, parseQuickAddText } from '@catetin/chat-core'
+import type { OcrReceiptResponse } from '@catetin/types'
 import { useCategories } from '~/hooks/use-categories'
 import { useCreateTransaction } from '~/hooks/use-create-transaction'
 import { useOcrReceipt } from '~/hooks/use-ocr-receipt'
@@ -69,6 +72,7 @@ export default function AddModal() {
   const [categoryId, setCategoryId] = useState<string | null>(null)
   const [description, setDescription] = useState('')
   const [showBigConfirm, setShowBigConfirm] = useState(false)
+  const [draftPreview, setDraftPreview] = useState<OcrReceiptResponse | null>(null)
   const params = useLocalSearchParams<{ scan?: string }>()
   const scanTriggered = useRef(false)
 
@@ -98,7 +102,7 @@ export default function AddModal() {
     if (match) setCategoryId(match.id)
   }
 
-  function applyDraft(draft: Awaited<ReturnType<typeof ocr.mutateAsync>>) {
+  function applyDraft(draft: OcrReceiptResponse) {
     setKind('expense')
     if (draft.total > 0) setAmountText(formatRupiahInput(String(draft.total)))
     if (draft.merchant) setDescription(draft.merchant)
@@ -106,12 +110,6 @@ export default function AddModal() {
     if (catName) {
       const match = (categories.data ?? []).find((c) => c.name === catName && c.kind === 'expense')
       if (match) setCategoryId(match.id)
-    }
-    if (draft.confidence === 'low') {
-      Alert.alert(
-        'Struk kurang jelas',
-        'Hasil scan agak ragu. Cek lagi angkanya sebelum simpan ya.',
-      )
     }
   }
 
@@ -137,7 +135,7 @@ export default function AddModal() {
         image: base64,
         mimeType: asset.mimeType ?? 'image/jpeg',
       })
-      applyDraft(draft)
+      setDraftPreview(draft)
     } catch (err) {
       Alert.alert('Gagal scan struk', apiErrorMessage(err))
     }
@@ -419,7 +417,161 @@ export default function AddModal() {
           </View>
         </View>
       </Modal>
+
+      <Modal
+        visible={ocr.isPending || draftPreview !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDraftPreview(null)}
+      >
+        <View className="flex-1 items-center justify-center bg-black/60 px-6">
+          {ocr.isPending ? (
+            <View className="w-full items-center rounded-3xl bg-white p-6 dark:bg-zinc-900">
+              <ActivityIndicator size="large" color="#18181b" />
+              <Text className="mt-4 font-display text-base font-bold text-zinc-900 dark:text-zinc-100">
+                Catetin lagi baca struk lo...
+              </Text>
+              <Text className="mt-1 text-center font-sans text-sm leading-5 text-zinc-500 dark:text-zinc-400">
+                Bentar, gue ekstrak total, merchant, sama kategorinya pakai AI.
+              </Text>
+            </View>
+          ) : draftPreview ? (
+            <View className="w-full rounded-3xl bg-white p-6 dark:bg-zinc-900">
+              <View className="flex-row items-center justify-between">
+                <Text className="font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
+                  Hasil scan struk
+                </Text>
+                <ConfidenceBadge confidence={draftPreview.confidence} />
+              </View>
+
+              <View className="mt-5">
+                <Text className="font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                  Total
+                </Text>
+                <Text
+                  className="mt-1 font-display text-3xl font-extrabold text-zinc-900 dark:text-zinc-100"
+                  style={{ fontVariant: ['tabular-nums'] }}
+                >
+                  {formatRupiah(draftPreview.total)}
+                </Text>
+                {draftPreview.total === 0 ? (
+                  <Text className="mt-1 font-sans text-xs text-danger">
+                    Total gak kebaca. Ralat manual aja.
+                  </Text>
+                ) : null}
+              </View>
+
+              <View className="mt-4 gap-2">
+                {draftPreview.merchant ? (
+                  <DraftRow label="Merchant" value={draftPreview.merchant} />
+                ) : null}
+                {draftPreview.date ? <DraftRow label="Tanggal" value={draftPreview.date} /> : null}
+                {draftPreview.items[0]?.category ? (
+                  <DraftRow label="Kategori" value={titleCase(draftPreview.items[0].category)} />
+                ) : null}
+              </View>
+
+              {draftPreview.items.length > 0 ? (
+                <View className="mt-4 rounded-card bg-zinc-50 p-3 dark:bg-zinc-800">
+                  <Text className="font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                    Item kebaca
+                  </Text>
+                  <View className="mt-2 gap-1.5">
+                    {draftPreview.items.slice(0, 6).map((it, i) => (
+                      <View key={i} className="flex-row justify-between gap-3">
+                        <Text
+                          className="flex-1 font-sans text-sm text-zinc-700 dark:text-zinc-200"
+                          numberOfLines={1}
+                        >
+                          {it.qty > 1 ? `${it.qty}x ` : ''}
+                          {it.name}
+                        </Text>
+                        <Text className="font-sans text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                          {formatRupiah(it.price)}
+                        </Text>
+                      </View>
+                    ))}
+                    {draftPreview.items.length > 6 ? (
+                      <Text className="mt-1 font-sans text-xs text-zinc-500">
+                        +{draftPreview.items.length - 6} item lain
+                      </Text>
+                    ) : null}
+                  </View>
+                </View>
+              ) : null}
+
+              <View className="mt-5 gap-2">
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => {
+                    applyDraft(draftPreview)
+                    setDraftPreview(null)
+                  }}
+                  className="items-center rounded-full bg-primary-600 py-3.5 active:opacity-90"
+                >
+                  <Text className="font-sans text-sm font-semibold text-white">Pakai ini</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setDraftPreview(null)}
+                  className="items-center rounded-full bg-zinc-100 py-3.5 active:opacity-70 dark:bg-zinc-800"
+                >
+                  <Text className="font-sans text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                    Ralat manual
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : null}
+        </View>
+      </Modal>
     </SafeAreaView>
+  )
+}
+
+function DraftRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View className="flex-row items-center justify-between gap-3">
+      <Text className="font-sans text-xs uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+        {label}
+      </Text>
+      <Text
+        className="flex-1 text-right font-sans text-sm font-medium text-zinc-900 dark:text-zinc-100"
+        numberOfLines={1}
+      >
+        {value}
+      </Text>
+    </View>
+  )
+}
+
+function ConfidenceBadge({ confidence }: { confidence: 'high' | 'medium' | 'low' }) {
+  const cfg =
+    confidence === 'high'
+      ? {
+          bg: 'bg-success/15',
+          text: 'text-success',
+          icon: <CheckCircle2 size={14} color="#16a34a" />,
+          label: 'Yakin',
+        }
+      : confidence === 'low'
+        ? {
+            bg: 'bg-danger/15',
+            text: 'text-danger',
+            icon: <AlertCircle size={14} color="#dc2626" />,
+            label: 'Ragu',
+          }
+        : {
+            bg: 'bg-warning/15',
+            text: 'text-warning',
+            icon: <AlertCircle size={14} color="#f59e0b" />,
+            label: 'Agak ragu',
+          }
+  return (
+    <View className={`flex-row items-center gap-1 rounded-full px-2.5 py-1 ${cfg.bg}`}>
+      {cfg.icon}
+      <Text className={`font-sans text-xs font-semibold ${cfg.text}`}>{cfg.label}</Text>
+    </View>
   )
 }
 
