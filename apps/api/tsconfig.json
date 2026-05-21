@@ -6,6 +6,7 @@
     "moduleResolution": "Bundler",
     "module": "ESNext",
     "target": "ES2022",
+    "jsx": "react-jsx",
     "types": ["node"]
   },
   "include": ["src/**/*"]

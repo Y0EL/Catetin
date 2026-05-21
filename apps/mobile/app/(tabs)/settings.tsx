@@ -2,23 +2,27 @@ import { useRouter } from 'expo-router'
 import {
   Bell,
   ChevronRight,
+  FileText,
   Globe,
   LogOut,
   MessageCircle,
   Monitor,
   Moon,
   Shield,
+  Sheet,
   Sparkles,
   Sun,
   Target,
 } from 'lucide-react-native'
-import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native'
+import { useState } from 'react'
+import { ActivityIndicator, Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { PaywallButton } from '~/components/paywall-button'
 import { ScreenFade } from '~/components/screen-fade'
 import { TelegramLinkRow } from '~/components/telegram-link-row'
 import { useAuth } from '~/hooks/use-auth'
 import { useNotifPrefs, useTestNotif, useUpdateNotifPrefs } from '~/hooks/use-notif-prefs'
+import { downloadAndShareReport } from '~/hooks/use-download-report'
 import { signOutUser } from '~/lib/auth'
 import { useTheme, type ThemePref } from '~/lib/theme'
 
@@ -80,6 +84,10 @@ export default function SettingsTab() {
               hint="Atur batas bulanan atau mingguan"
               onPress={() => router.push('/budgets')}
             />
+            <Divider />
+            <ExportRow kind="pdf" />
+            <Divider />
+            <ExportRow kind="csv" />
           </Section>
 
           <Section title="Channel">
@@ -231,6 +239,54 @@ function Row({
         <Text className="font-sans text-sm font-semibold text-primary-600 dark:text-primary-200">
           {cta}
         </Text>
+      ) : (
+        <ChevronRight size={16} color="#a1a1aa" />
+      )}
+    </Pressable>
+  )
+}
+
+function ExportRow({ kind }: { kind: 'pdf' | 'csv' }) {
+  const [loading, setLoading] = useState(false)
+
+  function currentMonth(): string {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  }
+
+  async function onPress() {
+    if (loading) return
+    setLoading(true)
+    try {
+      await downloadAndShareReport(kind, currentMonth())
+    } catch {
+      Alert.alert('Gagal export', 'Coba lagi ya.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const label = kind === 'pdf' ? 'Laporan PDF bulan ini' : 'CSV bulan ini'
+  const hint = kind === 'pdf' ? 'Bank statement ala fintech' : 'Spreadsheet semua transaksi'
+  const icon =
+    kind === 'pdf' ? <FileText size={18} color="#71717a" /> : <Sheet size={18} color="#71717a" />
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      className="flex-row items-center gap-3 px-4 py-3.5 active:bg-zinc-50 dark:active:bg-zinc-800"
+    >
+      <View className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+        {icon}
+      </View>
+      <View className="flex-1">
+        <Text className="font-sans text-base text-zinc-900 dark:text-zinc-100">{label}</Text>
+        <Text className="mt-0.5 font-sans text-xs text-zinc-500 dark:text-zinc-400">{hint}</Text>
+      </View>
+      {loading ? (
+        <ActivityIndicator size="small" color="#71717a" />
       ) : (
         <ChevronRight size={16} color="#a1a1aa" />
       )}
