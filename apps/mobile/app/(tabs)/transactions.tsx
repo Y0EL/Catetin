@@ -2,7 +2,7 @@ import { Search } from 'lucide-react-native'
 import { useMemo, useState } from 'react'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { formatRupiah } from '@catetin/chat-core'
+import { Money } from '~/components/money'
 import { ScreenFade } from '~/components/screen-fade'
 import { TransactionCard } from '~/components/transaction-card'
 import { useCategories } from '~/hooks/use-categories'
@@ -67,12 +67,9 @@ export default function TransactionsTab() {
             <Text className="font-sans text-xs font-medium uppercase tracking-widest text-primary-200">
               Net bulan ini
             </Text>
-            <Text
-              className="mt-2 font-display text-3xl font-extrabold text-white"
-              style={{ fontVariant: ['tabular-nums'] }}
-            >
-              {formatRupiah(total)}
-            </Text>
+            <View className="mt-2">
+              <Money value={total} size="lg" tone="onDark" compact />
+            </View>
             <Text className="mt-2 font-sans text-xs text-primary-100">
               {rows.length} transaksi dimuat
             </Text>

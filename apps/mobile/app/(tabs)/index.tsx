@@ -1,6 +1,7 @@
-import { useRouter } from 'expo-router'
+import { useQueryClient } from '@tanstack/react-query'
+import { useFocusEffect, useRouter } from 'expo-router'
 import { ArrowDownLeft, ArrowUpRight, Bell, Camera, Plus, Sparkles } from 'lucide-react-native'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { CardGlow } from '~/components/card-glow'
@@ -40,6 +41,14 @@ export default function HomeTab() {
   const transactions = useTransactions({})
   const categories = useCategories()
   const wallets = useWallets()
+  const queryClient = useQueryClient()
+
+  useFocusEffect(
+    useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      queryClient.invalidateQueries({ queryKey: ['summary'] })
+    }, [queryClient]),
+  )
 
   const recent = transactions.data?.pages[0]?.transactions.slice(0, 5) ?? []
   const catName = useMemo(

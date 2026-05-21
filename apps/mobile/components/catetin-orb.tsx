@@ -10,7 +10,6 @@ type Props = {
 }
 
 export function CatetinOrb({ size = 250, active = false, onPress }: Props) {
-  const frame = size * 1.3
   const [ready, setReady] = useState(false)
 
   function onLayout(e: LayoutChangeEvent) {
@@ -23,23 +22,8 @@ export function CatetinOrb({ size = 250, active = false, onPress }: Props) {
       accessibilityLabel={active ? 'Hentikan obrolan' : 'Mulai ngobrol dengan Catetin'}
       onPress={onPress}
       onLayout={onLayout}
-      style={{ width: frame, height: frame, alignItems: 'center', justifyContent: 'center' }}
+      style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}
     >
-      <View
-        pointerEvents="none"
-        style={{
-          position: 'absolute',
-          width: size * 0.95,
-          height: size * 0.95,
-          borderRadius: 9999,
-          backgroundColor: '#7c3aed',
-          opacity: active ? 0.45 : 0.25,
-          shadowColor: '#7c3aed',
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.9,
-          shadowRadius: active ? 60 : 40,
-        }}
-      />
       {ready ? (
         <LottieView
           source={orbSource}
