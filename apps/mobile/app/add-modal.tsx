@@ -25,6 +25,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { formatRupiah, parseQuickAddText } from '@catetin/chat-core'
 import type { OcrReceiptResponse } from '@catetin/types'
+import { CardGlow } from '~/components/card-glow'
 import { useCategories } from '~/hooks/use-categories'
 import { useCreateTransaction } from '~/hooks/use-create-transaction'
 import { useOcrReceipt } from '~/hooks/use-ocr-receipt'
@@ -424,105 +425,120 @@ export default function AddModal() {
         animationType="fade"
         onRequestClose={() => setDraftPreview(null)}
       >
-        <View className="flex-1 items-center justify-center bg-black/60 px-6">
-          {ocr.isPending ? (
-            <View className="w-full items-center rounded-3xl bg-white p-6 dark:bg-zinc-900">
-              <ActivityIndicator size="large" color="#18181b" />
-              <Text className="mt-4 font-display text-base font-bold text-zinc-900 dark:text-zinc-100">
-                Catetin lagi baca struk lo...
-              </Text>
-              <Text className="mt-1 text-center font-sans text-sm leading-5 text-zinc-500 dark:text-zinc-400">
-                Bentar, gue ekstrak total, merchant, sama kategorinya pakai AI.
-              </Text>
+        <View className="flex-1 items-center justify-center bg-black/80 px-6">
+          <View className="relative w-full items-center">
+            <View
+              pointerEvents="none"
+              style={{ position: 'absolute', top: -80, bottom: -80, left: -40, right: -40 }}
+            >
+              <CardGlow />
             </View>
-          ) : draftPreview ? (
-            <View className="w-full rounded-3xl bg-white p-6 dark:bg-zinc-900">
-              <View className="flex-row items-center justify-between">
-                <Text className="font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
-                  Hasil scan struk
+            {ocr.isPending ? (
+              <View
+                className="w-full items-center rounded-3xl bg-white p-6 dark:bg-zinc-900"
+                style={{ zIndex: 10 }}
+              >
+                <Text className="font-display text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                  Catetin lagi baca struk lo
                 </Text>
-                <ConfidenceBadge confidence={draftPreview.confidence} />
+                <Text className="mt-2 text-center font-sans text-sm leading-5 text-zinc-500 dark:text-zinc-400">
+                  Bentar, gue ekstrak total, merchant, sama kategorinya pakai AI.
+                </Text>
               </View>
-
-              <View className="mt-5">
-                <Text className="font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-                  Total
-                </Text>
-                <Text
-                  className="mt-1 font-display text-3xl font-extrabold text-zinc-900 dark:text-zinc-100"
-                  style={{ fontVariant: ['tabular-nums'] }}
-                >
-                  {formatRupiah(draftPreview.total)}
-                </Text>
-                {draftPreview.total === 0 ? (
-                  <Text className="mt-1 font-sans text-xs text-danger">
-                    Total gak kebaca. Ralat manual aja.
+            ) : draftPreview ? (
+              <View
+                className="w-full rounded-3xl bg-white p-6 dark:bg-zinc-900"
+                style={{ zIndex: 10 }}
+              >
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
+                    Hasil scan struk
                   </Text>
-                ) : null}
-              </View>
-
-              <View className="mt-4 gap-2">
-                {draftPreview.merchant ? (
-                  <DraftRow label="Merchant" value={draftPreview.merchant} />
-                ) : null}
-                {draftPreview.date ? <DraftRow label="Tanggal" value={draftPreview.date} /> : null}
-                {draftPreview.items[0]?.category ? (
-                  <DraftRow label="Kategori" value={titleCase(draftPreview.items[0].category)} />
-                ) : null}
-              </View>
-
-              {draftPreview.items.length > 0 ? (
-                <View className="mt-4 rounded-card bg-zinc-50 p-3 dark:bg-zinc-800">
-                  <Text className="font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-                    Item kebaca
-                  </Text>
-                  <View className="mt-2 gap-1.5">
-                    {draftPreview.items.slice(0, 6).map((it, i) => (
-                      <View key={i} className="flex-row justify-between gap-3">
-                        <Text
-                          className="flex-1 font-sans text-sm text-zinc-700 dark:text-zinc-200"
-                          numberOfLines={1}
-                        >
-                          {it.qty > 1 ? `${it.qty}x ` : ''}
-                          {it.name}
-                        </Text>
-                        <Text className="font-sans text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                          {formatRupiah(it.price)}
-                        </Text>
-                      </View>
-                    ))}
-                    {draftPreview.items.length > 6 ? (
-                      <Text className="mt-1 font-sans text-xs text-zinc-500">
-                        +{draftPreview.items.length - 6} item lain
-                      </Text>
-                    ) : null}
-                  </View>
+                  <ConfidenceBadge confidence={draftPreview.confidence} />
                 </View>
-              ) : null}
 
-              <View className="mt-5 gap-2">
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => {
-                    applyDraft(draftPreview)
-                    setDraftPreview(null)
-                  }}
-                  className="items-center rounded-full bg-primary-600 py-3.5 active:opacity-90"
-                >
-                  <Text className="font-sans text-sm font-semibold text-white">Pakai ini</Text>
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => setDraftPreview(null)}
-                  className="items-center rounded-full bg-zinc-100 py-3.5 active:opacity-70 dark:bg-zinc-800"
-                >
-                  <Text className="font-sans text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                    Ralat manual
+                <View className="mt-5">
+                  <Text className="font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                    Total
                   </Text>
-                </Pressable>
+                  <Text
+                    className="mt-1 font-display text-3xl font-extrabold text-zinc-900 dark:text-zinc-100"
+                    style={{ fontVariant: ['tabular-nums'] }}
+                  >
+                    {formatRupiah(draftPreview.total)}
+                  </Text>
+                  {draftPreview.total === 0 ? (
+                    <Text className="mt-1 font-sans text-xs text-danger">
+                      Total gak kebaca. Ralat manual aja.
+                    </Text>
+                  ) : null}
+                </View>
+
+                <View className="mt-4 gap-2">
+                  {draftPreview.merchant ? (
+                    <DraftRow label="Merchant" value={draftPreview.merchant} />
+                  ) : null}
+                  {draftPreview.date ? (
+                    <DraftRow label="Tanggal" value={draftPreview.date} />
+                  ) : null}
+                  {draftPreview.items[0]?.category ? (
+                    <DraftRow label="Kategori" value={titleCase(draftPreview.items[0].category)} />
+                  ) : null}
+                </View>
+
+                {draftPreview.items.length > 0 ? (
+                  <View className="mt-4 rounded-card bg-zinc-50 p-3 dark:bg-zinc-800">
+                    <Text className="font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                      Item kebaca
+                    </Text>
+                    <View className="mt-2 gap-1.5">
+                      {draftPreview.items.slice(0, 6).map((it, i) => (
+                        <View key={i} className="flex-row justify-between gap-3">
+                          <Text
+                            className="flex-1 font-sans text-sm text-zinc-700 dark:text-zinc-200"
+                            numberOfLines={1}
+                          >
+                            {it.qty > 1 ? `${it.qty}x ` : ''}
+                            {it.name}
+                          </Text>
+                          <Text className="font-sans text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                            {formatRupiah(it.price)}
+                          </Text>
+                        </View>
+                      ))}
+                      {draftPreview.items.length > 6 ? (
+                        <Text className="mt-1 font-sans text-xs text-zinc-500">
+                          +{draftPreview.items.length - 6} item lain
+                        </Text>
+                      ) : null}
+                    </View>
+                  </View>
+                ) : null}
+
+                <View className="mt-5 gap-2">
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => {
+                      applyDraft(draftPreview)
+                      setDraftPreview(null)
+                    }}
+                    className="items-center rounded-full bg-primary-600 py-3.5 active:opacity-90"
+                  >
+                    <Text className="font-sans text-sm font-semibold text-white">Pakai ini</Text>
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => setDraftPreview(null)}
+                    className="items-center rounded-full bg-zinc-100 py-3.5 active:opacity-70 dark:bg-zinc-800"
+                  >
+                    <Text className="font-sans text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                      Ralat manual
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
-            </View>
-          ) : null}
+            ) : null}
+          </View>
         </View>
       </Modal>
     </SafeAreaView>
