@@ -7,6 +7,7 @@ import ReanimatedSwipeable, {
 } from 'react-native-gesture-handler/ReanimatedSwipeable'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import type { TransactionDto } from '@catetin/types'
+import { CardGlow } from '~/components/card-glow'
 import { Money } from '~/components/money'
 import { ScreenFade } from '~/components/screen-fade'
 import { TransactionCard } from '~/components/transaction-card'
@@ -197,14 +198,15 @@ export default function TransactionsTab() {
             />
           </View>
 
-          <View className="mx-4 mt-5 rounded-3xl bg-primary-600 p-5">
-            <Text className="font-sans text-xs font-medium uppercase tracking-widest text-primary-200">
+          <View className="mx-4 mt-5 overflow-hidden rounded-3xl bg-white p-5 dark:bg-zinc-900">
+            <CardGlow />
+            <Text className="font-sans text-xs font-medium uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
               Net bulan ini
             </Text>
             <View className="mt-2">
-              <Money value={total} size="lg" tone="onDark" compact />
+              <Money value={total} size="lg" compact />
             </View>
-            <Text className="mt-2 font-sans text-xs text-primary-100">
+            <Text className="mt-2 font-sans text-xs text-zinc-500 dark:text-zinc-400">
               {rows.length} transaksi dimuat
             </Text>
           </View>
