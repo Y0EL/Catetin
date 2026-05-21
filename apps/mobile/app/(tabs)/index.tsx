@@ -3,6 +3,7 @@ import { ArrowDownLeft, ArrowUpRight, Bell, Camera, Plus, Sparkles } from 'lucid
 import { useMemo } from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { CardGlow } from '~/components/card-glow'
 import { Money } from '~/components/money'
 import { NoteCard } from '~/components/note-card'
 import { ScreenFade } from '~/components/screen-fade'
@@ -80,6 +81,7 @@ export default function HomeTab() {
             className="mx-4 mt-5 overflow-hidden rounded-3xl bg-primary-600 p-6"
             style={cardShadow}
           >
+            {(summary.data?.income ?? 0) > 0 ? <CardGlow position="bottomLeft" /> : null}
             <View className="flex-row items-center justify-between">
               <Text className="font-sans text-sm text-primary-200">Pengeluaran bulan ini</Text>
               <View className="rounded-full bg-white/15 px-2.5 py-1">

@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { formatRupiah } from '@catetin/chat-core'
+import { CardGlow } from '~/components/card-glow'
 import { ScreenFade } from '~/components/screen-fade'
 import { TransactionCard } from '~/components/transaction-card'
 import { useCategories } from '~/hooks/use-categories'
@@ -63,7 +64,8 @@ export default function TransactionsTab() {
             />
           </View>
 
-          <View className="mx-4 mt-5 rounded-3xl bg-primary-600 p-5">
+          <View className="mx-4 mt-5 overflow-hidden rounded-3xl bg-primary-600 p-5">
+            <CardGlow position="topRight" />
             <Text className="font-sans text-xs font-medium uppercase tracking-widest text-primary-200">
               Net bulan ini
             </Text>
@@ -80,7 +82,8 @@ export default function TransactionsTab() {
 
           <View className="mx-4 mt-6">
             {rows.length > 0 ? (
-              <View className="rounded-card bg-white px-4 dark:bg-zinc-900">
+              <View className="overflow-hidden rounded-card bg-zinc-950 px-4">
+                <CardGlow position="topRight" intensity={0.8} />
                 {rows.map((t) => (
                   <TransactionCard
                     key={t.id}
@@ -90,6 +93,7 @@ export default function TransactionsTab() {
                     amount={t.amount}
                     kind={t.kind === 'income' ? 'income' : 'expense'}
                     time={formatTxnTime(t.occurredAt)}
+                    onDark
                   />
                 ))}
               </View>
