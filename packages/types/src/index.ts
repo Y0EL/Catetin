@@ -69,6 +69,12 @@ export const bulkDeleteTransactionsSchema = z.object({
 
 export type BulkDeleteTransactionsInput = z.infer<typeof bulkDeleteTransactionsSchema>
 
+export const registerPushTokenSchema = z.object({
+  token: z.string().min(1).max(200),
+})
+
+export type RegisterPushTokenInput = z.infer<typeof registerPushTokenSchema>
+
 export const ocrReceiptResponseSchema = z.object({
   merchant: z.string().nullable(),
   date: z.string().nullable(),

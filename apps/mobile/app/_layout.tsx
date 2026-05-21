@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { useAuth } from '~/hooks/use-auth'
 import { useBootstrapSession } from '~/hooks/use-bootstrap-session'
+import { useRegisterPush } from '~/hooks/use-register-push'
 import { getFirebaseAuth } from '~/lib/firebase'
 import { configurePurchases } from '~/lib/revenuecat'
 import { EditTransactionProvider } from '~/lib/edit-store'
@@ -31,6 +32,7 @@ function AuthGate() {
   const router = useRouter()
 
   useBootstrapSession(Boolean(user))
+  useRegisterPush()
 
   useEffect(() => {
     if (loading) return
