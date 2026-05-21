@@ -48,8 +48,8 @@ function Blob({ color, size, from, to, duration }: BlobSpec) {
       <Svg width={size} height={size}>
         <Defs>
           <RadialGradient id={id} cx="50%" cy="50%" r="50%">
-            <Stop offset="0" stopColor={color} stopOpacity="0.7" />
-            <Stop offset="0.55" stopColor={color} stopOpacity="0.2" />
+            <Stop offset="0" stopColor={color} stopOpacity="0.9" />
+            <Stop offset="0.5" stopColor={color} stopOpacity="0.35" />
             <Stop offset="1" stopColor={color} stopOpacity="0" />
           </RadialGradient>
         </Defs>
@@ -126,10 +126,13 @@ function Spikes({ box, count, rInner, rOuter, duration, reverse, opacity, stops 
   )
 }
 
+// Palette Gemini sparkle: biru ke ungu ke magenta ke koral ke oranye ke kuning.
 const blobs: BlobSpec[] = [
-  { color: '#6366f1', size: 220, from: { x: -50, y: -40 }, to: { x: 40, y: 30 }, duration: 5200 },
-  { color: '#ec4899', size: 200, from: { x: 140, y: 70 }, to: { x: 70, y: -20 }, duration: 6800 },
-  { color: '#22d3ee', size: 180, from: { x: 20, y: 80 }, to: { x: 120, y: 20 }, duration: 8200 },
+  { color: '#4285f4', size: 230, from: { x: -60, y: -50 }, to: { x: 30, y: 20 }, duration: 5200 },
+  { color: '#9b72cb', size: 210, from: { x: 80, y: -30 }, to: { x: 20, y: 50 }, duration: 6400 },
+  { color: '#d96570', size: 200, from: { x: 150, y: 60 }, to: { x: 80, y: -10 }, duration: 6800 },
+  { color: '#f59e0b', size: 190, from: { x: -20, y: 90 }, to: { x: 90, y: 30 }, duration: 7600 },
+  { color: '#22d3ee', size: 170, from: { x: 120, y: 80 }, to: { x: 30, y: -20 }, duration: 8200 },
 ]
 
 export function CardGlow() {
@@ -141,29 +144,31 @@ export function CardGlow() {
       <View style={{ position: 'absolute', right: -60, top: -110 }}>
         <Spikes
           box={340}
-          count={16}
-          rInner={52}
-          rOuter={165}
+          count={18}
+          rInner={56}
+          rOuter={170}
           duration={26000}
-          opacity={0.4}
+          opacity={0.55}
           stops={[
-            { offset: '0', color: '#818cf8', opacity: 0.9 },
-            { offset: '0.5', color: '#c084fc', opacity: 0.7 },
-            { offset: '1', color: '#f472b6', opacity: 0.6 },
+            { offset: '0', color: '#4285f4', opacity: 0.95 },
+            { offset: '0.33', color: '#9b72cb', opacity: 0.9 },
+            { offset: '0.66', color: '#d96570', opacity: 0.9 },
+            { offset: '1', color: '#fbbc04', opacity: 0.85 },
           ]}
         />
         <Spikes
           box={340}
-          count={26}
-          rInner={34}
-          rOuter={140}
+          count={28}
+          rInner={36}
+          rOuter={144}
           duration={34000}
           reverse
-          opacity={0.32}
+          opacity={0.42}
           stops={[
             { offset: '0', color: '#22d3ee', opacity: 0.9 },
-            { offset: '0.6', color: '#6366f1', opacity: 0.6 },
-            { offset: '1', color: '#a855f7', opacity: 0.5 },
+            { offset: '0.4', color: '#a855f7', opacity: 0.85 },
+            { offset: '0.75', color: '#f472b6', opacity: 0.85 },
+            { offset: '1', color: '#f59e0b', opacity: 0.85 },
           ]}
         />
       </View>
