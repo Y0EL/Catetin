@@ -12,6 +12,6 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ]
 config.resolver.disableHierarchicalLookup = true
-config.transformer.babelTransformerPath = require.resolve('./babel-transformer.js')
+config.resolver.unstable_enablePackageExports = true
 
 module.exports = withNativeWind(config, { input: './global.css' })

@@ -16,7 +16,6 @@ export default tseslint.config(
       '**/index.js',
       '**/metro.config.js',
       '**/babel.config.js',
-      '**/babel-transformer.js',
     ],
   },
   js.configs.recommended,
