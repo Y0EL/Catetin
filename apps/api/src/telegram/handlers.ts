@@ -115,7 +115,8 @@ export function registerHandlers(bot: Bot) {
         parts: [{ text }],
       })
       await ctx.reply(reply)
-    } catch {
+    } catch (err) {
+      logger.warn({ err }, 'telegram agent failed, pakai regex fallback')
       await replyWithRegexFallback(ctx, db, userId, text)
     }
   })
@@ -217,12 +218,8 @@ async function replyWithRegexFallback(
     return
   }
   const recorded = await recordChatTransaction(db, userId, parsed, text, 'telegram')
-  const sign = recorded.kind === 'income' ? '+' : '-'
+  const verb = recorded.kind === 'income' ? 'masuk' : 'kepake'
   await ctx.reply(
-    [
-      recorded.kind === 'income' ? 'Pemasukan tercatat.' : 'Tercatat.',
-      `${capitalize(recorded.description)} ${sign}${formatRupiah(recorded.amount)}`,
-      `Kategori: ${capitalize(recorded.categoryName)} - ${recorded.walletName}`,
-    ].join('\n'),
+    `Sip, ${formatRupiah(recorded.amount)} ${verb} di ${capitalize(recorded.categoryName)} (${recorded.walletName}). Cek di app kalo mau ralat.`,
   )
 }
