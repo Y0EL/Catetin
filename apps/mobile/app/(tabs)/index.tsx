@@ -88,47 +88,36 @@ export default function HomeTab() {
             </Pressable>
           </View>
 
-          <View
-            className="mx-4 mt-5 overflow-hidden rounded-3xl bg-white p-6 dark:bg-zinc-900"
-            style={cardShadow}
-          >
+          <View className="mx-4 mt-5 overflow-hidden rounded-3xl bg-white p-6" style={cardShadow}>
             <CardGlow />
             <View className="flex-row items-center justify-between">
-              <Text className="font-sans text-sm text-zinc-500 dark:text-zinc-400">
-                Pengeluaran bulan ini
-              </Text>
-              <View className="rounded-full bg-zinc-100 px-2.5 py-1 dark:bg-zinc-800">
-                <Text className="font-sans text-xs font-medium text-zinc-600 dark:text-zinc-300">
-                  {periodChip}
-                </Text>
+              <Text className="font-sans text-sm text-zinc-500">Pengeluaran bulan ini</Text>
+              <View className="rounded-full bg-zinc-100 px-2.5 py-1">
+                <Text className="font-sans text-xs font-medium text-zinc-600">{periodChip}</Text>
               </View>
             </View>
             <View className="mt-3">
-              <Money value={summary.data?.expense ?? 0} size="hero" compact />
+              <Money value={summary.data?.expense ?? 0} size="hero" compact forceLight />
             </View>
 
             <View className="mt-6 flex-row items-stretch">
               <View className="flex-1">
                 <View className="flex-row items-center gap-1.5">
                   <ArrowDownLeft size={14} color="#71717a" />
-                  <Text className="font-sans text-xs text-zinc-500 dark:text-zinc-400">
-                    Pemasukan
-                  </Text>
+                  <Text className="font-sans text-xs text-zinc-500">Pemasukan</Text>
                 </View>
                 <View className="mt-1">
-                  <Money value={summary.data?.income ?? 0} size="lg" compact />
+                  <Money value={summary.data?.income ?? 0} size="lg" compact forceLight />
                 </View>
               </View>
-              <View className="mx-4 w-px bg-zinc-200 dark:bg-zinc-700" />
+              <View className="mx-4 w-px bg-zinc-200" />
               <View className="flex-1">
                 <View className="flex-row items-center gap-1.5">
                   <ArrowUpRight size={14} color="#71717a" />
-                  <Text className="font-sans text-xs text-zinc-500 dark:text-zinc-400">
-                    Pengeluaran
-                  </Text>
+                  <Text className="font-sans text-xs text-zinc-500">Pengeluaran</Text>
                 </View>
                 <View className="mt-1">
-                  <Money value={summary.data?.expense ?? 0} size="lg" compact />
+                  <Money value={summary.data?.expense ?? 0} size="lg" compact forceLight />
                 </View>
               </View>
             </View>
