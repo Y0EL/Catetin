@@ -36,27 +36,20 @@ export function Money({
   size = 'md',
   tone = 'default',
   compact = false,
-  forceLight = false,
 }: {
   value: number
   size?: Size
   tone?: Tone
   compact?: boolean
-  forceLight?: boolean
 }) {
   const { sign, digits } = formatParts(value, compact)
-  const numColor = forceLight
-    ? 'text-zinc-900'
-    : tone === 'onDark'
+  const numColor =
+    tone === 'onDark'
       ? 'text-white'
       : tone === 'income'
         ? 'text-success'
         : 'text-zinc-900 dark:text-zinc-100'
-  const rpColor = forceLight
-    ? 'text-zinc-400'
-    : tone === 'onDark'
-      ? 'text-primary-200'
-      : 'text-zinc-400 dark:text-zinc-500'
+  const rpColor = tone === 'onDark' ? 'text-primary-200' : 'text-zinc-400 dark:text-zinc-500'
 
   return (
     <View className="flex-row items-baseline">
