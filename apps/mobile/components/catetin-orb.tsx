@@ -1,5 +1,5 @@
 import LottieView from 'lottie-react-native'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Pressable, View, type LayoutChangeEvent } from 'react-native'
 import orbSource from '../assets/lottie/orb.json'
 
@@ -11,10 +11,22 @@ type Props = {
 
 export function CatetinOrb({ size = 250, active = false, onPress }: Props) {
   const [ready, setReady] = useState(false)
+  const raf = useRef<number | null>(null)
 
   function onLayout(e: LayoutChangeEvent) {
-    if (e.nativeEvent.layout.width > 0 && !ready) setReady(true)
+    if (e.nativeEvent.layout.width > 0 && !ready) {
+      raf.current = requestAnimationFrame(() => {
+        raf.current = requestAnimationFrame(() => setReady(true))
+      })
+    }
   }
+
+  useEffect(
+    () => () => {
+      if (raf.current) cancelAnimationFrame(raf.current)
+    },
+    [],
+  )
 
   return (
     <Pressable

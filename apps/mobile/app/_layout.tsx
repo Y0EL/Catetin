@@ -12,6 +12,7 @@ import { useAuth } from '~/hooks/use-auth'
 import { useBootstrapSession } from '~/hooks/use-bootstrap-session'
 import { getFirebaseAuth } from '~/lib/firebase'
 import { configurePurchases } from '~/lib/revenuecat'
+import { useThemeStore } from '~/lib/theme'
 
 colorScheme.set('system')
 
@@ -68,6 +69,7 @@ export default function RootLayout() {
   useEffect(() => {
     getFirebaseAuth()
     configurePurchases(REVENUECAT_KEY)
+    useThemeStore.getState().hydrate()
   }, [])
 
   return (

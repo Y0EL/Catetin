@@ -4,9 +4,11 @@ import {
   Globe,
   LogOut,
   MessageCircle,
+  Monitor,
   Moon,
   Shield,
   Sparkles,
+  Sun,
 } from 'lucide-react-native'
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -15,6 +17,7 @@ import { ScreenFade } from '~/components/screen-fade'
 import { TelegramLinkRow } from '~/components/telegram-link-row'
 import { useAuth } from '~/hooks/use-auth'
 import { signOutUser } from '~/lib/auth'
+import { useThemeStore, type ThemePref } from '~/lib/theme'
 
 export default function SettingsTab() {
   const { user } = useAuth()
@@ -78,7 +81,7 @@ export default function SettingsTab() {
           </Section>
 
           <Section title="Aplikasi">
-            <Row icon={<Moon size={18} color="#71717a" />} label="Tema" hint="Ikut sistem" />
+            <ThemeSelector />
             <Divider />
             <Row icon={<Bell size={18} color="#71717a" />} label="Notifikasi" hint="Aktif" />
             <Divider />
@@ -104,6 +107,59 @@ export default function SettingsTab() {
         </ScrollView>
       </ScreenFade>
     </SafeAreaView>
+  )
+}
+
+const themeOptions: { key: ThemePref; label: string; icon: typeof Sun }[] = [
+  { key: 'light', label: 'Terang', icon: Sun },
+  { key: 'dark', label: 'Gelap', icon: Moon },
+  { key: 'system', label: 'Sistem', icon: Monitor },
+]
+
+function ThemeSelector() {
+  const pref = useThemeStore((s) => s.pref)
+  const setPref = useThemeStore((s) => s.setPref)
+
+  return (
+    <View className="px-4 py-3.5">
+      <View className="flex-row items-center gap-3">
+        <View className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+          <Moon size={18} color="#71717a" />
+        </View>
+        <Text className="font-sans text-base text-zinc-900 dark:text-zinc-100">Tema</Text>
+      </View>
+      <View className="mt-3 flex-row gap-1 rounded-full bg-zinc-100 p-1 dark:bg-zinc-800">
+        {themeOptions.map((opt) => {
+          const active = pref === opt.key
+          const Icon = opt.icon
+          return (
+            <Pressable
+              key={opt.key}
+              accessibilityRole="button"
+              accessibilityLabel={`Tema ${opt.label}`}
+              accessibilityState={active ? { selected: true } : {}}
+              onPress={() => setPref(opt.key)}
+              className={
+                active
+                  ? 'flex-1 flex-row items-center justify-center gap-1.5 rounded-full bg-primary-600 py-2'
+                  : 'flex-1 flex-row items-center justify-center gap-1.5 rounded-full py-2 active:opacity-60'
+              }
+            >
+              <Icon size={15} color={active ? '#ffffff' : '#71717a'} />
+              <Text
+                className={
+                  active
+                    ? 'font-sans text-xs font-semibold text-white'
+                    : 'font-sans text-xs font-medium text-zinc-600 dark:text-zinc-300'
+                }
+              >
+                {opt.label}
+              </Text>
+            </Pressable>
+          )
+        })}
+      </View>
+    </View>
   )
 }
 
