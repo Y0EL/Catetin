@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { colorScheme } from 'nativewind'
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { Appearance } from 'react-native'
 
 export type ThemePref = 'light' | 'dark' | 'system'
 
@@ -23,17 +24,27 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((value) => {
-        if (isPref(value)) {
-          setPrefState(value)
-          colorScheme.set(value)
-        }
+        if (isPref(value)) setPrefState(value)
       })
       .catch(() => {})
   }, [])
 
+  useEffect(() => {
+    if (pref === 'light' || pref === 'dark') {
+      colorScheme.set(pref)
+      return
+    }
+    const apply = () => {
+      const os = Appearance.getColorScheme()
+      colorScheme.set(os === 'dark' ? 'dark' : 'light')
+    }
+    apply()
+    const sub = Appearance.addChangeListener(apply)
+    return () => sub.remove()
+  }, [pref])
+
   const setPref = useCallback((next: ThemePref) => {
     setPrefState(next)
-    colorScheme.set(next)
     AsyncStorage.setItem(STORAGE_KEY, next).catch(() => {})
   }, [])
 
