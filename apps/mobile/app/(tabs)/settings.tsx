@@ -12,12 +12,13 @@ import {
   Sun,
   Target,
 } from 'lucide-react-native'
-import { Pressable, ScrollView, Text, View } from 'react-native'
+import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { PaywallButton } from '~/components/paywall-button'
 import { ScreenFade } from '~/components/screen-fade'
 import { TelegramLinkRow } from '~/components/telegram-link-row'
 import { useAuth } from '~/hooks/use-auth'
+import { useNotifPrefs, useTestNotif, useUpdateNotifPrefs } from '~/hooks/use-notif-prefs'
 import { signOutUser } from '~/lib/auth'
 import { useTheme, type ThemePref } from '~/lib/theme'
 
@@ -92,10 +93,12 @@ export default function SettingsTab() {
             />
           </Section>
 
+          <Section title="Notifikasi">
+            <NotifPrefsSection />
+          </Section>
+
           <Section title="Aplikasi">
             <ThemeSelector />
-            <Divider />
-            <Row icon={<Bell size={18} color="#71717a" />} label="Notifikasi" hint="Aktif" />
             <Divider />
             <Row icon={<Globe size={18} color="#71717a" />} label="Bahasa" hint="Indonesia" />
           </Section>
@@ -232,5 +235,103 @@ function Row({
         <ChevronRight size={16} color="#a1a1aa" />
       )}
     </Pressable>
+  )
+}
+
+function NotifPrefsSection() {
+  const prefs = useNotifPrefs()
+  const update = useUpdateNotifPrefs()
+  const test = useTestNotif()
+  const data = prefs.data
+  const tokenReady = data?.hasPushToken === true
+
+  function toggle(key: 'dailyReminder' | 'weeklyRecap' | 'budgetAlerts', value: boolean) {
+    update.mutate({ [key]: value })
+  }
+
+  return (
+    <View>
+      <ToggleRow
+        icon={<Bell size={18} color="#71717a" />}
+        label="Reminder harian"
+        hint="Tiap jam 8 malem kalo belum nyatet"
+        value={data?.dailyReminder ?? true}
+        onChange={(v) => toggle('dailyReminder', v)}
+      />
+      <Divider />
+      <ToggleRow
+        icon={<Bell size={18} color="#71717a" />}
+        label="Rekap mingguan"
+        hint="Senin pagi summary minggu lalu"
+        value={data?.weeklyRecap ?? true}
+        onChange={(v) => toggle('weeklyRecap', v)}
+      />
+      <Divider />
+      <ToggleRow
+        icon={<Bell size={18} color="#71717a" />}
+        label="Alert budget"
+        hint="Pas pengeluaran tembus threshold"
+        value={data?.budgetAlerts ?? true}
+        onChange={(v) => toggle('budgetAlerts', v)}
+      />
+      <Divider />
+      <Pressable
+        onPress={() => {
+          if (!tokenReady) {
+            Alert.alert(
+              'Belum aktif',
+              'Buka app di HP dulu dan kasih izin notifikasi biar gue bisa kirim.',
+            )
+            return
+          }
+          test.mutate(undefined, {
+            onSuccess: () => Alert.alert('Tes terkirim', 'Cek notifikasi HP lo.'),
+            onError: () => Alert.alert('Gagal', 'Coba lagi.'),
+          })
+        }}
+        className="flex-row items-center gap-3 px-4 py-3.5 active:bg-zinc-50 dark:active:bg-zinc-800"
+      >
+        <View className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+          <Bell size={18} color="#71717a" />
+        </View>
+        <View className="flex-1">
+          <Text className="font-sans text-base text-zinc-900 dark:text-zinc-100">
+            Coba kirim notif
+          </Text>
+          <Text className="mt-0.5 font-sans text-xs text-zinc-500 dark:text-zinc-400">
+            {tokenReady ? 'Tap buat tes' : 'Aktifin izin notif dulu di HP'}
+          </Text>
+        </View>
+      </Pressable>
+    </View>
+  )
+}
+
+function ToggleRow({
+  icon,
+  label,
+  hint,
+  value,
+  onChange,
+}: {
+  icon: React.ReactNode
+  label: string
+  hint?: string
+  value: boolean
+  onChange: (v: boolean) => void
+}) {
+  return (
+    <View className="flex-row items-center gap-3 px-4 py-3.5">
+      <View className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+        {icon}
+      </View>
+      <View className="flex-1">
+        <Text className="font-sans text-base text-zinc-900 dark:text-zinc-100">{label}</Text>
+        {hint ? (
+          <Text className="mt-0.5 font-sans text-xs text-zinc-500 dark:text-zinc-400">{hint}</Text>
+        ) : null}
+      </View>
+      <Switch value={value} onValueChange={onChange} />
+    </View>
   )
 }

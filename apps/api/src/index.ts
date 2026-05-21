@@ -16,7 +16,9 @@ import { ocrRouter } from './routes/ocr'
 import { reportsRouter } from './routes/reports'
 import { transactionsRouter } from './routes/transactions'
 import { walletsRouter } from './routes/wallets'
+import { registerCrons } from './services/cron-service'
 import { createTelegramBot } from './telegram/bot'
+import { getDb } from './db'
 
 const env = loadEnv()
 
@@ -65,6 +67,8 @@ bot.start({
   drop_pending_updates: true,
   onStart: (info) => logger.info({ username: info.username }, 'Telegram bot polling started'),
 })
+
+registerCrons(getDb())
 
 serve({ fetch: app.fetch, port: env.PORT }, (info) => {
   logger.info({ port: info.port }, 'Catetin API listening')

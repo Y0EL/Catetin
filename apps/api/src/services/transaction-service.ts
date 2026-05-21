@@ -8,6 +8,7 @@ import type {
   UpdateTransactionInput,
 } from '@catetin/types'
 import { HttpError } from '../errors'
+import { checkBudgetAlerts } from './budget-alert-service'
 
 export function monthToRange(month: string): { start: Date; end: Date } {
   const parts = month.split('-')
@@ -133,6 +134,7 @@ export async function createTransaction(
       source: input.source,
     })
     .returning()
+  void checkBudgetAlerts(db, userId, input.categoryId, input.kind, input.amount).catch(() => {})
   return rows[0]!
 }
 

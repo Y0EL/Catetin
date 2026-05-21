@@ -2,6 +2,7 @@ import { and, asc, eq } from 'drizzle-orm'
 import { categories, transactions, wallets, type Database } from '@catetin/db'
 import type { ParsedTextTransaction } from '@catetin/chat-core'
 import { HttpError } from '../errors'
+import { checkBudgetAlerts } from './budget-alert-service'
 import { ensureUserDefaults } from './seed-service'
 
 export type ChatSource = 'telegram' | 'whatsapp'
@@ -80,20 +81,23 @@ async function insertTransaction(
   const wallet = await pickDefaultWallet(db, userId)
   if (!wallet) throw new HttpError(500, 'INTERNAL', 'Wallet default gak ketemu')
 
+  const amount = Math.round(values.amount)
   await db.insert(transactions).values({
     userId,
     walletId: wallet.id,
     categoryId: category.id,
     kind: values.kind,
-    amount: Math.round(values.amount),
+    amount,
     description: values.description,
     occurredAt: values.occurredAt,
     source: values.source,
   })
 
+  void checkBudgetAlerts(db, userId, category.id, values.kind, amount).catch(() => {})
+
   return {
     kind: values.kind,
-    amount: Math.round(values.amount),
+    amount,
     description: values.description,
     categoryName: category.name,
     walletName: wallet.name,

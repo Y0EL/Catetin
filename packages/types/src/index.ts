@@ -75,6 +75,23 @@ export const registerPushTokenSchema = z.object({
 
 export type RegisterPushTokenInput = z.infer<typeof registerPushTokenSchema>
 
+export const updateNotifPrefsSchema = z.object({
+  dailyReminder: z.boolean().optional(),
+  weeklyRecap: z.boolean().optional(),
+  budgetAlerts: z.boolean().optional(),
+})
+
+export type UpdateNotifPrefsInput = z.infer<typeof updateNotifPrefsSchema>
+
+export const notifPrefsSchema = z.object({
+  dailyReminder: z.boolean(),
+  weeklyRecap: z.boolean(),
+  budgetAlerts: z.boolean(),
+  hasPushToken: z.boolean(),
+})
+
+export type NotifPrefs = z.infer<typeof notifPrefsSchema>
+
 export const ocrReceiptResponseSchema = z.object({
   merchant: z.string().nullable(),
   date: z.string().nullable(),
