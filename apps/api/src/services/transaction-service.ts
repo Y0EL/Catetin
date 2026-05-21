@@ -145,7 +145,7 @@ export async function getMonthSummary(
       kind: transactions.kind,
       categoryId: transactions.categoryId,
       categoryName: categories.name,
-      total: sql<number>`coalesce(sum(${transactions.amount}), 0)::int`,
+      total: sql<string>`coalesce(sum(${transactions.amount}), 0)::bigint`,
     })
     .from(transactions)
     .innerJoin(categories, eq(categories.id, transactions.categoryId))
@@ -157,5 +157,8 @@ export async function getMonthSummary(
       ),
     )
     .groupBy(transactions.kind, transactions.categoryId, categories.name)
-  return foldSummary(month, rows)
+  return foldSummary(
+    month,
+    rows.map((r) => ({ ...r, total: Number(r.total) })),
+  )
 }
