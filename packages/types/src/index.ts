@@ -168,6 +168,20 @@ export const summaryQuerySchema = z.object({
 
 export type SummaryQuery = z.infer<typeof summaryQuerySchema>
 
+export const trendQuerySchema = z.object({
+  months: z.coerce.number().int().min(1).max(24).default(6),
+})
+
+export type TrendQuery = z.infer<typeof trendQuerySchema>
+
+export const trendItemSchema = z.object({
+  month: z.string().regex(/^\d{4}-\d{2}$/),
+  income: z.number().int().nonnegative(),
+  expense: z.number().int().nonnegative(),
+})
+
+export type TrendItem = z.infer<typeof trendItemSchema>
+
 export const userProfileSchema = z.object({
   id: z.string().uuid(),
   email: z.string().nullable(),

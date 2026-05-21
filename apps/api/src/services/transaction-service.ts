@@ -4,6 +4,7 @@ import type {
   CreateTransactionInput,
   ListTransactionsQuery,
   MonthSummary,
+  TrendItem,
   UpdateTransactionInput,
 } from '@catetin/types'
 import { HttpError } from '../errors'
@@ -219,4 +220,40 @@ export async function getMonthSummary(
     month,
     rows.map((r) => ({ ...r, total: Number(r.total) })),
   )
+}
+
+export async function getMonthlyTrend(
+  db: Database,
+  userId: string,
+  monthsBack: number,
+): Promise<TrendItem[]> {
+  const now = new Date()
+  const startMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - monthsBack + 1, 1))
+
+  const rows = await db
+    .select({
+      month: sql<string>`to_char(date_trunc('month', ${transactions.occurredAt} AT TIME ZONE 'UTC'), 'YYYY-MM')`,
+      kind: transactions.kind,
+      total: sql<string>`coalesce(sum(${transactions.amount}), 0)::bigint`,
+    })
+    .from(transactions)
+    .where(and(eq(transactions.userId, userId), gte(transactions.occurredAt, startMonth)))
+    .groupBy(
+      sql`date_trunc('month', ${transactions.occurredAt} AT TIME ZONE 'UTC')`,
+      transactions.kind,
+    )
+
+  const map = new Map<string, { income: number; expense: number }>()
+  for (let i = 0; i < monthsBack; i += 1) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - monthsBack + 1 + i, 1))
+    map.set(d.toISOString().slice(0, 7), { income: 0, expense: 0 })
+  }
+  for (const row of rows) {
+    const bucket = map.get(row.month)
+    if (!bucket) continue
+    const value = Number(row.total)
+    if (row.kind === 'income') bucket.income = value
+    else if (row.kind === 'expense') bucket.expense = value
+  }
+  return Array.from(map, ([month, vals]) => ({ month, income: vals.income, expense: vals.expense }))
 }
