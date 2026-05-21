@@ -10,6 +10,7 @@ import {
 } from 'lucide-react-native'
 import { Pressable, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useAccentColor, useIsDark } from '~/lib/use-accent-color'
 
 type TabKey = 'index' | 'transactions' | 'add' | 'companion' | 'settings'
 
@@ -40,6 +41,8 @@ const fabShadow = {
 export function CatetinTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const accent = useAccentColor()
+  const isDark = useIsDark()
 
   return (
     <View
@@ -70,10 +73,10 @@ export function CatetinTabBar({ state, navigation }: BottomTabBarProps) {
                 })}
               >
                 <View
-                  className="h-12 w-12 items-center justify-center rounded-full bg-primary-600"
+                  className="h-12 w-12 items-center justify-center rounded-full bg-zinc-900 dark:bg-white"
                   style={fabShadow}
                 >
-                  <Plus size={24} color="#ffffff" strokeWidth={2.6} />
+                  <Plus size={24} color={isDark ? '#18181b' : '#ffffff'} strokeWidth={2.6} />
                 </View>
               </Pressable>
             )
@@ -99,13 +102,13 @@ export function CatetinTabBar({ state, navigation }: BottomTabBarProps) {
               <View
                 className={
                   isFocused
-                    ? 'h-12 w-12 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-950'
+                    ? 'h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800'
                     : 'h-12 w-12 items-center justify-center rounded-full'
                 }
               >
                 <Icon
                   size={22}
-                  color={isFocused ? '#18181b' : '#a1a1aa'}
+                  color={isFocused ? accent : '#a1a1aa'}
                   strokeWidth={isFocused ? 2.5 : 2}
                 />
               </View>

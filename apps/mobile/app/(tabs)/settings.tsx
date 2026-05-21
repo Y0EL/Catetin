@@ -38,7 +38,7 @@ export default function SettingsTab() {
             </Text>
           </View>
 
-          <View className="mx-4 mt-5 flex-row items-center gap-4 rounded-card bg-white p-4 dark:bg-zinc-900">
+          <View className="mx-4 mt-5 flex-row items-center gap-4 rounded-card bg-white p-4 dark:bg-zinc-800">
             <View className="h-14 w-14 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-950">
               <Text className="font-display text-xl font-bold text-primary-700 dark:text-primary-300">
                 {initial}
@@ -97,7 +97,7 @@ export default function SettingsTab() {
               accessibilityRole="button"
               accessibilityLabel="Keluar dari Catetin"
               onPress={() => signOutUser().catch(() => {})}
-              className="flex-row items-center justify-center gap-2 rounded-card bg-white py-3.5 active:opacity-80 dark:bg-zinc-900"
+              className="flex-row items-center justify-center gap-2 rounded-card bg-white py-3.5 active:opacity-80 dark:bg-zinc-800"
             >
               <LogOut size={16} color="#dc2626" />
               <Text className="font-sans text-sm font-semibold text-danger">Keluar</Text>
@@ -169,7 +169,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <Text className="font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
         {title}
       </Text>
-      <View className="mt-3 overflow-hidden rounded-card bg-white dark:bg-zinc-900">
+      <View className="mt-3 overflow-hidden rounded-card bg-white dark:bg-zinc-800">
         {children}
       </View>
     </View>

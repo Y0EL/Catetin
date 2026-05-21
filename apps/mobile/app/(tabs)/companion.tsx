@@ -4,9 +4,11 @@ import { Pressable, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { CatetinOrb } from '~/components/catetin-orb'
 import { ScreenFade } from '~/components/screen-fade'
+import { useAccentColor } from '~/lib/use-accent-color'
 
 export default function CompanionTab() {
   const [active, setActive] = useState(false)
+  const accent = useAccentColor()
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-50 dark:bg-zinc-950" edges={['top']}>
@@ -22,7 +24,7 @@ export default function CompanionTab() {
               </Text>
             </View>
             <View className="flex-row items-center gap-1 rounded-full bg-primary-50 px-3 py-1.5 dark:bg-primary-950">
-              <Sparkles size={12} color="#18181b" />
+              <Sparkles size={12} color={accent} />
               <Text className="font-sans text-xs font-semibold text-primary-700 dark:text-primary-300">
                 Pro
               </Text>
@@ -41,7 +43,7 @@ export default function CompanionTab() {
             </Text>
           </View>
 
-          <View className="mb-28 rounded-card bg-white p-5 dark:bg-zinc-900">
+          <View className="mb-28 rounded-card bg-white p-5 dark:bg-zinc-800">
             <View className="flex-row items-center justify-between">
               <Text className="font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
                 Kuota hari ini

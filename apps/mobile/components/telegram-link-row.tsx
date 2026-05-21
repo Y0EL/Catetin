@@ -2,9 +2,11 @@ import { ExternalLink, MessageCircle } from 'lucide-react-native'
 import { ActivityIndicator, Linking, Pressable, Text, View } from 'react-native'
 import { useLinkTelegram } from '~/hooks/use-link-telegram'
 import { apiErrorMessage } from '~/lib/api'
+import { useAccentColor } from '~/lib/use-accent-color'
 
 export function TelegramLinkRow() {
   const link = useLinkTelegram()
+  const accent = useAccentColor()
   const data = link.data
 
   function onOpen() {
@@ -22,7 +24,7 @@ export function TelegramLinkRow() {
         className="flex-row items-center gap-3 px-4 py-3.5 active:bg-zinc-50 dark:active:bg-zinc-800"
       >
         <View className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-          <MessageCircle size={18} color="#18181b" />
+          <MessageCircle size={18} color={accent} />
         </View>
         <View className="flex-1">
           <Text className="font-sans text-base text-zinc-900 dark:text-zinc-100">Telegram</Text>
@@ -31,7 +33,7 @@ export function TelegramLinkRow() {
           </Text>
         </View>
         {link.isPending ? (
-          <ActivityIndicator size="small" color="#18181b" />
+          <ActivityIndicator size="small" color={accent} />
         ) : (
           <Text className="font-sans text-sm font-semibold text-primary-600">
             {data ? 'Kode baru' : 'Sambungin'}
@@ -45,7 +47,7 @@ export function TelegramLinkRow() {
             Tap tombol di bawah, nanti Telegram kebuka dan kodenya otomatis kekirim. Atau ketik
             manual ke @catetindobot.
           </Text>
-          <View className="mt-3 items-center rounded-xl bg-white px-4 py-3 dark:bg-zinc-900">
+          <View className="mt-3 items-center rounded-xl bg-white px-4 py-3 dark:bg-zinc-800">
             <Text className="font-display text-2xl font-bold tracking-[8px] text-primary-700 dark:text-primary-200">
               {data.code}
             </Text>

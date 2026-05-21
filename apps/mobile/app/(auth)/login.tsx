@@ -2,6 +2,7 @@ import { Camera, MessageCircle, Mic } from 'lucide-react-native'
 import { Platform, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { GoogleSignInButton } from '~/components/google-sign-in-button'
+import { useAccentColor } from '~/lib/use-accent-color'
 
 function hasOAuthConfigured(): boolean {
   if (Platform.OS === 'web') return Boolean(process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB)
@@ -21,6 +22,7 @@ function hasOAuthConfigured(): boolean {
 
 export default function LoginScreen() {
   const ready = hasOAuthConfigured()
+  const accent = useAccentColor()
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-50 dark:bg-zinc-950" edges={['top', 'bottom']}>
@@ -40,17 +42,17 @@ export default function LoginScreen() {
 
         <View className="gap-3">
           <Feature
-            icon={<MessageCircle size={20} color="#18181b" />}
+            icon={<MessageCircle size={20} color={accent} />}
             title="Catat lewat chat"
             body='Tulis "makan 35rb", langsung kecatat.'
           />
           <Feature
-            icon={<Camera size={20} color="#18181b" />}
+            icon={<Camera size={20} color={accent} />}
             title="Scan struk"
             body="OCR otomatis pecah per item."
           />
           <Feature
-            icon={<Mic size={20} color="#18181b" />}
+            icon={<Mic size={20} color={accent} />}
             title="Temen curhat"
             body="Ngobrol soal duit, 10 menit gratis."
           />
@@ -80,7 +82,7 @@ export default function LoginScreen() {
 
 function Feature({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
   return (
-    <View className="flex-row items-center gap-3 rounded-card bg-white p-4 dark:bg-zinc-900">
+    <View className="flex-row items-center gap-3 rounded-card bg-white p-4 dark:bg-zinc-800">
       <View className="h-10 w-10 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-950">
         {icon}
       </View>

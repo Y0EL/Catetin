@@ -19,7 +19,7 @@ export function NoteCard({
       >
         <Paperclip size={24} color={clipColor} strokeWidth={2.25} />
       </View>
-      <View className={`rounded-card bg-white dark:bg-zinc-900 ${className}`}>{children}</View>
+      <View className={`rounded-card bg-white dark:bg-zinc-800 ${className}`}>{children}</View>
     </View>
   )
 }

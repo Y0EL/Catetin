@@ -126,7 +126,7 @@ export default function AddModal() {
           accessibilityRole="button"
           accessibilityLabel="Tutup"
           onPress={close}
-          className="h-10 w-10 items-center justify-center rounded-full bg-white active:opacity-70 dark:bg-zinc-900"
+          className="h-10 w-10 items-center justify-center rounded-full bg-white active:opacity-70 dark:bg-zinc-800"
         >
           <X size={18} color="#71717a" />
         </Pressable>
@@ -194,7 +194,7 @@ export default function AddModal() {
                   className={
                     active
                       ? 'flex-row items-center gap-2 rounded-full bg-primary-600 px-4 py-2.5'
-                      : 'flex-row items-center gap-2 rounded-full bg-white px-4 py-2.5 active:opacity-70 dark:bg-zinc-900'
+                      : 'flex-row items-center gap-2 rounded-full bg-white px-4 py-2.5 active:opacity-70 dark:bg-zinc-800'
                   }
                 >
                   <Icon size={15} color={active ? '#ffffff' : meta.tint} />
@@ -227,7 +227,7 @@ export default function AddModal() {
                   className={
                     active
                       ? 'rounded-full bg-zinc-900 px-5 py-2.5 dark:bg-zinc-100'
-                      : 'rounded-full bg-white px-5 py-2.5 active:opacity-70 dark:bg-zinc-900'
+                      : 'rounded-full bg-white px-5 py-2.5 active:opacity-70 dark:bg-zinc-800'
                   }
                 >
                   <Text
@@ -252,7 +252,7 @@ export default function AddModal() {
             onChangeText={applyTextHint}
             placeholder='Contoh: "kopi 25rb di starbucks"'
             placeholderTextColor="#a1a1aa"
-            className="mt-3 rounded-input bg-white px-4 py-3.5 font-sans text-base text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100"
+            className="mt-3 rounded-input bg-white px-4 py-3.5 font-sans text-base text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
           />
           <Text className="mt-2 font-sans text-xs leading-5 text-zinc-500 dark:text-zinc-400">
             Tulis bebas, Catetin coba detect angka dan kategori otomatis.
@@ -281,7 +281,7 @@ export default function AddModal() {
         onRequestClose={() => setShowBigConfirm(false)}
       >
         <View className="flex-1 items-center justify-center bg-black/60 px-8">
-          <View className="w-full rounded-3xl bg-white p-6 dark:bg-zinc-900">
+          <View className="w-full rounded-3xl bg-white p-6 dark:bg-zinc-800">
             <View className="h-16 w-16 items-center justify-center self-center rounded-full bg-danger/10">
               <Skull size={30} color="#dc2626" />
             </View>
@@ -349,7 +349,7 @@ function KindToggle({
       className={
         active
           ? `flex-1 flex-row items-center justify-center gap-2 rounded-full py-3 ${activeClass}`
-          : 'flex-1 flex-row items-center justify-center gap-2 rounded-full bg-white py-3 active:opacity-70 dark:bg-zinc-900'
+          : 'flex-1 flex-row items-center justify-center gap-2 rounded-full bg-white py-3 active:opacity-70 dark:bg-zinc-800'
       }
     >
       {icon}

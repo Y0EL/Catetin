@@ -15,6 +15,7 @@ import { useSummary, currentMonth } from '~/hooks/use-summary'
 import { useTransactions } from '~/hooks/use-transactions'
 import { useWallets } from '~/hooks/use-wallets'
 import type { CategoryKey } from '~/lib/categories'
+import { useAccentColor } from '~/lib/use-accent-color'
 
 const cardShadow = {
   shadowColor: '#18181b',
@@ -34,6 +35,7 @@ function formatTxnTime(iso: string): string {
 export default function HomeTab() {
   const { user } = useAuth()
   const router = useRouter()
+  const accent = useAccentColor()
   const firstName = user?.displayName?.split(' ')[0] ?? 'kamu'
   const periodChip = new Date().toLocaleDateString('id-ID', { month: 'long' })
 
@@ -80,7 +82,7 @@ export default function HomeTab() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Notifikasi"
-              className="h-11 w-11 items-center justify-center rounded-full bg-white active:opacity-70 dark:bg-zinc-900"
+              className="h-11 w-11 items-center justify-center rounded-full bg-white active:opacity-70 dark:bg-zinc-800"
             >
               <Bell size={20} color="#71717a" />
             </Pressable>
@@ -126,12 +128,12 @@ export default function HomeTab() {
 
           <View className="mx-4 mt-4 flex-row gap-3">
             <QuickAction
-              icon={<Camera size={20} color="#18181b" />}
+              icon={<Camera size={20} color={accent} />}
               label="Scan struk"
               onPress={() => router.push('/add-modal')}
             />
             <QuickAction
-              icon={<Plus size={20} color="#18181b" />}
+              icon={<Plus size={20} color={accent} />}
               label="Catat manual"
               onPress={() => router.push('/add-modal')}
             />
@@ -174,7 +176,7 @@ export default function HomeTab() {
               <View className="mt-3">
                 <NoteCard className="items-center px-6 pb-10 pt-8">
                   <View className="h-14 w-14 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-950">
-                    <Sparkles size={24} color="#18181b" />
+                    <Sparkles size={24} color={accent} />
                   </View>
                   <Text className="mt-4 font-display text-base font-bold text-zinc-900 dark:text-zinc-100">
                     Belum ada cerita bulan ini
@@ -222,7 +224,7 @@ function QuickAction({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
-      className="flex-1 flex-row items-center gap-2 rounded-card bg-white px-4 py-3.5 active:opacity-80 dark:bg-zinc-900"
+      className="flex-1 flex-row items-center gap-2 rounded-card bg-white px-4 py-3.5 active:opacity-80 dark:bg-zinc-800"
     >
       <View className="h-9 w-9 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-950">
         {icon}
@@ -249,8 +251,8 @@ function ChannelCard({
     <View
       className={
         muted
-          ? 'flex-row items-center justify-between rounded-card bg-white px-4 py-4 opacity-55 dark:bg-zinc-900'
-          : 'flex-row items-center justify-between rounded-card bg-white px-4 py-4 dark:bg-zinc-900'
+          ? 'flex-row items-center justify-between rounded-card bg-white px-4 py-4 opacity-55 dark:bg-zinc-800'
+          : 'flex-row items-center justify-between rounded-card bg-white px-4 py-4 dark:bg-zinc-800'
       }
     >
       <View>

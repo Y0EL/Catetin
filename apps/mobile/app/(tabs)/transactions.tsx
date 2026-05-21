@@ -52,7 +52,7 @@ export default function TransactionsTab() {
             </Text>
           </View>
 
-          <View className="mx-4 mt-4 flex-row items-center gap-3 rounded-input bg-white px-4 py-3 dark:bg-zinc-900">
+          <View className="mx-4 mt-4 flex-row items-center gap-3 rounded-input bg-white px-4 py-3 dark:bg-zinc-800">
             <Search size={18} color="#a1a1aa" />
             <TextInput
               value={search}
@@ -77,7 +77,7 @@ export default function TransactionsTab() {
 
           <View className="mx-4 mt-6">
             {rows.length > 0 ? (
-              <View className="rounded-card bg-white px-4 dark:bg-zinc-900">
+              <View className="rounded-card bg-white px-4 dark:bg-zinc-800">
                 {rows.map((t) => (
                   <TransactionCard
                     key={t.id}
@@ -91,7 +91,7 @@ export default function TransactionsTab() {
                 ))}
               </View>
             ) : (
-              <View className="items-center rounded-card bg-white px-6 py-10 dark:bg-zinc-900">
+              <View className="items-center rounded-card bg-white px-6 py-10 dark:bg-zinc-800">
                 <Text className="font-sans text-sm text-zinc-400">
                   {search.trim() ? 'Gak ada yang cocok.' : 'Belum ada transaksi.'}
                 </Text>
@@ -102,7 +102,7 @@ export default function TransactionsTab() {
               <Pressable
                 onPress={() => transactions.fetchNextPage()}
                 disabled={transactions.isFetchingNextPage}
-                className="mt-4 items-center rounded-full bg-white py-3 active:opacity-70 dark:bg-zinc-900"
+                className="mt-4 items-center rounded-full bg-white py-3 active:opacity-70 dark:bg-zinc-800"
               >
                 <Text className="font-sans text-sm font-semibold text-primary-600">
                   {transactions.isFetchingNextPage ? 'Memuat' : 'Muat lagi'}
