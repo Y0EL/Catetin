@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router'
-import { ArrowDownLeft, ArrowUpRight, X } from 'lucide-react-native'
+import { ArrowDownLeft, ArrowUpRight, Skull, X } from 'lucide-react-native'
 import { useMemo, useState } from 'react'
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { parseQuickAddText } from '@catetin/chat-core'
 import { useCategories } from '~/hooks/use-categories'
@@ -10,8 +10,11 @@ import { useWallets } from '~/hooks/use-wallets'
 import { apiErrorMessage } from '~/lib/api'
 import { getCategoryMeta, type CategoryKey } from '~/lib/categories'
 
+const MAX_AMOUNT_DIGITS = 13
+const BIG_AMOUNT_THRESHOLD = 1_000_000_000
+
 function formatRupiahInput(raw: string): string {
-  const digits = raw.replace(/[^0-9]/g, '')
+  const digits = raw.replace(/[^0-9]/g, '').slice(0, MAX_AMOUNT_DIGITS)
   if (!digits) return ''
   return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
@@ -20,8 +23,8 @@ function amountFontSize(formatted: string): number {
   const n = formatted.replace(/[^0-9]/g, '').length
   if (n <= 6) return 48
   if (n <= 9) return 38
-  if (n <= 12) return 30
-  return 24
+  if (n <= 11) return 30
+  return 22
 }
 
 function parseDigits(formatted: string): number {
@@ -45,6 +48,7 @@ export default function AddModal() {
   const [walletId, setWalletId] = useState<string | null>(null)
   const [categoryId, setCategoryId] = useState<string | null>(null)
   const [description, setDescription] = useState('')
+  const [showBigConfirm, setShowBigConfirm] = useState(false)
 
   const amount = useMemo(() => parseDigits(amountText), [amountText])
   const walletList = wallets.data ?? []
@@ -81,6 +85,16 @@ export default function AddModal() {
       Alert.alert('Sebentar ya', 'Wallet atau kategori belum siap. Coba lagi sebentar.')
       return
     }
+    if (amount >= BIG_AMOUNT_THRESHOLD) {
+      setShowBigConfirm(true)
+      return
+    }
+    doSave()
+  }
+
+  function doSave() {
+    setShowBigConfirm(false)
+    if (!effectiveWalletId || !effectiveCategoryId) return
     createTx.mutate(
       {
         walletId: effectiveWalletId,
@@ -259,6 +273,49 @@ export default function AddModal() {
           </Text>
         </Pressable>
       </View>
+
+      <Modal
+        visible={showBigConfirm}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowBigConfirm(false)}
+      >
+        <View className="flex-1 items-center justify-center bg-black/60 px-8">
+          <View className="w-full rounded-3xl bg-white p-6 dark:bg-zinc-900">
+            <View className="h-16 w-16 items-center justify-center self-center rounded-full bg-danger/10">
+              <Skull size={30} color="#dc2626" />
+            </View>
+            <Text className="mt-4 text-center font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
+              Hmm, gede banget cok
+            </Text>
+            <Text className="mt-2 text-center font-sans text-sm leading-5 text-zinc-500 dark:text-zinc-400">
+              Lo beneran mau catat{' '}
+              <Text className="font-semibold text-zinc-900 dark:text-zinc-100">
+                Rp {amountText}
+              </Text>
+              ? Itu angka beneran apa kepencet bjir?
+            </Text>
+            <View className="mt-6 gap-2">
+              <Pressable
+                accessibilityRole="button"
+                onPress={doSave}
+                className="items-center rounded-full bg-primary-600 py-3.5 active:opacity-90"
+              >
+                <Text className="font-sans text-sm font-semibold text-white">Yakin, gas catat</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setShowBigConfirm(false)}
+                className="items-center rounded-full bg-zinc-100 py-3.5 active:opacity-70 dark:bg-zinc-800"
+              >
+                <Text className="font-sans text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                  Eh, ralat dulu
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   )
 }
