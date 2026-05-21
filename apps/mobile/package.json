@@ -59,6 +59,7 @@
     "@babel/core": "^7.26.0",
     "@types/react": "~19.1.17",
     "@types/three": "^0.184.1",
+    "babel-plugin-transform-import-meta": "^2.3.3",
     "typescript": "^5.7.2"
   }
 }
