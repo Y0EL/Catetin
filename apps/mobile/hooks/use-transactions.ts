@@ -60,3 +60,17 @@ export function useDeleteTransaction() {
     onSuccess: () => invalidateAfterMutation(qc),
   })
 }
+
+export function useBulkDeleteTransactions() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const res = await apiFetch<{ ok: true; deleted: number }>('/v1/transactions/bulk-delete', {
+        method: 'POST',
+        body: JSON.stringify({ ids }),
+      })
+      return res.deleted
+    },
+    onSuccess: () => invalidateAfterMutation(qc),
+  })
+}

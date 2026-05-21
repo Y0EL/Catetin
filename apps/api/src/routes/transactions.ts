@@ -1,6 +1,7 @@
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import {
+  bulkDeleteTransactionsSchema,
   createTransactionSchema,
   listTransactionsQuerySchema,
   updateTransactionSchema,
@@ -10,6 +11,7 @@ import { getDb } from '../db'
 import { toTransactionDto } from '../dto'
 import { requireAuth } from '../middleware/auth'
 import {
+  bulkDeleteTransactions,
   createTransaction,
   deleteTransaction,
   listTransactions,
@@ -40,6 +42,17 @@ transactionsRouter.patch('/:id', zValidator('json', updateTransactionSchema), as
   const tx = await updateTransaction(db, c.get('userId'), c.req.param('id'), c.req.valid('json'))
   return c.json({ ok: true, transaction: toTransactionDto(tx) })
 })
+
+transactionsRouter.post(
+  '/bulk-delete',
+  zValidator('json', bulkDeleteTransactionsSchema),
+  async (c) => {
+    const db = getDb()
+    const { ids } = c.req.valid('json')
+    const deleted = await bulkDeleteTransactions(db, c.get('userId'), ids)
+    return c.json({ ok: true, deleted })
+  },
+)
 
 transactionsRouter.delete('/:id', async (c) => {
   const db = getDb()

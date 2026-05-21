@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, ilike, lt, lte, or, sql, type SQL } from 'drizzle-orm'
+import { and, desc, eq, gte, ilike, inArray, lt, lte, or, sql, type SQL } from 'drizzle-orm'
 import { categories, transactions, wallets, type Database, type Transaction } from '@catetin/db'
 import type {
   CreateTransactionInput,
@@ -137,6 +137,19 @@ export async function createTransaction(
 
 export async function deleteTransaction(db: Database, userId: string, id: string): Promise<void> {
   await db.delete(transactions).where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
+}
+
+export async function bulkDeleteTransactions(
+  db: Database,
+  userId: string,
+  ids: string[],
+): Promise<number> {
+  if (ids.length === 0) return 0
+  const rows = await db
+    .delete(transactions)
+    .where(and(eq(transactions.userId, userId), inArray(transactions.id, ids)))
+    .returning({ id: transactions.id })
+  return rows.length
 }
 
 export async function updateTransaction(

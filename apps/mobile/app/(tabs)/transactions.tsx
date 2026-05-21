@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router'
-import { Pencil, Search, Trash2 } from 'lucide-react-native'
+import { Check, CheckSquare, Pencil, Search, Trash2, X } from 'lucide-react-native'
 import { useMemo, useRef, useState } from 'react'
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import ReanimatedSwipeable, {
@@ -12,7 +12,11 @@ import { ScreenFade } from '~/components/screen-fade'
 import { TransactionCard } from '~/components/transaction-card'
 import { useCategories } from '~/hooks/use-categories'
 import { useSummary, currentMonth } from '~/hooks/use-summary'
-import { useDeleteTransaction, useTransactions } from '~/hooks/use-transactions'
+import {
+  useBulkDeleteTransactions,
+  useDeleteTransaction,
+  useTransactions,
+} from '~/hooks/use-transactions'
 import { useWallets } from '~/hooks/use-wallets'
 import { apiErrorMessage } from '~/lib/api'
 import type { CategoryKey } from '~/lib/categories'
@@ -29,7 +33,10 @@ export default function TransactionsTab() {
   const router = useRouter()
   const setEditing = useEditStore((s) => s.setEditing)
   const del = useDeleteTransaction()
+  const bulkDel = useBulkDeleteTransactions()
   const [search, setSearch] = useState('')
+  const [selecting, setSelecting] = useState(false)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
   const summary = useSummary(currentMonth())
   const transactions = useTransactions(search.trim() ? { q: search.trim() } : {})
   const categories = useCategories()
@@ -54,7 +61,48 @@ export default function TransactionsTab() {
     ])
   }
 
+  function enterSelectionWith(id: string) {
+    setSelecting(true)
+    setSelected(new Set([id]))
+  }
+
+  function toggleSelected(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function cancelSelection() {
+    setSelecting(false)
+    setSelected(new Set())
+  }
+
+  function selectAll() {
+    setSelected(new Set(rows.map((r) => r.id)))
+  }
+
+  function bulkDelete() {
+    const ids = Array.from(selected)
+    if (ids.length === 0) return
+    Alert.alert(`Hapus ${ids.length} transaksi?`, 'Catatan-catatan ini bakal ilang permanen.', [
+      { text: 'Batal', style: 'cancel' },
+      {
+        text: 'Hapus',
+        style: 'destructive',
+        onPress: () =>
+          bulkDel.mutate(ids, {
+            onSuccess: cancelSelection,
+            onError: (err) => Alert.alert('Gagal hapus', apiErrorMessage(err)),
+          }),
+      },
+    ])
+  }
+
   const rows = transactions.data?.pages.flatMap((p) => p.transactions) ?? []
+  const allSelected = rows.length > 0 && selected.size === rows.length
   const catName = useMemo(
     () => new Map((categories.data ?? []).map((c) => [c.id, c.name])),
     [categories.data],
@@ -74,12 +122,63 @@ export default function TransactionsTab() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <View className="px-4 pt-3">
-            <Text className="font-sans text-sm text-zinc-500 dark:text-zinc-400">Catatan</Text>
-            <Text className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-              Riwayat
-            </Text>
-          </View>
+          {selecting ? (
+            <View className="flex-row items-center justify-between gap-2 px-4 pt-3">
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Batal pilih"
+                onPress={cancelSelection}
+                className="h-10 w-10 items-center justify-center rounded-full bg-white active:opacity-70 dark:bg-zinc-800"
+              >
+                <X size={18} color="#71717a" />
+              </Pressable>
+              <Text className="flex-1 font-display text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                {selected.size} dipilih
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={allSelected ? 'Kosongin pilihan' : 'Pilih semua'}
+                onPress={allSelected ? cancelSelection : selectAll}
+                className="rounded-full bg-zinc-100 px-3 py-2 active:opacity-70 dark:bg-zinc-800"
+              >
+                <Text className="font-sans text-xs font-semibold text-zinc-700 dark:text-zinc-200">
+                  {allSelected ? 'Kosongin' : 'Semua'}
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Hapus ${selected.size} transaksi`}
+                onPress={bulkDelete}
+                disabled={selected.size === 0 || bulkDel.isPending}
+                className="flex-row items-center gap-1 rounded-full bg-danger px-3 py-2 active:opacity-80 disabled:opacity-40"
+              >
+                <Trash2 size={14} color="#ffffff" />
+                <Text className="font-sans text-xs font-semibold text-white">{selected.size}</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View className="flex-row items-end justify-between px-4 pt-3">
+              <View>
+                <Text className="font-sans text-sm text-zinc-500 dark:text-zinc-400">Catatan</Text>
+                <Text className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                  Riwayat
+                </Text>
+              </View>
+              {rows.length > 0 ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Pilih banyak"
+                  onPress={() => setSelecting(true)}
+                  className="flex-row items-center gap-1 rounded-full bg-white px-3 py-2 active:opacity-70 dark:bg-zinc-800"
+                >
+                  <CheckSquare size={14} color="#71717a" />
+                  <Text className="font-sans text-xs font-semibold text-zinc-700 dark:text-zinc-200">
+                    Pilih
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
+          )}
 
           <View className="mx-4 mt-4 flex-row items-center gap-3 rounded-input bg-white px-4 py-3 dark:bg-zinc-800">
             <Search size={18} color="#a1a1aa" />
@@ -107,20 +206,56 @@ export default function TransactionsTab() {
           <View className="mx-4 mt-6">
             {rows.length > 0 ? (
               <View className="overflow-hidden rounded-card bg-white dark:bg-zinc-800">
-                {rows.map((t) => (
-                  <SwipeableRow key={t.id} onEdit={() => onEdit(t)} onDelete={() => onDelete(t)}>
-                    <View className="bg-white px-4 dark:bg-zinc-800">
-                      <TransactionCard
-                        category={(catName.get(t.categoryId) ?? 'lainnya') as CategoryKey}
-                        title={t.description ?? t.merchant ?? 'Transaksi'}
-                        wallet={walletName.get(t.walletId) ?? 'Wallet'}
-                        amount={t.amount}
-                        kind={t.kind === 'income' ? 'income' : 'expense'}
-                        time={formatTxnTime(t.occurredAt)}
-                      />
-                    </View>
-                  </SwipeableRow>
-                ))}
+                {rows.map((t) => {
+                  const card = (
+                    <TransactionCard
+                      category={(catName.get(t.categoryId) ?? 'lainnya') as CategoryKey}
+                      title={t.description ?? t.merchant ?? 'Transaksi'}
+                      wallet={walletName.get(t.walletId) ?? 'Wallet'}
+                      amount={t.amount}
+                      kind={t.kind === 'income' ? 'income' : 'expense'}
+                      time={formatTxnTime(t.occurredAt)}
+                    />
+                  )
+                  if (selecting) {
+                    const checked = selected.has(t.id)
+                    return (
+                      <Pressable
+                        key={t.id}
+                        onPress={() => toggleSelected(t.id)}
+                        accessibilityRole="checkbox"
+                        accessibilityState={{ checked }}
+                        className={
+                          checked
+                            ? 'flex-row items-center gap-3 bg-primary-50 px-4 dark:bg-primary-900/40'
+                            : 'flex-row items-center gap-3 bg-white px-4 active:opacity-70 dark:bg-zinc-800'
+                        }
+                      >
+                        <View
+                          className={
+                            checked
+                              ? 'h-5 w-5 items-center justify-center rounded-md bg-primary-600'
+                              : 'h-5 w-5 items-center justify-center rounded-md border border-zinc-300 dark:border-zinc-600'
+                          }
+                        >
+                          {checked ? <Check size={14} color="#ffffff" /> : null}
+                        </View>
+                        <View className="flex-1">{card}</View>
+                      </Pressable>
+                    )
+                  }
+                  return (
+                    <SwipeableRow key={t.id} onEdit={() => onEdit(t)} onDelete={() => onDelete(t)}>
+                      <Pressable
+                        onLongPress={() => enterSelectionWith(t.id)}
+                        delayLongPress={350}
+                        className="bg-white px-4 dark:bg-zinc-800"
+                      >
+                        {card}
+                      </Pressable>
+                    </SwipeableRow>
+                  )
+                })}
               </View>
             ) : (
               <View className="items-center rounded-card bg-white px-6 py-10 dark:bg-zinc-800">

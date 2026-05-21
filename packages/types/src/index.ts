@@ -63,6 +63,12 @@ export const updateTransactionSchema = z.object({
 
 export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>
 
+export const bulkDeleteTransactionsSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(200),
+})
+
+export type BulkDeleteTransactionsInput = z.infer<typeof bulkDeleteTransactionsSchema>
+
 export const ocrReceiptResponseSchema = z.object({
   merchant: z.string().nullable(),
   date: z.string().nullable(),
