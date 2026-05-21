@@ -4,8 +4,8 @@
   "private": true,
   "main": "./index.js",
   "scripts": {
-    "dev": "expo start",
-    "web": "expo start --web",
+    "dev": "cross-env EXPO_OFFLINE=1 expo start",
+    "web": "cross-env EXPO_OFFLINE=1 expo start --web",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "typecheck": "tsc --noEmit",
@@ -60,6 +60,7 @@
     "@types/react": "~19.1.17",
     "@types/three": "^0.184.1",
     "babel-plugin-transform-import-meta": "^2.3.3",
+    "cross-env": "^10.1.0",
     "typescript": "^5.7.2"
   }
 }
