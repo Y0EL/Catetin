@@ -1,6 +1,11 @@
 import { and, desc, eq, gte, ilike, lt, lte, or, sql, type SQL } from 'drizzle-orm'
 import { categories, transactions, wallets, type Database, type Transaction } from '@catetin/db'
-import type { CreateTransactionInput, ListTransactionsQuery, MonthSummary } from '@catetin/types'
+import type {
+  CreateTransactionInput,
+  ListTransactionsQuery,
+  MonthSummary,
+  UpdateTransactionInput,
+} from '@catetin/types'
 import { HttpError } from '../errors'
 
 export function monthToRange(month: string): { start: Date; end: Date } {
@@ -132,6 +137,46 @@ export async function createTransaction(
 
 export async function deleteTransaction(db: Database, userId: string, id: string): Promise<void> {
   await db.delete(transactions).where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
+}
+
+export async function updateTransaction(
+  db: Database,
+  userId: string,
+  id: string,
+  input: UpdateTransactionInput,
+): Promise<Transaction> {
+  if (input.walletId !== undefined) {
+    const ownedWallet = await db
+      .select({ id: wallets.id })
+      .from(wallets)
+      .where(and(eq(wallets.id, input.walletId), eq(wallets.userId, userId)))
+      .limit(1)
+    if (ownedWallet.length === 0) throw new HttpError(404, 'NOT_FOUND', 'Wallet gak ketemu')
+  }
+  if (input.categoryId !== undefined) {
+    const ownedCategory = await db
+      .select({ id: categories.id })
+      .from(categories)
+      .where(and(eq(categories.id, input.categoryId), eq(categories.userId, userId)))
+      .limit(1)
+    if (ownedCategory.length === 0) throw new HttpError(404, 'NOT_FOUND', 'Kategori gak ketemu')
+  }
+  const rows = await db
+    .update(transactions)
+    .set({
+      ...(input.walletId !== undefined ? { walletId: input.walletId } : {}),
+      ...(input.categoryId !== undefined ? { categoryId: input.categoryId } : {}),
+      ...(input.kind !== undefined ? { kind: input.kind } : {}),
+      ...(input.amount !== undefined ? { amount: input.amount } : {}),
+      ...(input.description !== undefined ? { description: input.description } : {}),
+      ...(input.merchant !== undefined ? { merchant: input.merchant } : {}),
+      ...(input.occurredAt !== undefined ? { occurredAt: new Date(input.occurredAt) } : {}),
+      updatedAt: new Date(),
+    })
+    .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
+    .returning()
+  if (rows.length === 0) throw new HttpError(404, 'NOT_FOUND', 'Transaksi gak ketemu')
+  return rows[0]!
 }
 
 export async function getMonthSummary(

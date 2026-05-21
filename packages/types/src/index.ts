@@ -51,6 +51,18 @@ export const createTransactionSchema = z.object({
 
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>
 
+export const updateTransactionSchema = z.object({
+  walletId: z.string().uuid().optional(),
+  categoryId: z.string().uuid().optional(),
+  kind: transactionKindSchema.optional(),
+  amount: z.number().int().nonnegative().optional(),
+  description: z.string().max(500).optional(),
+  merchant: z.string().max(200).optional(),
+  occurredAt: z.string().datetime().optional(),
+})
+
+export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>
+
 export const ocrReceiptResponseSchema = z.object({
   merchant: z.string().nullable(),
   date: z.string().nullable(),

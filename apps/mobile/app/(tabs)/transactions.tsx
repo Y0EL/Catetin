@@ -1,15 +1,22 @@
-import { Search } from 'lucide-react-native'
-import { useMemo, useState } from 'react'
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { useRouter } from 'expo-router'
+import { Pencil, Search, Trash2 } from 'lucide-react-native'
+import { useMemo, useRef, useState } from 'react'
+import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import ReanimatedSwipeable, {
+  type SwipeableMethods,
+} from 'react-native-gesture-handler/ReanimatedSwipeable'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import type { TransactionDto } from '@catetin/types'
 import { Money } from '~/components/money'
 import { ScreenFade } from '~/components/screen-fade'
 import { TransactionCard } from '~/components/transaction-card'
 import { useCategories } from '~/hooks/use-categories'
 import { useSummary, currentMonth } from '~/hooks/use-summary'
-import { useTransactions } from '~/hooks/use-transactions'
+import { useDeleteTransaction, useTransactions } from '~/hooks/use-transactions'
 import { useWallets } from '~/hooks/use-wallets'
+import { apiErrorMessage } from '~/lib/api'
 import type { CategoryKey } from '~/lib/categories'
+import { useEditStore } from '~/lib/edit-store'
 
 function formatTxnTime(iso: string): string {
   const d = new Date(iso)
@@ -19,11 +26,33 @@ function formatTxnTime(iso: string): string {
 }
 
 export default function TransactionsTab() {
+  const router = useRouter()
+  const setEditing = useEditStore((s) => s.setEditing)
+  const del = useDeleteTransaction()
   const [search, setSearch] = useState('')
   const summary = useSummary(currentMonth())
   const transactions = useTransactions(search.trim() ? { q: search.trim() } : {})
   const categories = useCategories()
   const wallets = useWallets()
+
+  function onEdit(t: TransactionDto) {
+    setEditing(t)
+    router.push('/add-modal')
+  }
+
+  function onDelete(t: TransactionDto) {
+    Alert.alert('Hapus transaksi?', 'Catatan ini bakal ilang permanen.', [
+      { text: 'Batal', style: 'cancel' },
+      {
+        text: 'Hapus',
+        style: 'destructive',
+        onPress: () =>
+          del.mutate(t.id, {
+            onError: (err) => Alert.alert('Gagal hapus', apiErrorMessage(err)),
+          }),
+      },
+    ])
+  }
 
   const rows = transactions.data?.pages.flatMap((p) => p.transactions) ?? []
   const catName = useMemo(
@@ -77,17 +106,20 @@ export default function TransactionsTab() {
 
           <View className="mx-4 mt-6">
             {rows.length > 0 ? (
-              <View className="rounded-card bg-white px-4 dark:bg-zinc-800">
+              <View className="overflow-hidden rounded-card bg-white dark:bg-zinc-800">
                 {rows.map((t) => (
-                  <TransactionCard
-                    key={t.id}
-                    category={(catName.get(t.categoryId) ?? 'lainnya') as CategoryKey}
-                    title={t.description ?? t.merchant ?? 'Transaksi'}
-                    wallet={walletName.get(t.walletId) ?? 'Wallet'}
-                    amount={t.amount}
-                    kind={t.kind === 'income' ? 'income' : 'expense'}
-                    time={formatTxnTime(t.occurredAt)}
-                  />
+                  <SwipeableRow key={t.id} onEdit={() => onEdit(t)} onDelete={() => onDelete(t)}>
+                    <View className="bg-white px-4 dark:bg-zinc-800">
+                      <TransactionCard
+                        category={(catName.get(t.categoryId) ?? 'lainnya') as CategoryKey}
+                        title={t.description ?? t.merchant ?? 'Transaksi'}
+                        wallet={walletName.get(t.walletId) ?? 'Wallet'}
+                        amount={t.amount}
+                        kind={t.kind === 'income' ? 'income' : 'expense'}
+                        time={formatTxnTime(t.occurredAt)}
+                      />
+                    </View>
+                  </SwipeableRow>
                 ))}
               </View>
             ) : (
@@ -113,5 +145,55 @@ export default function TransactionsTab() {
         </ScrollView>
       </ScreenFade>
     </SafeAreaView>
+  )
+}
+
+function SwipeableRow({
+  children,
+  onEdit,
+  onDelete,
+}: {
+  children: React.ReactNode
+  onEdit: () => void
+  onDelete: () => void
+}) {
+  const ref = useRef<SwipeableMethods>(null)
+  return (
+    <ReanimatedSwipeable
+      ref={ref}
+      friction={2}
+      overshootLeft={false}
+      overshootRight={false}
+      renderLeftActions={() => (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Hapus transaksi"
+          onPress={() => {
+            ref.current?.close()
+            onDelete()
+          }}
+          className="w-24 flex-col items-center justify-center bg-danger active:opacity-80"
+        >
+          <Trash2 size={20} color="#ffffff" />
+          <Text className="mt-1 font-sans text-xs font-semibold text-white">Hapus</Text>
+        </Pressable>
+      )}
+      renderRightActions={() => (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Edit transaksi"
+          onPress={() => {
+            ref.current?.close()
+            onEdit()
+          }}
+          className="w-24 flex-col items-center justify-center bg-primary-600 active:opacity-80"
+        >
+          <Pencil size={20} color="#ffffff" />
+          <Text className="mt-1 font-sans text-xs font-semibold text-white">Edit</Text>
+        </Pressable>
+      )}
+    >
+      {children}
+    </ReanimatedSwipeable>
   )
 }

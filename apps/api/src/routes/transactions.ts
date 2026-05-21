@@ -1,6 +1,10 @@
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
-import { createTransactionSchema, listTransactionsQuerySchema } from '@catetin/types'
+import {
+  createTransactionSchema,
+  listTransactionsQuerySchema,
+  updateTransactionSchema,
+} from '@catetin/types'
 import type { AppEnv } from '../context'
 import { getDb } from '../db'
 import { toTransactionDto } from '../dto'
@@ -9,6 +13,7 @@ import {
   createTransaction,
   deleteTransaction,
   listTransactions,
+  updateTransaction,
 } from '../services/transaction-service'
 
 export const transactionsRouter = new Hono<AppEnv>()
@@ -28,6 +33,12 @@ transactionsRouter.post('/', zValidator('json', createTransactionSchema), async 
   const db = getDb()
   const tx = await createTransaction(db, c.get('userId'), c.req.valid('json'))
   return c.json({ ok: true, transaction: toTransactionDto(tx) }, 201)
+})
+
+transactionsRouter.patch('/:id', zValidator('json', updateTransactionSchema), async (c) => {
+  const db = getDb()
+  const tx = await updateTransaction(db, c.get('userId'), c.req.param('id'), c.req.valid('json'))
+  return c.json({ ok: true, transaction: toTransactionDto(tx) })
 })
 
 transactionsRouter.delete('/:id', async (c) => {

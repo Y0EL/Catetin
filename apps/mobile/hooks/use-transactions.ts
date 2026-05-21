@@ -1,5 +1,5 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
-import type { TransactionDto } from '@catetin/types'
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import type { TransactionDto, UpdateTransactionInput } from '@catetin/types'
 import { apiFetch } from '~/lib/api'
 
 export type TransactionFilters = {
@@ -28,5 +28,35 @@ export function useTransactions(filters: TransactionFilters = {}) {
       return apiFetch<Page>(`/v1/transactions${qs ? `?${qs}` : ''}`)
     },
     getNextPageParam: (last) => last.nextCursor,
+  })
+}
+
+function invalidateAfterMutation(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: ['transactions'] })
+  qc.invalidateQueries({ queryKey: ['summary'] })
+  qc.invalidateQueries({ queryKey: ['budgets'] })
+}
+
+export function useUpdateTransaction() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, input }: { id: string; input: UpdateTransactionInput }) => {
+      const res = await apiFetch<{ ok: true; transaction: TransactionDto }>(
+        `/v1/transactions/${id}`,
+        { method: 'PATCH', body: JSON.stringify(input) },
+      )
+      return res.transaction
+    },
+    onSuccess: () => invalidateAfterMutation(qc),
+  })
+}
+
+export function useDeleteTransaction() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await apiFetch<{ ok: true }>(`/v1/transactions/${id}`, { method: 'DELETE' })
+    },
+    onSuccess: () => invalidateAfterMutation(qc),
   })
 }

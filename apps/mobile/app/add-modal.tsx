@@ -29,9 +29,11 @@ import { LoadingLottie } from '~/components/loading-lottie'
 import { useCategories } from '~/hooks/use-categories'
 import { useCreateTransaction } from '~/hooks/use-create-transaction'
 import { useOcrReceipt } from '~/hooks/use-ocr-receipt'
+import { useUpdateTransaction } from '~/hooks/use-transactions'
 import { useWallets } from '~/hooks/use-wallets'
 import { apiErrorMessage } from '~/lib/api'
 import { getCategoryMeta, type CategoryKey } from '~/lib/categories'
+import { useEditStore } from '~/lib/edit-store'
 
 const MAX_AMOUNT_DIGITS = 13
 const BIG_AMOUNT_THRESHOLD = 1_000_000_000
@@ -65,7 +67,11 @@ export default function AddModal() {
   const wallets = useWallets()
   const categories = useCategories()
   const createTx = useCreateTransaction()
+  const updateTx = useUpdateTransaction()
   const ocr = useOcrReceipt()
+  const editing = useEditStore((s) => s.editing)
+  const setEditing = useEditStore((s) => s.setEditing)
+  const isEditing = editing !== null
 
   const [kind, setKind] = useState<'expense' | 'income'>('expense')
   const [amountText, setAmountText] = useState('')
@@ -89,6 +95,7 @@ export default function AddModal() {
     categoryId && catList.some((c) => c.id === categoryId) ? categoryId : (catList[0]?.id ?? null)
 
   function close() {
+    setEditing(null)
     if (router.canGoBack()) router.back()
     else router.replace('/(tabs)/index')
   }
@@ -148,6 +155,15 @@ export default function AddModal() {
     void scanReceipt(params.scan === 'camera')
   }, [params.scan])
 
+  useEffect(() => {
+    if (!editing) return
+    setKind(editing.kind === 'income' ? 'income' : 'expense')
+    setAmountText(formatRupiahInput(String(editing.amount)))
+    setWalletId(editing.walletId)
+    setCategoryId(editing.categoryId)
+    setDescription(editing.description ?? editing.merchant ?? '')
+  }, [editing])
+
   function onSave() {
     if (amount <= 0) {
       Alert.alert('Nominal kosong', 'Isi dulu jumlah duitnya ya.')
@@ -167,6 +183,25 @@ export default function AddModal() {
   function doSave() {
     setShowBigConfirm(false)
     if (!effectiveWalletId || !effectiveCategoryId) return
+    if (isEditing && editing) {
+      updateTx.mutate(
+        {
+          id: editing.id,
+          input: {
+            walletId: effectiveWalletId,
+            categoryId: effectiveCategoryId,
+            kind,
+            amount,
+            description: description.trim() ? description.trim() : undefined,
+          },
+        },
+        {
+          onSuccess: close,
+          onError: (err) => Alert.alert('Gagal update', apiErrorMessage(err)),
+        },
+      )
+      return
+    }
     createTx.mutate(
       {
         walletId: effectiveWalletId,
@@ -192,7 +227,7 @@ export default function AddModal() {
 
       <View className="flex-row items-center justify-between px-4 pt-4">
         <Text className="font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
-          Catat cepat
+          {isEditing ? 'Edit transaksi' : 'Catat cepat'}
         </Text>
         <Pressable
           accessibilityRole="button"
@@ -210,35 +245,37 @@ export default function AddModal() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View className="overflow-hidden rounded-card bg-primary-600 p-4">
-          <View className="flex-row items-center gap-2">
-            <Sparkles size={16} color="#ffffff" />
-            <Text className="font-display text-sm font-bold text-white">Scan struk pakai AI</Text>
-          </View>
-          <Text className="mt-1 font-sans text-xs leading-5 text-primary-100">
-            Foto struknya, Catetin baca total dan kategorinya otomatis.
-          </Text>
-          <View className="mt-3 flex-row gap-2">
-            <ScanButton
-              icon={<Camera size={16} color="#18181b" />}
-              label="Kamera"
-              onPress={() => scanReceipt(true)}
-              disabled={ocr.isPending}
-            />
-            <ScanButton
-              icon={<Images size={16} color="#18181b" />}
-              label="Galeri"
-              onPress={() => scanReceipt(false)}
-              disabled={ocr.isPending}
-            />
-          </View>
-          {ocr.isPending ? (
-            <View className="mt-3 flex-row items-center gap-2">
-              <ActivityIndicator size="small" color="#ffffff" />
-              <Text className="font-sans text-xs text-primary-100">Lagi baca struk...</Text>
+        {!isEditing ? (
+          <View className="overflow-hidden rounded-card bg-primary-600 p-4">
+            <View className="flex-row items-center gap-2">
+              <Sparkles size={16} color="#ffffff" />
+              <Text className="font-display text-sm font-bold text-white">Scan struk pakai AI</Text>
             </View>
-          ) : null}
-        </View>
+            <Text className="mt-1 font-sans text-xs leading-5 text-primary-100">
+              Foto struknya, Catetin baca total dan kategorinya otomatis.
+            </Text>
+            <View className="mt-3 flex-row gap-2">
+              <ScanButton
+                icon={<Camera size={16} color="#18181b" />}
+                label="Kamera"
+                onPress={() => scanReceipt(true)}
+                disabled={ocr.isPending}
+              />
+              <ScanButton
+                icon={<Images size={16} color="#18181b" />}
+                label="Galeri"
+                onPress={() => scanReceipt(false)}
+                disabled={ocr.isPending}
+              />
+            </View>
+            {ocr.isPending ? (
+              <View className="mt-3 flex-row items-center gap-2">
+                <ActivityIndicator size="small" color="#ffffff" />
+                <Text className="font-sans text-xs text-primary-100">Lagi baca struk...</Text>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
 
         <View className="flex-row gap-2">
           <KindToggle
@@ -365,13 +402,17 @@ export default function AddModal() {
       <View className="absolute bottom-0 left-0 right-0 border-t border-zinc-200 bg-zinc-50 px-4 pb-8 pt-3 dark:border-zinc-800 dark:bg-zinc-950">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Catat sekarang"
-          disabled={createTx.isPending}
+          accessibilityLabel={isEditing ? 'Simpan perubahan' : 'Catat sekarang'}
+          disabled={createTx.isPending || updateTx.isPending}
           onPress={onSave}
           className="items-center rounded-full bg-primary-600 py-4 active:opacity-90 disabled:opacity-50"
         >
           <Text className="font-sans text-base font-semibold text-white">
-            {createTx.isPending ? 'Nyimpen' : 'Catat sekarang'}
+            {createTx.isPending || updateTx.isPending
+              ? 'Nyimpen'
+              : isEditing
+                ? 'Simpan perubahan'
+                : 'Catat sekarang'}
           </Text>
         </Pressable>
       </View>
