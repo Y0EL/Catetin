@@ -11,6 +11,7 @@ export const serverEnvSchema = z.object({
   GEMINI_LIVE_MODEL: z.string().default('gemini-2.0-flash-live-001'),
   TELEGRAM_BOT_TOKEN: z.string().min(1),
   TELEGRAM_WEBHOOK_SECRET: z.string().min(8),
+  TELEGRAM_BOT_USERNAME: z.string().default('catetindobot'),
   REVENUECAT_API_KEY_IOS: z.string().optional(),
   REVENUECAT_API_KEY_ANDROID: z.string().optional(),
   REVENUECAT_WEBHOOK_AUTH: z.string().optional(),

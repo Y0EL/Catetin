@@ -12,6 +12,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { PaywallButton } from '~/components/paywall-button'
 import { ScreenFade } from '~/components/screen-fade'
+import { TelegramLinkRow } from '~/components/telegram-link-row'
 import { useAuth } from '~/hooks/use-auth'
 import { signOutUser } from '~/lib/auth'
 
@@ -66,12 +67,7 @@ export default function SettingsTab() {
           </View>
 
           <Section title="Channel">
-            <Row
-              icon={<MessageCircle size={18} color="#4f46e5" />}
-              label="Telegram"
-              hint="@catetindobot"
-              cta="Sambungin"
-            />
+            <TelegramLinkRow />
             <Divider />
             <Row
               icon={<MessageCircle size={18} color="#a1a1aa" />}
