@@ -12,16 +12,7 @@ import {
   X,
 } from 'lucide-react-native'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  ActivityIndicator,
-  Alert,
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
+import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { formatRupiah, parseQuickAddText } from '@catetin/chat-core'
 import type { OcrReceiptResponse } from '@catetin/types'
@@ -268,12 +259,6 @@ export default function AddModal() {
                 disabled={ocr.isPending}
               />
             </View>
-            {ocr.isPending ? (
-              <View className="mt-3 flex-row items-center gap-2">
-                <ActivityIndicator size="small" color="#ffffff" />
-                <Text className="font-sans text-xs text-primary-100">Lagi baca struk...</Text>
-              </View>
-            ) : null}
           </View>
         ) : null}
 

@@ -89,38 +89,46 @@ export default function HomeTab() {
           </View>
 
           <View
-            className="mx-4 mt-5 overflow-hidden rounded-3xl bg-primary-600 p-6"
+            className="mx-4 mt-5 overflow-hidden rounded-3xl bg-primary-600 p-6 dark:bg-white"
             style={cardShadow}
           >
             <CardGlow />
             <View className="flex-row items-center justify-between">
-              <Text className="font-sans text-sm text-primary-200">Pengeluaran bulan ini</Text>
-              <View className="rounded-full bg-white/15 px-2.5 py-1">
-                <Text className="font-sans text-xs font-medium text-primary-100">{periodChip}</Text>
+              <Text className="font-sans text-sm text-primary-200 dark:text-zinc-500">
+                Pengeluaran bulan ini
+              </Text>
+              <View className="rounded-full bg-white/15 px-2.5 py-1 dark:bg-zinc-100">
+                <Text className="font-sans text-xs font-medium text-primary-100 dark:text-zinc-600">
+                  {periodChip}
+                </Text>
               </View>
             </View>
             <View className="mt-3">
-              <Money value={summary.data?.expense ?? 0} size="hero" tone="onDark" compact />
+              <Money value={summary.data?.expense ?? 0} size="hero" tone="invert" compact />
             </View>
 
             <View className="mt-6 flex-row items-stretch">
               <View className="flex-1">
                 <View className="flex-row items-center gap-1.5">
                   <ArrowDownLeft size={14} color="#a1a1aa" />
-                  <Text className="font-sans text-xs text-primary-100">Pemasukan</Text>
+                  <Text className="font-sans text-xs text-primary-100 dark:text-zinc-500">
+                    Pemasukan
+                  </Text>
                 </View>
                 <View className="mt-1">
-                  <Money value={summary.data?.income ?? 0} size="lg" tone="onDark" compact />
+                  <Money value={summary.data?.income ?? 0} size="lg" tone="invert" compact />
                 </View>
               </View>
-              <View className="mx-4 w-px bg-white/20" />
+              <View className="mx-4 w-px bg-white/20 dark:bg-zinc-200" />
               <View className="flex-1">
                 <View className="flex-row items-center gap-1.5">
                   <ArrowUpRight size={14} color="#a1a1aa" />
-                  <Text className="font-sans text-xs text-primary-100">Pengeluaran</Text>
+                  <Text className="font-sans text-xs text-primary-100 dark:text-zinc-500">
+                    Pengeluaran
+                  </Text>
                 </View>
                 <View className="mt-1">
-                  <Money value={summary.data?.expense ?? 0} size="lg" tone="onDark" compact />
+                  <Money value={summary.data?.expense ?? 0} size="lg" tone="invert" compact />
                 </View>
               </View>
             </View>

@@ -1,6 +1,9 @@
 import lottie, { type AnimationItem } from 'lottie-web'
 import { useEffect, useRef } from 'react'
 import loadingSource from '../assets/lottie/loading.json'
+import { tintLottie } from './lottie-tint'
+
+const blackSource = tintLottie(loadingSource, [0, 0, 0])
 
 type Props = { size?: number }
 
@@ -15,7 +18,7 @@ export function LoadingLottie({ size = 120 }: Props) {
       renderer: 'svg',
       loop: true,
       autoplay: true,
-      animationData: loadingSource,
+      animationData: blackSource as object,
     })
     animRef.current = anim
     return () => {

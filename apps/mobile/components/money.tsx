@@ -1,7 +1,7 @@
 import { Text, View } from 'react-native'
 
 type Size = 'hero' | 'lg' | 'md' | 'sm'
-type Tone = 'default' | 'onDark' | 'income' | 'expense'
+type Tone = 'default' | 'onDark' | 'income' | 'expense' | 'invert'
 
 const sizes: Record<Size, { rp: string; num: string }> = {
   hero: { rp: 'text-base', num: 'text-5xl' },
@@ -44,12 +44,19 @@ export function Money({
 }) {
   const { sign, digits } = formatParts(value, compact)
   const numColor =
-    tone === 'onDark'
-      ? 'text-white'
-      : tone === 'income'
-        ? 'text-success'
-        : 'text-zinc-900 dark:text-zinc-100'
-  const rpColor = tone === 'onDark' ? 'text-primary-200' : 'text-zinc-400 dark:text-zinc-500'
+    tone === 'invert'
+      ? 'text-white dark:text-zinc-900'
+      : tone === 'onDark'
+        ? 'text-white'
+        : tone === 'income'
+          ? 'text-success'
+          : 'text-zinc-900 dark:text-zinc-100'
+  const rpColor =
+    tone === 'invert'
+      ? 'text-primary-200 dark:text-zinc-400'
+      : tone === 'onDark'
+        ? 'text-primary-200'
+        : 'text-zinc-400 dark:text-zinc-500'
 
   return (
     <View className="flex-row items-baseline">
