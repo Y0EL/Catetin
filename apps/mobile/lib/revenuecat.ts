@@ -12,12 +12,7 @@ export const CATETIN_PRO_ENTITLEMENT = 'Catetin Pro'
 
 export type CatetinPlan = 'lifetime' | 'yearly' | 'monthly'
 
-export type PaywallResult =
-  | 'NOT_PRESENTED'
-  | 'CANCELLED'
-  | 'PURCHASED'
-  | 'RESTORED'
-  | 'ERROR'
+export type PaywallResult = 'NOT_PRESENTED' | 'CANCELLED' | 'PURCHASED' | 'RESTORED' | 'ERROR'
 
 export type PurchaseOutcome =
   | { ok: true; info: CustomerInfo }
@@ -31,10 +26,14 @@ export function configurePurchases(apiKey: string) {
     console.warn('RevenueCat API key missing, skipping configure')
     return
   }
-  Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.WARN)
-  if (Platform.OS === 'ios' || Platform.OS === 'android') {
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') return
+  try {
+    Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.WARN)
     Purchases.configure({ apiKey })
     configured = true
+  } catch (err) {
+    // Expo Go gak punya modul native RevenueCat. Skip diam-diam, fitur Pro mati di Expo Go.
+    console.warn('RevenueCat configure failed (probably Expo Go):', err)
   }
 }
 
@@ -140,7 +139,9 @@ export function subscribeToProStatus(callback: (status: ProStatus) => void): () 
       expiresAt: ent?.expirationDate ? new Date(ent.expirationDate) : null,
     })
   }
-  Purchases.getCustomerInfo().then(apply).catch(() => {})
+  Purchases.getCustomerInfo()
+    .then(apply)
+    .catch(() => {})
   Purchases.addCustomerInfoUpdateListener(apply)
   return () => Purchases.removeCustomerInfoUpdateListener(apply)
 }
