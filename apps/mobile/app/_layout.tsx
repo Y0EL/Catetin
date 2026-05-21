@@ -12,7 +12,8 @@ import { useAuth } from '~/hooks/use-auth'
 import { useBootstrapSession } from '~/hooks/use-bootstrap-session'
 import { getFirebaseAuth } from '~/lib/firebase'
 import { configurePurchases } from '~/lib/revenuecat'
-import { useThemeStore } from '~/lib/theme'
+import { EditTransactionProvider } from '~/lib/edit-store'
+import { ThemeProvider } from '~/lib/theme'
 
 colorScheme.set('system')
 
@@ -70,17 +71,20 @@ export default function RootLayout() {
   useEffect(() => {
     getFirebaseAuth()
     configurePurchases(REVENUECAT_KEY)
-    useThemeStore.getState().hydrate()
   }, [])
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <SafeAreaProvider>
-          <AuthGate />
-          <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-        </SafeAreaProvider>
-      </GestureHandlerRootView>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <EditTransactionProvider>
+        <QueryClientProvider client={queryClient}>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <SafeAreaProvider>
+              <AuthGate />
+              <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+            </SafeAreaProvider>
+          </GestureHandlerRootView>
+        </QueryClientProvider>
+      </EditTransactionProvider>
+    </ThemeProvider>
   )
 }

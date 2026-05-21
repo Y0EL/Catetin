@@ -24,7 +24,7 @@ import { useUpdateTransaction } from '~/hooks/use-transactions'
 import { useWallets } from '~/hooks/use-wallets'
 import { apiErrorMessage } from '~/lib/api'
 import { getCategoryMeta, type CategoryKey } from '~/lib/categories'
-import { useEditStore } from '~/lib/edit-store'
+import { useEditTransaction } from '~/lib/edit-store'
 
 const MAX_AMOUNT_DIGITS = 13
 const BIG_AMOUNT_THRESHOLD = 1_000_000_000
@@ -60,8 +60,7 @@ export default function AddModal() {
   const createTx = useCreateTransaction()
   const updateTx = useUpdateTransaction()
   const ocr = useOcrReceipt()
-  const editing = useEditStore((s) => s.editing)
-  const setEditing = useEditStore((s) => s.setEditing)
+  const { editing, setEditing } = useEditTransaction()
   const isEditing = editing !== null
 
   const [kind, setKind] = useState<'expense' | 'income'>('expense')

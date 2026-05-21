@@ -19,7 +19,7 @@ import { ScreenFade } from '~/components/screen-fade'
 import { TelegramLinkRow } from '~/components/telegram-link-row'
 import { useAuth } from '~/hooks/use-auth'
 import { signOutUser } from '~/lib/auth'
-import { useThemeStore, type ThemePref } from '~/lib/theme'
+import { useTheme, type ThemePref } from '~/lib/theme'
 
 export default function SettingsTab() {
   const router = useRouter()
@@ -129,8 +129,7 @@ const themeOptions: { key: ThemePref; label: string; icon: typeof Sun }[] = [
 ]
 
 function ThemeSelector() {
-  const pref = useThemeStore((s) => s.pref)
-  const setPref = useThemeStore((s) => s.setPref)
+  const { pref, setPref } = useTheme()
 
   return (
     <View className="px-4 py-3.5">

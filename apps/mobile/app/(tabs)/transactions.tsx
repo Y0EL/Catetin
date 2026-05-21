@@ -20,7 +20,7 @@ import {
 import { useWallets } from '~/hooks/use-wallets'
 import { apiErrorMessage } from '~/lib/api'
 import type { CategoryKey } from '~/lib/categories'
-import { useEditStore } from '~/lib/edit-store'
+import { useEditTransaction } from '~/lib/edit-store'
 
 function formatTxnTime(iso: string): string {
   const d = new Date(iso)
@@ -31,7 +31,7 @@ function formatTxnTime(iso: string): string {
 
 export default function TransactionsTab() {
   const router = useRouter()
-  const setEditing = useEditStore((s) => s.setEditing)
+  const { setEditing } = useEditTransaction()
   const del = useDeleteTransaction()
   const bulkDel = useBulkDeleteTransactions()
   const [search, setSearch] = useState('')
