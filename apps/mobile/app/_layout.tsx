@@ -45,7 +45,7 @@ function AuthGate() {
   if (loading) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-zinc-950">
-        <ActivityIndicator size="large" color="#4f46e5" />
+        <ActivityIndicator size="large" color="#18181b" />
       </View>
     )
   }

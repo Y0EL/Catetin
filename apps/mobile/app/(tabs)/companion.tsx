@@ -22,7 +22,7 @@ export default function CompanionTab() {
               </Text>
             </View>
             <View className="flex-row items-center gap-1 rounded-full bg-primary-50 px-3 py-1.5 dark:bg-primary-950">
-              <Sparkles size={12} color="#4f46e5" />
+              <Sparkles size={12} color="#18181b" />
               <Text className="font-sans text-xs font-semibold text-primary-700 dark:text-primary-300">
                 Pro
               </Text>

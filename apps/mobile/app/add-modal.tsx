@@ -144,7 +144,7 @@ export default function AddModal() {
               onChangeText={(t) => setAmountText(formatRupiahInput(t))}
               keyboardType="number-pad"
               placeholder="0"
-              placeholderTextColor="#c7d2fe"
+              placeholderTextColor="#71717a"
               className="flex-1 font-display text-5xl font-extrabold text-white"
               style={{ paddingVertical: 0, fontVariant: ['tabular-nums'] }}
             />

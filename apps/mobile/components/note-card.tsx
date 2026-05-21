@@ -4,7 +4,7 @@ import { View } from 'react-native'
 export function NoteCard({
   children,
   className = '',
-  clipColor = '#4f46e5',
+  clipColor = '#18181b',
 }: {
   children: React.ReactNode
   className?: string

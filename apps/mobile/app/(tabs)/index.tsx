@@ -15,7 +15,7 @@ import { useWallets } from '~/hooks/use-wallets'
 import type { CategoryKey } from '~/lib/categories'
 
 const cardShadow = {
-  shadowColor: '#4f46e5',
+  shadowColor: '#18181b',
   shadowOffset: { width: 0, height: 10 },
   shadowOpacity: 0.25,
   shadowRadius: 20,
@@ -93,7 +93,7 @@ export default function HomeTab() {
             <View className="mt-6 flex-row items-stretch">
               <View className="flex-1">
                 <View className="flex-row items-center gap-1.5">
-                  <ArrowDownLeft size={14} color="#a5b4fc" />
+                  <ArrowDownLeft size={14} color="#a1a1aa" />
                   <Text className="font-sans text-xs text-primary-100">Pemasukan</Text>
                 </View>
                 <View className="mt-1">
@@ -103,7 +103,7 @@ export default function HomeTab() {
               <View className="mx-4 w-px bg-white/20" />
               <View className="flex-1">
                 <View className="flex-row items-center gap-1.5">
-                  <ArrowUpRight size={14} color="#a5b4fc" />
+                  <ArrowUpRight size={14} color="#a1a1aa" />
                   <Text className="font-sans text-xs text-primary-100">Pengeluaran</Text>
                 </View>
                 <View className="mt-1">
@@ -115,12 +115,12 @@ export default function HomeTab() {
 
           <View className="mx-4 mt-4 flex-row gap-3">
             <QuickAction
-              icon={<Camera size={20} color="#4f46e5" />}
+              icon={<Camera size={20} color="#18181b" />}
               label="Scan struk"
               onPress={() => router.push('/add-modal')}
             />
             <QuickAction
-              icon={<Plus size={20} color="#4f46e5" />}
+              icon={<Plus size={20} color="#18181b" />}
               label="Catat manual"
               onPress={() => router.push('/add-modal')}
             />
@@ -163,7 +163,7 @@ export default function HomeTab() {
               <View className="mt-3">
                 <NoteCard className="items-center px-6 pb-10 pt-8">
                   <View className="h-14 w-14 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-950">
-                    <Sparkles size={24} color="#4f46e5" />
+                    <Sparkles size={24} color="#18181b" />
                   </View>
                   <Text className="mt-4 font-display text-base font-bold text-zinc-900 dark:text-zinc-100">
                     Belum ada cerita bulan ini

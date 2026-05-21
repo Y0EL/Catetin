@@ -22,7 +22,7 @@ export function TelegramLinkRow() {
         className="flex-row items-center gap-3 px-4 py-3.5 active:bg-zinc-50 dark:active:bg-zinc-800"
       >
         <View className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-          <MessageCircle size={18} color="#4f46e5" />
+          <MessageCircle size={18} color="#18181b" />
         </View>
         <View className="flex-1">
           <Text className="font-sans text-base text-zinc-900 dark:text-zinc-100">Telegram</Text>
@@ -31,7 +31,7 @@ export function TelegramLinkRow() {
           </Text>
         </View>
         {link.isPending ? (
-          <ActivityIndicator size="small" color="#4f46e5" />
+          <ActivityIndicator size="small" color="#18181b" />
         ) : (
           <Text className="font-sans text-sm font-semibold text-primary-600">
             {data ? 'Kode baru' : 'Sambungin'}

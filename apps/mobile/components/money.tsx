@@ -10,10 +10,20 @@ const sizes: Record<Size, { rp: string; num: string }> = {
   sm: { rp: 'text-[10px]', num: 'text-sm' },
 }
 
+function truncTo1(value: number): string {
+  const floored = Math.floor(value * 10) / 10
+  return floored.toLocaleString('id-ID', { maximumFractionDigits: 1 })
+}
+
+function compactRupiah(abs: number): string {
+  if (abs >= 1_000_000_000) return `${truncTo1(abs / 1_000_000_000)}miliar`
+  if (abs >= 1_000_000) return `${truncTo1(abs / 1_000_000)}jt`
+  return abs.toLocaleString('id-ID', { maximumFractionDigits: 0 })
+}
+
 function formatParts(value: number): { sign: string; digits: string } {
   const sign = value < 0 ? '-' : ''
-  const digits = Math.abs(value).toLocaleString('id-ID', { maximumFractionDigits: 0 })
-  return { sign, digits }
+  return { sign, digits: compactRupiah(Math.abs(value)) }
 }
 
 export function Money({

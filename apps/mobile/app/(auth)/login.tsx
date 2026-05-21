@@ -40,17 +40,17 @@ export default function LoginScreen() {
 
         <View className="gap-3">
           <Feature
-            icon={<MessageCircle size={20} color="#4f46e5" />}
+            icon={<MessageCircle size={20} color="#18181b" />}
             title="Catat lewat chat"
             body='Tulis "makan 35rb", langsung kecatat.'
           />
           <Feature
-            icon={<Camera size={20} color="#4f46e5" />}
+            icon={<Camera size={20} color="#18181b" />}
             title="Scan struk"
             body="OCR otomatis pecah per item."
           />
           <Feature
-            icon={<Mic size={20} color="#4f46e5" />}
+            icon={<Mic size={20} color="#18181b" />}
             title="Temen curhat"
             body="Ngobrol soal duit, 10 menit gratis."
           />

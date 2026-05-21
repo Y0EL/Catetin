@@ -30,7 +30,7 @@ const barShadow = {
 }
 
 const fabShadow = {
-  shadowColor: '#4f46e5',
+  shadowColor: '#18181b',
   shadowOffset: { width: 0, height: 4 },
   shadowOpacity: 0.45,
   shadowRadius: 10,
@@ -105,7 +105,7 @@ export function CatetinTabBar({ state, navigation }: BottomTabBarProps) {
               >
                 <Icon
                   size={22}
-                  color={isFocused ? '#4f46e5' : '#a1a1aa'}
+                  color={isFocused ? '#18181b' : '#a1a1aa'}
                   strokeWidth={isFocused ? 2.5 : 2}
                 />
               </View>
