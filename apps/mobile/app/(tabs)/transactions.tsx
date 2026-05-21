@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router'
 import { Check, CheckSquare, Pencil, Search, Trash2, X } from 'lucide-react-native'
 import { useMemo, useRef, useState } from 'react'
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable'
@@ -37,6 +37,7 @@ export default function TransactionsTab() {
   const [search, setSearch] = useState('')
   const [selecting, setSelecting] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [confirm, setConfirm] = useState<{ kind: 'single' | 'bulk'; ids: string[] } | null>(null)
   const summary = useSummary(currentMonth())
   const transactions = useTransactions(search.trim() ? { q: search.trim() } : {})
   const categories = useCategories()
@@ -48,17 +49,7 @@ export default function TransactionsTab() {
   }
 
   function onDelete(t: TransactionDto) {
-    Alert.alert('Hapus transaksi?', 'Catatan ini bakal ilang permanen.', [
-      { text: 'Batal', style: 'cancel' },
-      {
-        text: 'Hapus',
-        style: 'destructive',
-        onPress: () =>
-          del.mutate(t.id, {
-            onError: (err) => Alert.alert('Gagal hapus', apiErrorMessage(err)),
-          }),
-      },
-    ])
+    setConfirm({ kind: 'single', ids: [t.id] })
   }
 
   function enterSelectionWith(id: string) {
@@ -87,18 +78,33 @@ export default function TransactionsTab() {
   function bulkDelete() {
     const ids = Array.from(selected)
     if (ids.length === 0) return
-    Alert.alert(`Hapus ${ids.length} transaksi?`, 'Catatan-catatan ini bakal ilang permanen.', [
-      { text: 'Batal', style: 'cancel' },
-      {
-        text: 'Hapus',
-        style: 'destructive',
-        onPress: () =>
-          bulkDel.mutate(ids, {
-            onSuccess: cancelSelection,
-            onError: (err) => Alert.alert('Gagal hapus', apiErrorMessage(err)),
-          }),
+    setConfirm({ kind: 'bulk', ids })
+  }
+
+  function runConfirm() {
+    if (!confirm) return
+    if (confirm.kind === 'single') {
+      const id = confirm.ids[0]
+      if (!id) return
+      del.mutate(id, {
+        onSuccess: () => setConfirm(null),
+        onError: (err) => {
+          setConfirm(null)
+          Alert.alert('Gagal hapus', apiErrorMessage(err))
+        },
+      })
+      return
+    }
+    bulkDel.mutate(confirm.ids, {
+      onSuccess: () => {
+        setConfirm(null)
+        cancelSelection()
       },
-    ])
+      onError: (err) => {
+        setConfirm(null)
+        Alert.alert('Gagal hapus', apiErrorMessage(err))
+      },
+    })
   }
 
   const rows = transactions.data?.pages.flatMap((p) => p.transactions) ?? []
@@ -279,6 +285,54 @@ export default function TransactionsTab() {
           </View>
         </ScrollView>
       </ScreenFade>
+
+      <Modal
+        visible={confirm !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setConfirm(null)}
+      >
+        <View className="flex-1 items-center justify-center bg-black/60 px-6">
+          <View className="w-full rounded-3xl bg-white p-6 dark:bg-zinc-900">
+            <View className="h-12 w-12 items-center justify-center self-start rounded-full bg-danger/10">
+              <Trash2 size={22} color="#dc2626" />
+            </View>
+            <Text className="mt-4 font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
+              {confirm?.kind === 'bulk'
+                ? `Hapus ${confirm.ids.length} transaksi?`
+                : 'Hapus transaksi?'}
+            </Text>
+            <Text className="mt-1 font-sans text-sm leading-5 text-zinc-500 dark:text-zinc-400">
+              {confirm?.kind === 'bulk'
+                ? 'Catatan-catatan ini bakal ilang permanen, gak bisa balik lagi.'
+                : 'Catatan ini bakal ilang permanen, gak bisa balik lagi.'}
+            </Text>
+            <View className="mt-5 gap-2">
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Hapus"
+                onPress={runConfirm}
+                disabled={del.isPending || bulkDel.isPending}
+                className="items-center rounded-full bg-danger py-3.5 active:opacity-90 disabled:opacity-50"
+              >
+                <Text className="font-sans text-sm font-semibold text-white">
+                  {del.isPending || bulkDel.isPending ? 'Lagi ngehapus' : 'Iya, hapus'}
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Batal"
+                onPress={() => setConfirm(null)}
+                className="items-center rounded-full bg-zinc-100 py-3.5 active:opacity-70 dark:bg-zinc-800"
+              >
+                <Text className="font-sans text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                  Eh, batal
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   )
 }
