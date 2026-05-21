@@ -5,7 +5,7 @@ module.exports = function (api) {
     plugins: ['react-native-worklets/plugin'],
     overrides: [
       {
-        test: /node_modules[\\/](three|@react-three)[\\/]/,
+        test: /node_modules[\\/](three|@react-three|zustand)[\\/]/,
         plugins: ['babel-plugin-transform-import-meta'],
       },
     ],
