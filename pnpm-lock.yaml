@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  zustand@5.0.13:
+    hash: bu6y5yc3ngsk7fkwe3x6tztn2a
+    path: patches/zustand@5.0.13.patch
+
 importers:
 
   .:
@@ -9438,7 +9443,7 @@ snapshots:
       tunnel-rat: 0.1.2(@types/react@19.1.17)(react@19.1.0)
       use-sync-external-store: 1.6.0(react@19.1.0)
       utility-types: 3.11.0
-      zustand: 5.0.13(@types/react@19.1.17)(react@19.1.0)(use-sync-external-store@1.6.0(react@19.1.0))
+      zustand: 5.0.13(patch_hash=bu6y5yc3ngsk7fkwe3x6tztn2a)(@types/react@19.1.17)(react@19.1.0)(use-sync-external-store@1.6.0(react@19.1.0))
     optionalDependencies:
       react-dom: 19.1.0(react@19.1.0)
     transitivePeerDependencies:
@@ -9459,7 +9464,7 @@ snapshots:
       suspend-react: 0.1.3(react@19.1.0)
       three: 0.184.0
       use-sync-external-store: 1.6.0(react@19.1.0)
-      zustand: 5.0.13(@types/react@19.1.17)(react@19.1.0)(use-sync-external-store@1.6.0(react@19.1.0))
+      zustand: 5.0.13(patch_hash=bu6y5yc3ngsk7fkwe3x6tztn2a)(@types/react@19.1.17)(react@19.1.0)(use-sync-external-store@1.6.0(react@19.1.0))
     optionalDependencies:
       expo: 54.0.34(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.23)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(typescript@5.9.3)
       expo-asset: 12.0.13(expo@54.0.34)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(typescript@5.9.3)
@@ -14144,7 +14149,7 @@ snapshots:
       '@types/react': 19.1.17
       react: 19.1.0
 
-  zustand@5.0.13(@types/react@19.1.17)(react@19.1.0)(use-sync-external-store@1.6.0(react@19.1.0)):
+  zustand@5.0.13(patch_hash=bu6y5yc3ngsk7fkwe3x6tztn2a)(@types/react@19.1.17)(react@19.1.0)(use-sync-external-store@1.6.0(react@19.1.0)):
     optionalDependencies:
       '@types/react': 19.1.17
       react: 19.1.0
