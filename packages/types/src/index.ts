@@ -92,6 +92,28 @@ export const notifPrefsSchema = z.object({
 
 export type NotifPrefs = z.infer<typeof notifPrefsSchema>
 
+export const companionQuotaSchema = z.object({
+  dailyLimitSec: z.number().int().nonnegative(),
+  usedTodaySec: z.number().int().nonnegative(),
+  remainingSec: z.number().int().nonnegative(),
+  isPro: z.boolean(),
+})
+
+export type CompanionQuota = z.infer<typeof companionQuotaSchema>
+
+export const startCompanionSessionResponseSchema = z.object({
+  sessionId: z.string().uuid(),
+  expiresInSec: z.number().int().positive(),
+})
+
+export type StartCompanionSessionResponse = z.infer<typeof startCompanionSessionResponseSchema>
+
+export const endCompanionSessionSchema = z.object({
+  sessionId: z.string().uuid(),
+})
+
+export type EndCompanionSessionInput = z.infer<typeof endCompanionSessionSchema>
+
 export const ocrReceiptResponseSchema = z.object({
   merchant: z.string().nullable(),
   date: z.string().nullable(),

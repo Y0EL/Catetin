@@ -9,6 +9,7 @@ import { logger } from './logger'
 import { authRouter } from './routes/auth'
 import { budgetsRouter } from './routes/budgets'
 import { categoriesRouter } from './routes/categories'
+import { companionRouter } from './routes/companion'
 import { healthRouter } from './routes/health'
 import { linkingRouter } from './routes/linking'
 import { notifRouter } from './routes/notif'
@@ -60,6 +61,7 @@ app.route('/v1/linking', linkingRouter)
 app.route('/v1/ocr', ocrRouter)
 app.route('/v1/budgets', budgetsRouter)
 app.route('/v1/notif', notifRouter)
+app.route('/v1/companion', companionRouter)
 
 const bot = createTelegramBot(env.TELEGRAM_BOT_TOKEN)
 
