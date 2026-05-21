@@ -5,6 +5,7 @@ import { HttpError } from '../errors'
 import { ensureUserDefaults } from './seed-service'
 
 export type ChatSource = 'telegram' | 'whatsapp'
+export type TransactionSource = ChatSource | 'ocr_photo' | 'ocr_video'
 
 export type RecordedChatTransaction = {
   kind: 'expense' | 'income'
@@ -12,6 +13,14 @@ export type RecordedChatTransaction = {
   description: string
   categoryName: string
   walletName: string
+}
+
+export type AgentTransactionInput = {
+  amount: number
+  deskripsi: string
+  kategori: string
+  jenis: 'pengeluaran' | 'pemasukan'
+  occurredAt?: string
 }
 
 const INCOME_KEYWORDS = ['gaji', 'gajian', 'bonus', 'thr', 'pemasukan', 'dividen', 'cuan', 'untung']
@@ -35,6 +44,62 @@ async function findCategory(
   return rows[0] ?? null
 }
 
+async function pickDefaultWallet(
+  db: Database,
+  userId: string,
+): Promise<{ id: string; name: string } | null> {
+  const rows = await db
+    .select({ id: wallets.id, name: wallets.name })
+    .from(wallets)
+    .where(and(eq(wallets.userId, userId), eq(wallets.isArchived, false)))
+    .orderBy(asc(wallets.createdAt))
+    .limit(1)
+  return rows[0] ?? null
+}
+
+async function insertTransaction(
+  db: Database,
+  userId: string,
+  values: {
+    kind: 'expense' | 'income'
+    amount: number
+    description: string
+    categoryName: string
+    fallbackCategory: string
+    occurredAt: Date
+    source: TransactionSource
+  },
+): Promise<RecordedChatTransaction> {
+  await ensureUserDefaults(db, userId)
+
+  const category =
+    (await findCategory(db, userId, values.categoryName.toLowerCase(), values.kind)) ??
+    (await findCategory(db, userId, values.fallbackCategory, values.kind))
+  if (!category) throw new HttpError(500, 'INTERNAL', 'Kategori default gak ketemu')
+
+  const wallet = await pickDefaultWallet(db, userId)
+  if (!wallet) throw new HttpError(500, 'INTERNAL', 'Wallet default gak ketemu')
+
+  await db.insert(transactions).values({
+    userId,
+    walletId: wallet.id,
+    categoryId: category.id,
+    kind: values.kind,
+    amount: Math.round(values.amount),
+    description: values.description,
+    occurredAt: values.occurredAt,
+    source: values.source,
+  })
+
+  return {
+    kind: values.kind,
+    amount: Math.round(values.amount),
+    description: values.description,
+    categoryName: category.name,
+    walletName: wallet.name,
+  }
+}
+
 export async function recordChatTransaction(
   db: Database,
   userId: string,
@@ -42,43 +107,33 @@ export async function recordChatTransaction(
   rawText: string,
   source: ChatSource,
 ): Promise<RecordedChatTransaction> {
-  await ensureUserDefaults(db, userId)
-
   const isIncome = looksLikeIncome(rawText)
   const kind: 'expense' | 'income' = isIncome ? 'income' : 'expense'
-  const wantedName = isIncome ? 'pemasukan lain' : parsed.category
-  const fallbackName = isIncome ? 'pemasukan lain' : 'lainnya'
-
-  const category =
-    (await findCategory(db, userId, wantedName, kind)) ??
-    (await findCategory(db, userId, fallbackName, kind))
-  if (!category) throw new HttpError(500, 'INTERNAL', 'Kategori default gak ketemu')
-
-  const walletRows = await db
-    .select({ id: wallets.id, name: wallets.name })
-    .from(wallets)
-    .where(and(eq(wallets.userId, userId), eq(wallets.isArchived, false)))
-    .orderBy(asc(wallets.createdAt))
-    .limit(1)
-  const wallet = walletRows[0]
-  if (!wallet) throw new HttpError(500, 'INTERNAL', 'Wallet default gak ketemu')
-
-  await db.insert(transactions).values({
-    userId,
-    walletId: wallet.id,
-    categoryId: category.id,
+  return insertTransaction(db, userId, {
     kind,
     amount: parsed.amount,
     description: parsed.description,
+    categoryName: isIncome ? 'pemasukan lain' : parsed.category,
+    fallbackCategory: isIncome ? 'pemasukan lain' : 'lainnya',
     occurredAt: new Date(),
     source,
   })
+}
 
-  return {
+export async function saveAgentTransaction(
+  db: Database,
+  userId: string,
+  input: AgentTransactionInput,
+  source: TransactionSource,
+): Promise<RecordedChatTransaction> {
+  const kind: 'expense' | 'income' = input.jenis === 'pemasukan' ? 'income' : 'expense'
+  return insertTransaction(db, userId, {
     kind,
-    amount: parsed.amount,
-    description: parsed.description,
-    categoryName: category.name,
-    walletName: wallet.name,
-  }
+    amount: input.amount,
+    description: input.deskripsi,
+    categoryName: input.kategori,
+    fallbackCategory: kind === 'income' ? 'pemasukan lain' : 'lainnya',
+    occurredAt: input.occurredAt ? new Date(input.occurredAt) : new Date(),
+    source,
+  })
 }
