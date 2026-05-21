@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef } from 'react'
-import { Animated, Easing, StyleSheet, View } from 'react-native'
+import { Animated, Easing, Platform, StyleSheet, View } from 'react-native'
 import Svg, { Circle, Defs, LinearGradient, Path, RadialGradient, Stop } from 'react-native-svg'
+
+const USE_NATIVE_DRIVER = Platform.OS !== 'web'
 
 type BlobSpec = {
   color: string
@@ -21,13 +23,13 @@ function Blob({ color, size, from, to, duration }: BlobSpec) {
           toValue: 1,
           duration,
           easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
         Animated.timing(t, {
           toValue: 0,
           duration,
           easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
       ]),
     )
@@ -95,7 +97,7 @@ function Spikes({ box, count, rInner, rOuter, duration, reverse, opacity, stops 
         toValue: 1,
         duration,
         easing: Easing.linear,
-        useNativeDriver: true,
+        useNativeDriver: USE_NATIVE_DRIVER,
       }),
     )
     loop.start()
@@ -162,6 +164,107 @@ export function CardGlow() {
             { offset: '0', color: '#22d3ee', opacity: 0.9 },
             { offset: '0.6', color: '#6366f1', opacity: 0.6 },
             { offset: '1', color: '#a855f7', opacity: 0.5 },
+          ]}
+        />
+      </View>
+    </View>
+  )
+}
+
+type RingStop = { offset: string; color: string; opacity: number }
+
+function HaloRing({
+  box,
+  radius,
+  strokeWidth,
+  duration,
+  reverse,
+  opacity,
+  stops,
+}: {
+  box: number
+  radius: number
+  strokeWidth: number
+  duration: number
+  reverse?: boolean
+  opacity: number
+  stops: RingStop[]
+}) {
+  const id = useId().replace(/:/g, '')
+  const rot = useRef(new Animated.Value(0)).current
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(rot, {
+        toValue: 1,
+        duration,
+        easing: Easing.linear,
+        useNativeDriver: USE_NATIVE_DRIVER,
+      }),
+    )
+    loop.start()
+    return () => loop.stop()
+  }, [rot, duration])
+
+  const rotate = rot.interpolate({
+    inputRange: [0, 1],
+    outputRange: reverse ? ['360deg', '0deg'] : ['0deg', '360deg'],
+  })
+
+  return (
+    <Animated.View style={{ position: 'absolute', opacity, transform: [{ rotate }] }}>
+      <Svg width={box} height={box}>
+        <Defs>
+          <LinearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+            {stops.map((s, i) => (
+              <Stop key={i} offset={s.offset} stopColor={s.color} stopOpacity={s.opacity} />
+            ))}
+          </LinearGradient>
+        </Defs>
+        <Circle
+          cx={box / 2}
+          cy={box / 2}
+          r={radius}
+          stroke={`url(#${id})`}
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+      </Svg>
+    </Animated.View>
+  )
+}
+
+export function SpotlightGlow() {
+  return (
+    <View
+      pointerEvents="none"
+      style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}
+    >
+      <View style={{ width: 520, height: 520 }}>
+        <HaloRing
+          box={520}
+          radius={210}
+          strokeWidth={70}
+          duration={14000}
+          opacity={0.85}
+          stops={[
+            { offset: '0', color: '#818cf8', opacity: 0.95 },
+            { offset: '0.33', color: '#22d3ee', opacity: 0.95 },
+            { offset: '0.66', color: '#f472b6', opacity: 0.95 },
+            { offset: '1', color: '#c084fc', opacity: 0.9 },
+          ]}
+        />
+        <HaloRing
+          box={520}
+          radius={170}
+          strokeWidth={40}
+          duration={22000}
+          reverse
+          opacity={0.6}
+          stops={[
+            { offset: '0', color: '#f59e0b', opacity: 0.9 },
+            { offset: '0.5', color: '#a855f7', opacity: 0.8 },
+            { offset: '1', color: '#22d3ee', opacity: 0.9 },
           ]}
         />
       </View>

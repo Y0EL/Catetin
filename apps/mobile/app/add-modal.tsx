@@ -25,7 +25,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { formatRupiah, parseQuickAddText } from '@catetin/chat-core'
 import type { OcrReceiptResponse } from '@catetin/types'
-import { CardGlow } from '~/components/card-glow'
+import { SpotlightGlow } from '~/components/card-glow'
 import { useCategories } from '~/hooks/use-categories'
 import { useCreateTransaction } from '~/hooks/use-create-transaction'
 import { useOcrReceipt } from '~/hooks/use-ocr-receipt'
@@ -429,9 +429,9 @@ export default function AddModal() {
           <View className="relative w-full items-center">
             <View
               pointerEvents="none"
-              style={{ position: 'absolute', top: -80, bottom: -80, left: -40, right: -40 }}
+              style={{ position: 'absolute', top: -60, bottom: -60, left: -60, right: -60 }}
             >
-              <CardGlow />
+              <SpotlightGlow />
             </View>
             {ocr.isPending ? (
               <View
