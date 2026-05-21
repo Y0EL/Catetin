@@ -130,7 +130,7 @@ export default function HomeTab() {
             <QuickAction
               icon={<Camera size={20} color={accent} />}
               label="Scan struk"
-              onPress={() => router.push('/add-modal')}
+              onPress={() => router.push('/add-modal?scan=camera')}
             />
             <QuickAction
               icon={<Plus size={20} color={accent} />}

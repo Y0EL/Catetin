@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 import {
   ArrowDownLeft,
@@ -9,7 +9,7 @@ import {
   Sparkles,
   X,
 } from 'lucide-react-native'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -69,6 +69,8 @@ export default function AddModal() {
   const [categoryId, setCategoryId] = useState<string | null>(null)
   const [description, setDescription] = useState('')
   const [showBigConfirm, setShowBigConfirm] = useState(false)
+  const params = useLocalSearchParams<{ scan?: string }>()
+  const scanTriggered = useRef(false)
 
   const amount = useMemo(() => parseDigits(amountText), [amountText])
   const walletList = wallets.data ?? []
@@ -140,6 +142,12 @@ export default function AddModal() {
       Alert.alert('Gagal scan struk', apiErrorMessage(err))
     }
   }
+
+  useEffect(() => {
+    if (!params.scan || scanTriggered.current) return
+    scanTriggered.current = true
+    void scanReceipt(params.scan === 'camera')
+  }, [params.scan])
 
   function onSave() {
     if (amount <= 0) {
