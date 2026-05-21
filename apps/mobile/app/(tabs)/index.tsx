@@ -81,7 +81,7 @@ export default function HomeTab() {
             className="mx-4 mt-5 overflow-hidden rounded-3xl bg-primary-600 p-6"
             style={cardShadow}
           >
-            {(summary.data?.income ?? 0) > 0 ? <CardGlow position="bottomLeft" /> : null}
+            <CardGlow />
             <View className="flex-row items-center justify-between">
               <Text className="font-sans text-sm text-primary-200">Pengeluaran bulan ini</Text>
               <View className="rounded-full bg-white/15 px-2.5 py-1">
@@ -89,7 +89,7 @@ export default function HomeTab() {
               </View>
             </View>
             <View className="mt-3">
-              <Money value={summary.data?.expense ?? 0} size="hero" tone="onDark" />
+              <Money value={summary.data?.expense ?? 0} size="hero" tone="onDark" compact />
             </View>
 
             <View className="mt-6 flex-row items-stretch">
@@ -99,7 +99,7 @@ export default function HomeTab() {
                   <Text className="font-sans text-xs text-primary-100">Pemasukan</Text>
                 </View>
                 <View className="mt-1">
-                  <Money value={summary.data?.income ?? 0} size="lg" tone="onDark" />
+                  <Money value={summary.data?.income ?? 0} size="lg" tone="onDark" compact />
                 </View>
               </View>
               <View className="mx-4 w-px bg-white/20" />
@@ -109,7 +109,7 @@ export default function HomeTab() {
                   <Text className="font-sans text-xs text-primary-100">Pengeluaran</Text>
                 </View>
                 <View className="mt-1">
-                  <Money value={summary.data?.expense ?? 0} size="lg" tone="onDark" />
+                  <Money value={summary.data?.expense ?? 0} size="lg" tone="onDark" compact />
                 </View>
               </View>
             </View>

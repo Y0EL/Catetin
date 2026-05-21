@@ -9,16 +9,12 @@ type Props = {
   amount: number
   kind: 'expense' | 'income'
   time: string
-  onDark?: boolean
 }
 
-export function TransactionCard({ category, title, wallet, amount, kind, time, onDark }: Props) {
+export function TransactionCard({ category, title, wallet, amount, kind, time }: Props) {
   const meta = getCategoryMeta(category)
   const Icon = meta.icon
   const signed = kind === 'expense' ? -Math.abs(amount) : Math.abs(amount)
-  const titleColor = onDark ? 'text-zinc-50' : 'text-zinc-900 dark:text-zinc-100'
-  const subColor = onDark ? 'text-zinc-400' : 'text-zinc-500 dark:text-zinc-400'
-  const moneyTone = kind === 'income' ? 'income' : onDark ? 'onDark' : 'default'
 
   return (
     <View className="flex-row items-center gap-3 py-3">
@@ -29,16 +25,16 @@ export function TransactionCard({ category, title, wallet, amount, kind, time, o
         <Icon size={20} color={meta.tint} />
       </View>
       <View className="flex-1">
-        <Text className={`font-sans text-base font-semibold ${titleColor}`}>{title}</Text>
-        <Text className={`mt-0.5 font-sans text-xs ${subColor}`}>
+        <Text className="font-sans text-base font-semibold text-zinc-900 dark:text-zinc-100">
+          {title}
+        </Text>
+        <Text className="mt-0.5 font-sans text-xs text-zinc-500 dark:text-zinc-400">
           {wallet} {'·'} {meta.label}
         </Text>
       </View>
       <View className="items-end">
-        <Money value={signed} size="md" tone={moneyTone} />
-        <Text className={`mt-0.5 font-sans text-xs ${onDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-          {time}
-        </Text>
+        <Money value={signed} size="md" tone={kind === 'income' ? 'income' : 'default'} />
+        <Text className="mt-0.5 font-sans text-xs text-zinc-400">{time}</Text>
       </View>
     </View>
   )

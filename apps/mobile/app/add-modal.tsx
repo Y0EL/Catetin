@@ -16,6 +16,14 @@ function formatRupiahInput(raw: string): string {
   return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
+function amountFontSize(formatted: string): number {
+  const n = formatted.replace(/[^0-9]/g, '').length
+  if (n <= 6) return 48
+  if (n <= 9) return 38
+  if (n <= 12) return 30
+  return 24
+}
+
 function parseDigits(formatted: string): number {
   const digits = formatted.replace(/[^0-9]/g, '')
   if (!digits) return 0
@@ -145,8 +153,13 @@ export default function AddModal() {
               keyboardType="number-pad"
               placeholder="0"
               placeholderTextColor="#71717a"
-              className="flex-1 font-display text-5xl font-extrabold text-white"
-              style={{ paddingVertical: 0, fontVariant: ['tabular-nums'] }}
+              numberOfLines={1}
+              className="flex-1 font-display font-extrabold text-white"
+              style={{
+                paddingVertical: 0,
+                fontVariant: ['tabular-nums'],
+                fontSize: amountFontSize(amountText),
+              }}
             />
           </View>
         </View>

@@ -16,26 +16,33 @@ function truncTo1(value: number): string {
 }
 
 function compactRupiah(abs: number): string {
+  if (abs >= 1_000_000_000_000) return `${truncTo1(abs / 1_000_000_000_000)}triliun`
   if (abs >= 1_000_000_000) return `${truncTo1(abs / 1_000_000_000)}miliar`
   if (abs >= 1_000_000) return `${truncTo1(abs / 1_000_000)}jt`
   return abs.toLocaleString('id-ID', { maximumFractionDigits: 0 })
 }
 
-function formatParts(value: number): { sign: string; digits: string } {
+function formatParts(value: number, compact: boolean): { sign: string; digits: string } {
   const sign = value < 0 ? '-' : ''
-  return { sign, digits: compactRupiah(Math.abs(value)) }
+  const abs = Math.abs(value)
+  const digits = compact
+    ? compactRupiah(abs)
+    : abs.toLocaleString('id-ID', { maximumFractionDigits: 0 })
+  return { sign, digits }
 }
 
 export function Money({
   value,
   size = 'md',
   tone = 'default',
+  compact = false,
 }: {
   value: number
   size?: Size
   tone?: Tone
+  compact?: boolean
 }) {
-  const { sign, digits } = formatParts(value)
+  const { sign, digits } = formatParts(value, compact)
   const numColor =
     tone === 'onDark'
       ? 'text-white'
