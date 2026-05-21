@@ -35,6 +35,7 @@ function invalidateAfterMutation(qc: ReturnType<typeof useQueryClient>) {
   qc.invalidateQueries({ queryKey: ['transactions'] })
   qc.invalidateQueries({ queryKey: ['summary'] })
   qc.invalidateQueries({ queryKey: ['budgets'] })
+  qc.invalidateQueries({ queryKey: ['trend'] })
 }
 
 export function useUpdateTransaction() {

@@ -15,6 +15,8 @@ export function useCreateTransaction() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
       queryClient.invalidateQueries({ queryKey: ['summary'] })
+      queryClient.invalidateQueries({ queryKey: ['budgets'] })
+      queryClient.invalidateQueries({ queryKey: ['trend'] })
     },
   })
 }

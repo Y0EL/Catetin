@@ -1,12 +1,14 @@
-import { useColorScheme } from 'nativewind'
-
-// Warna ikon aksen yang ngikut tema: gelap di light mode, terang di dark mode.
-export function useAccentColor(): string {
-  const { colorScheme } = useColorScheme()
-  return colorScheme === 'dark' ? '#fafafa' : '#18181b'
-}
+import { useColorScheme as useNativeWindScheme } from 'nativewind'
+import { useColorScheme as useRNScheme } from 'react-native'
 
 export function useIsDark(): boolean {
-  const { colorScheme } = useColorScheme()
-  return colorScheme === 'dark'
+  const { colorScheme } = useNativeWindScheme()
+  const osScheme = useRNScheme()
+  if (colorScheme === 'dark') return true
+  if (colorScheme === 'light') return false
+  return osScheme === 'dark'
+}
+
+export function useAccentColor(): string {
+  return useIsDark() ? '#fafafa' : '#18181b'
 }
