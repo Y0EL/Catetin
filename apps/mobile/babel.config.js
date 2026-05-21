@@ -3,11 +3,5 @@ module.exports = function (api) {
   return {
     presets: [['babel-preset-expo', { jsxImportSource: 'nativewind' }], 'nativewind/babel'],
     plugins: ['react-native-worklets/plugin'],
-    overrides: [
-      {
-        test: /node_modules[\\/](three|@react-three|zustand)[\\/]/,
-        plugins: ['babel-plugin-transform-import-meta'],
-      },
-    ],
   }
 }
