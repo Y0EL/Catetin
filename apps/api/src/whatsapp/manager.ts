@@ -1,0 +1,210 @@
+import type { Boom } from '@hapi/boom'
+import {
+  DisconnectReason,
+  makeWASocket,
+  type ConnectionState,
+  type WAMessage,
+  type WASocket,
+} from 'baileys'
+import { eq, isNotNull } from 'drizzle-orm'
+import QRCode from 'qrcode'
+import { whatsappSessions, type Database } from '@catetin/db'
+import { logger as appLogger } from '../logger'
+import { clearAuthState, makeDbAuthState } from './auth-state'
+import { handleIncomingMessage } from './handler'
+
+type Mode = 'pairing' | 'connected' | 'disconnected'
+
+type SessionState = {
+  userId: string
+  mode: Mode
+  qrDataUrl: string | null
+  socket: WASocket | null
+  jid: string | null
+  startedAt: number
+  silentLogger: ReturnType<typeof makeSilentLogger>
+}
+
+const sessions = new Map<string, SessionState>()
+let dbRef: Database | null = null
+
+function makeSilentLogger() {
+  const noop = () => undefined
+  const base = {
+    level: 'silent',
+    trace: noop,
+    debug: noop,
+    info: noop,
+    warn: noop,
+    error: noop,
+    fatal: noop,
+    child() {
+      return base
+    },
+  }
+  return base
+}
+
+async function refreshLastSeen(db: Database, userId: string) {
+  await db
+    .update(whatsappSessions)
+    .set({ lastSeenAt: new Date() })
+    .where(eq(whatsappSessions.userId, userId))
+}
+
+async function startSocket(db: Database, userId: string, initial: boolean): Promise<SessionState> {
+  const existing = sessions.get(userId)
+  if (existing && existing.socket && existing.mode !== 'disconnected') return existing
+
+  const silentLogger = existing?.silentLogger ?? makeSilentLogger()
+  const { state, saveCreds } = await makeDbAuthState(db, userId)
+  const socket = makeWASocket({
+    auth: state,
+    printQRInTerminal: false,
+    logger: silentLogger,
+    syncFullHistory: false,
+    markOnlineOnConnect: false,
+  })
+
+  const session: SessionState = existing ?? {
+    userId,
+    mode: initial && state.creds.registered ? 'connected' : 'pairing',
+    qrDataUrl: null,
+    socket: null,
+    jid: state.creds.me?.id ?? null,
+    startedAt: Date.now(),
+    silentLogger,
+  }
+  session.socket = socket
+  session.mode = state.creds.registered ? 'connected' : 'pairing'
+  sessions.set(userId, session)
+
+  socket.ev.on('creds.update', () => {
+    void saveCreds()
+  })
+
+  socket.ev.on('connection.update', (update: Partial<ConnectionState>) => {
+    void handleConnectionUpdate(db, userId, update)
+  })
+
+  socket.ev.on('messages.upsert', (event) => {
+    if (event.type !== 'notify') return
+    for (const msg of event.messages) {
+      void safeHandle(db, userId, msg)
+    }
+  })
+
+  return session
+}
+
+async function safeHandle(db: Database, userId: string, msg: WAMessage) {
+  try {
+    const session = sessions.get(userId)
+    if (!session || !session.socket) return
+    await handleIncomingMessage(db, userId, session.socket, msg)
+    await refreshLastSeen(db, userId)
+  } catch (err) {
+    appLogger.error({ err, userId }, 'wa message handle gagal')
+  }
+}
+
+async function handleConnectionUpdate(
+  db: Database,
+  userId: string,
+  update: Partial<ConnectionState>,
+) {
+  const session = sessions.get(userId)
+  if (!session) return
+
+  if (update.qr) {
+    try {
+      session.qrDataUrl = await QRCode.toDataURL(update.qr, { width: 320, margin: 1 })
+      session.mode = 'pairing'
+    } catch (err) {
+      appLogger.error({ err, userId }, 'gagal generate QR image')
+    }
+  }
+
+  if (update.connection === 'open') {
+    session.qrDataUrl = null
+    session.mode = 'connected'
+    session.jid = session.socket?.user?.id ?? session.jid
+    await db
+      .update(whatsappSessions)
+      .set({ jid: session.jid, linkedAt: new Date(), lastSeenAt: new Date() })
+      .where(eq(whatsappSessions.userId, userId))
+    appLogger.info({ userId, jid: session.jid }, 'wa session ke-link')
+  }
+
+  if (update.connection === 'close') {
+    const reason = (update.lastDisconnect?.error as Boom | undefined)?.output?.statusCode
+    session.mode = 'disconnected'
+    session.socket = null
+    if (reason === DisconnectReason.loggedOut) {
+      await clearAuthState(db, userId)
+      sessions.delete(userId)
+      appLogger.info({ userId }, 'wa session logout')
+      return
+    }
+    appLogger.warn({ userId, reason }, 'wa session putus, retry sebentar lagi')
+    setTimeout(() => {
+      void startSocket(db, userId, false).catch((err) =>
+        appLogger.error({ err, userId }, 'wa reconnect gagal'),
+      )
+    }, 5000)
+  }
+}
+
+export function setWhatsappDb(db: Database): void {
+  dbRef = db
+}
+
+export async function startPairing(userId: string): Promise<{
+  mode: Mode
+  qr: string | null
+  jid: string | null
+}> {
+  if (!dbRef) throw new Error('WhatsApp manager belum di-init')
+  const session = await startSocket(dbRef, userId, false)
+  return { mode: session.mode, qr: session.qrDataUrl, jid: session.jid }
+}
+
+export function getPairingStatus(userId: string): {
+  mode: Mode
+  qr: string | null
+  jid: string | null
+} {
+  const session = sessions.get(userId)
+  if (!session) return { mode: 'disconnected', qr: null, jid: null }
+  return { mode: session.mode, qr: session.qrDataUrl, jid: session.jid }
+}
+
+export async function unlinkUser(userId: string): Promise<void> {
+  if (!dbRef) throw new Error('WhatsApp manager belum di-init')
+  const session = sessions.get(userId)
+  if (session?.socket) {
+    try {
+      await session.socket.logout()
+    } catch {
+      // sudah putus, lanjut hapus creds aja
+    }
+  }
+  await clearAuthState(dbRef, userId)
+  sessions.delete(userId)
+}
+
+export async function restoreActiveSessions(db: Database): Promise<void> {
+  setWhatsappDb(db)
+  const rows = await db
+    .select({ userId: whatsappSessions.userId })
+    .from(whatsappSessions)
+    .where(isNotNull(whatsappSessions.linkedAt))
+  for (const row of rows) {
+    try {
+      await startSocket(db, row.userId, true)
+    } catch (err) {
+      appLogger.error({ err, userId: row.userId }, 'wa restore session gagal')
+    }
+  }
+  appLogger.info({ count: rows.length }, 'wa sessions di-restore')
+}

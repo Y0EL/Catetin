@@ -5,7 +5,6 @@ import {
   FileText,
   Globe,
   LogOut,
-  MessageCircle,
   Monitor,
   Moon,
   Shield,
@@ -20,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { PaywallButton } from '~/components/paywall-button'
 import { ScreenFade } from '~/components/screen-fade'
 import { TelegramLinkRow } from '~/components/telegram-link-row'
+import { WhatsappLinkRow } from '~/components/whatsapp-link-row'
 import { useAuth } from '~/hooks/use-auth'
 import { useNotifPrefs, useTestNotif, useUpdateNotifPrefs } from '~/hooks/use-notif-prefs'
 import { downloadAndShareReport } from '~/hooks/use-download-report'
@@ -93,12 +93,7 @@ export default function SettingsTab() {
           <Section title="Channel">
             <TelegramLinkRow />
             <Divider />
-            <Row
-              icon={<MessageCircle size={18} color="#a1a1aa" />}
-              label="WhatsApp"
-              hint="Coming soon"
-              muted
-            />
+            <WhatsappLinkRow />
           </Section>
 
           <Section title="Notifikasi">

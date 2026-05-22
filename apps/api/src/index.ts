@@ -17,9 +17,11 @@ import { ocrRouter } from './routes/ocr'
 import { reportsRouter } from './routes/reports'
 import { transactionsRouter } from './routes/transactions'
 import { walletsRouter } from './routes/wallets'
+import { whatsappRouter } from './routes/whatsapp'
 import { registerCrons } from './services/cron-service'
 import { createTelegramBot } from './telegram/bot'
 import { getDb } from './db'
+import { restoreActiveSessions } from './whatsapp/manager'
 
 const env = loadEnv()
 
@@ -62,6 +64,7 @@ app.route('/v1/ocr', ocrRouter)
 app.route('/v1/budgets', budgetsRouter)
 app.route('/v1/notif', notifRouter)
 app.route('/v1/companion', companionRouter)
+app.route('/v1/whatsapp', whatsappRouter)
 
 const bot = createTelegramBot(env.TELEGRAM_BOT_TOKEN)
 
@@ -81,6 +84,10 @@ bot
   })
 
 registerCrons(getDb())
+
+void restoreActiveSessions(getDb()).catch((err) =>
+  logger.error({ err }, 'restore wa sessions gagal'),
+)
 
 serve({ fetch: app.fetch, port: env.PORT, hostname: '0.0.0.0' }, (info) => {
   logger.info({ port: info.port, address: info.address }, 'Catetin API listening')

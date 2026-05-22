@@ -150,6 +150,17 @@ export const companionSessions = pgTable('companion_sessions', {
   wasSubscribed: boolean('was_subscribed').notNull().default(false),
 })
 
+export const whatsappSessions = pgTable('whatsapp_sessions', {
+  userId: uuid('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  jid: text('jid'),
+  creds: jsonb('creds'),
+  keys: jsonb('keys').notNull().default({}),
+  linkedAt: timestamp('linked_at', { withTimezone: true }),
+  lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
+})
+
 export const notificationPrefs = pgTable('notification_prefs', {
   userId: uuid('user_id')
     .primaryKey()
@@ -173,3 +184,5 @@ export type Budget = typeof budgets.$inferSelect
 export type NewBudget = typeof budgets.$inferInsert
 export type ChannelLink = typeof channelLinks.$inferSelect
 export type CompanionSession = typeof companionSessions.$inferSelect
+export type WhatsappSession = typeof whatsappSessions.$inferSelect
+export type NewWhatsappSession = typeof whatsappSessions.$inferInsert
