@@ -23,6 +23,7 @@ type SessionState = {
   jid: string | null
   startedAt: number
   silentLogger: ReturnType<typeof makeSilentLogger>
+  reconnectTimer: ReturnType<typeof setTimeout> | null
 }
 
 const sessions = new Map<string, SessionState>()
@@ -74,6 +75,7 @@ async function startSocket(db: Database, userId: string, initial: boolean): Prom
     jid: state.creds.me?.id ?? null,
     startedAt: Date.now(),
     silentLogger,
+    reconnectTimer: null,
   }
   session.socket = socket
   session.mode = state.creds.registered ? 'connected' : 'pairing'
@@ -140,14 +142,20 @@ async function handleConnectionUpdate(
     const reason = (update.lastDisconnect?.error as Boom | undefined)?.output?.statusCode
     session.mode = 'disconnected'
     session.socket = null
+    if (session.reconnectTimer) {
+      clearTimeout(session.reconnectTimer)
+      session.reconnectTimer = null
+    }
     if (reason === DisconnectReason.loggedOut) {
-      await clearAuthState(db, userId)
       sessions.delete(userId)
+      await clearAuthState(db, userId)
       appLogger.info({ userId }, 'wa session logout')
       return
     }
     appLogger.warn({ userId, reason }, 'wa session putus, retry sebentar lagi')
-    setTimeout(() => {
+    session.reconnectTimer = setTimeout(() => {
+      session.reconnectTimer = null
+      if (!sessions.has(userId)) return
       void startSocket(db, userId, false).catch((err) =>
         appLogger.error({ err, userId }, 'wa reconnect gagal'),
       )
@@ -182,6 +190,11 @@ export function getPairingStatus(userId: string): {
 export async function unlinkUser(userId: string): Promise<void> {
   if (!dbRef) throw new Error('WhatsApp manager belum di-init')
   const session = sessions.get(userId)
+  if (session?.reconnectTimer) {
+    clearTimeout(session.reconnectTimer)
+    session.reconnectTimer = null
+  }
+  sessions.delete(userId)
   if (session?.socket) {
     try {
       await session.socket.logout()
@@ -190,7 +203,6 @@ export async function unlinkUser(userId: string): Promise<void> {
     }
   }
   await clearAuthState(dbRef, userId)
-  sessions.delete(userId)
 }
 
 export async function restoreActiveSessions(db: Database): Promise<void> {
