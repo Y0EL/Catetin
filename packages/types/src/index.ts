@@ -126,6 +126,7 @@ export const companionTurnResponseSchema = z.object({
   text: z.string(),
   audio: z.string().optional(),
   mimeType: z.string().optional(),
+  transcript: z.string().optional(),
 })
 
 export type CompanionTurnResponse = z.infer<typeof companionTurnResponseSchema>

@@ -57,12 +57,19 @@ companionRouter.post('/turn', zValidator('json', companionTurnSchema), async (c)
     logger.warn({ err }, 'TTS generation failed, returning text-only')
   }
 
+  const userContent = result.transcript || '[Pesan suara]'
   await saveCompanionMessages(db, userId, [
-    { role: 'user', content: '[Pesan suara]', source: 'voice' },
+    { role: 'user', content: userContent, source: 'voice' },
     { role: 'model', content: result.text, source: 'voice' },
   ]).catch((err) => logger.warn({ err }, 'failed to save voice turn messages'))
 
-  return c.json({ ok: true, text: result.text, audio: wavBase64, mimeType: 'audio/wav' })
+  return c.json({
+    ok: true,
+    text: result.text,
+    audio: wavBase64,
+    mimeType: 'audio/wav',
+    transcript: result.transcript,
+  })
 })
 
 companionRouter.post('/end', zValidator('json', endCompanionSessionSchema), async (c) => {

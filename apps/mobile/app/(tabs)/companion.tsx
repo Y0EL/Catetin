@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { CatetinOrb } from '~/components/catetin-orb'
 import { ScreenFade } from '~/components/screen-fade'
 import {
@@ -47,6 +47,7 @@ function formatMinutes(totalSec: number): string {
 
 export default function CompanionTab() {
   const accent = useAccentColor()
+  const insets = useSafeAreaInsets()
   const [tab, setTab] = useState<Tab>('voice')
 
   // voice
@@ -154,7 +155,12 @@ export default function CompanionTab() {
       }
       setMessages((prev) => [
         ...prev,
-        { id: `v-u-${Date.now()}`, role: 'user', content: '[Pesan suara]', source: 'voice' },
+        {
+          id: `v-u-${Date.now()}`,
+          role: 'user',
+          content: res.transcript || '[Pesan suara]',
+          source: 'voice',
+        },
         { id: `v-m-${Date.now()}`, role: 'model', content: res.text, source: 'voice' },
       ])
     } catch (err) {
@@ -251,7 +257,7 @@ export default function CompanionTab() {
   return (
     <SafeAreaView className="flex-1 bg-zinc-50 dark:bg-zinc-950" edges={['top']}>
       <ScreenFade>
-        <View className="flex-1">
+        <View className="flex-1" style={{ paddingBottom: Math.max(insets.bottom, 12) + 76 }}>
           <View className="flex-row items-center justify-between px-4 pb-2 pt-3">
             <Text className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
               Curhat

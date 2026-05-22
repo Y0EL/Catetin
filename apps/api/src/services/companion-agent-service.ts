@@ -202,6 +202,22 @@ export type CompanionTurnInput = {
 
 export type CompanionTurnResult = {
   text: string
+  transcript?: string
+}
+
+async function transcribeAudio(data: string, mimeType: string): Promise<string> {
+  try {
+    const model = getGenAI().getGenerativeModel({ model: COMPANION_MODEL })
+    const result = await model.generateContent([
+      {
+        text: 'Transkripsi ucapan dalam audio berikut ke teks bahasa Indonesia. Balas hanya transkripsinya saja, tanpa tanda kutip atau penjelasan.',
+      },
+      { inlineData: { mimeType, data } },
+    ])
+    return result.response.text().trim()
+  } catch {
+    return ''
+  }
 }
 
 export async function runCompanionTurn(turn: CompanionTurnInput): Promise<CompanionTurnResult> {
@@ -216,6 +232,8 @@ export async function runCompanionTurn(turn: CompanionTurnInput): Promise<Compan
   const chat = model.startChat({ history: sessionHistories.get(turn.sessionId) ?? [] })
 
   const parts: Part[] = [{ inlineData: { mimeType: turn.audio.mimeType, data: turn.audio.data } }]
+
+  const transcriptPromise = transcribeAudio(turn.audio.data, turn.audio.mimeType)
 
   try {
     let result = await chat.sendMessage(parts)
@@ -237,7 +255,11 @@ export async function runCompanionTurn(turn: CompanionTurnInput): Promise<Compan
 
     const text = result.response.text().trim()
     sessionHistories.set(turn.sessionId, stripInlineData(await chat.getHistory()))
-    return { text: text.length > 0 ? text : 'Hmm gue gak nangkep, coba ulangin?' }
+    const transcript = await transcriptPromise
+    return {
+      text: text.length > 0 ? text : 'Hmm gue gak nangkep, coba ulangin?',
+      transcript: transcript || undefined,
+    }
   } catch (err) {
     logger.error({ err, sessionId: turn.sessionId }, 'companion turn failed')
     throw err
