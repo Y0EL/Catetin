@@ -1,5 +1,6 @@
 import { Camera, MessageCircle, Mic } from 'lucide-react-native'
-import { Platform, Text, View } from 'react-native'
+import { Image, Platform, Text, View } from 'react-native'
+import iconImage from '~/assets/icon.png'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { GoogleSignInButton } from '~/components/google-sign-in-button'
 import { useAccentColor } from '~/lib/use-accent-color'
@@ -25,9 +26,7 @@ export default function LoginScreen() {
     <SafeAreaView className="flex-1 bg-zinc-50 dark:bg-zinc-950" edges={['top', 'bottom']}>
       <View className="flex-1 justify-between px-6 pb-8 pt-12">
         <View>
-          <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primary-600">
-            <Text className="font-display text-2xl font-extrabold text-white">C</Text>
-          </View>
+          <Image source={iconImage} className="h-16 w-16 rounded-2xl" resizeMode="cover" />
           <Text className="mt-8 font-display text-4xl font-extrabold leading-[44px] text-zinc-900 dark:text-zinc-50">
             Catat duit,{'\n'}dari mana aja.
           </Text>
