@@ -30,7 +30,7 @@ function isSelfChat(socket: WASocket, msg: WAMessage): boolean {
   if (!me) return false
   const meBase = me.split(':')[0]?.split('@')[0]
   const remote = msg.key.remoteJid ?? ''
-  const remoteBase = remote.split('@')[0]
+  const remoteBase = remote.split('@')[0]?.split(':')[0]
   return !!meBase && meBase === remoteBase
 }
 
