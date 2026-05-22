@@ -82,8 +82,8 @@ bot
 
 registerCrons(getDb())
 
-serve({ fetch: app.fetch, port: env.PORT }, (info) => {
-  logger.info({ port: info.port }, 'Catetin API listening')
+serve({ fetch: app.fetch, port: env.PORT, hostname: '0.0.0.0' }, (info) => {
+  logger.info({ port: info.port, address: info.address }, 'Catetin API listening')
 })
 
 process.on('SIGINT', async () => {

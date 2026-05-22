@@ -56,6 +56,8 @@ DESIGN.md
 PLAN.md
 RULES.md
 docs.txt
+DEV.md
+.env.fly
 base.md
 skills-lock.json
 scripts/*
