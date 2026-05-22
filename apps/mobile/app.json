@@ -22,7 +22,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#09090b"
-      }
+      },
+      "permissions": ["android.permission.RECORD_AUDIO"]
     },
     "web": {
       "bundler": "metro",
@@ -32,6 +33,13 @@
     "plugins": ["expo-dev-client", "expo-router", "expo-image-picker", "expo-web-browser"],
     "experiments": {
       "typedRoutes": false
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "09668b29-3ef2-405d-8a06-c6fbb04c8c6a"
+      }
+    },
+    "owner": "y0el"
   }
 }
