@@ -1,10 +1,12 @@
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
-import { endCompanionSessionSchema } from '@catetin/types'
+import { companionTurnSchema, endCompanionSessionSchema } from '@catetin/types'
 import type { AppEnv } from '../context'
 import { getDb } from '../db'
 import { requireAuth } from '../middleware/auth'
+import { clearCompanionHistory, runCompanionTurn } from '../services/companion-agent-service'
 import {
+  assertSessionOwnedAndActive,
   endCompanionSession,
   getCompanionQuota,
   startCompanionSession,
@@ -25,8 +27,23 @@ companionRouter.post('/start', async (c) => {
   return c.json({ ok: true, ...session })
 })
 
+companionRouter.post('/turn', zValidator('json', companionTurnSchema), async (c) => {
+  const db = getDb()
+  const userId = c.get('userId')
+  const { sessionId, audio, mimeType } = c.req.valid('json')
+  await assertSessionOwnedAndActive(db, userId, sessionId)
+  const result = await runCompanionTurn({
+    userId,
+    sessionId,
+    audio: { data: audio, mimeType },
+  })
+  return c.json({ ok: true, text: result.text })
+})
+
 companionRouter.post('/end', zValidator('json', endCompanionSessionSchema), async (c) => {
   const db = getDb()
-  await endCompanionSession(db, c.get('userId'), c.req.valid('json').sessionId)
+  const { sessionId } = c.req.valid('json')
+  await endCompanionSession(db, c.get('userId'), sessionId)
+  clearCompanionHistory(sessionId)
   return c.json({ ok: true })
 })

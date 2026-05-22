@@ -1,5 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { CompanionQuota, StartCompanionSessionResponse } from '@catetin/types'
+import type {
+  CompanionQuota,
+  CompanionTurnResponse,
+  StartCompanionSessionResponse,
+} from '@catetin/types'
 import { apiFetch } from '~/lib/api'
 
 export function useCompanionQuota() {
@@ -34,5 +38,17 @@ export function useEndCompanion() {
       })
     },
     onSettled: () => qc.invalidateQueries({ queryKey: ['companion-quota'] }),
+  })
+}
+
+export function useCompanionTurn() {
+  return useMutation({
+    mutationFn: async (input: { sessionId: string; audio: string; mimeType: string }) => {
+      const res = await apiFetch<{ ok: true } & CompanionTurnResponse>('/v1/companion/turn', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      })
+      return { text: res.text }
+    },
   })
 }

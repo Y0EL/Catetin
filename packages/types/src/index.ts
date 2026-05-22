@@ -114,6 +114,20 @@ export const endCompanionSessionSchema = z.object({
 
 export type EndCompanionSessionInput = z.infer<typeof endCompanionSessionSchema>
 
+export const companionTurnSchema = z.object({
+  sessionId: z.string().uuid(),
+  audio: z.string().min(1),
+  mimeType: z.string().min(1).max(80),
+})
+
+export type CompanionTurnInput = z.infer<typeof companionTurnSchema>
+
+export const companionTurnResponseSchema = z.object({
+  text: z.string(),
+})
+
+export type CompanionTurnResponse = z.infer<typeof companionTurnResponseSchema>
+
 export const ocrReceiptResponseSchema = z.object({
   merchant: z.string().nullable(),
   date: z.string().nullable(),

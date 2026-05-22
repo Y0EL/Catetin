@@ -66,6 +66,25 @@ export async function startCompanionSession(
   return { sessionId, expiresInSec }
 }
 
+export async function assertSessionOwnedAndActive(
+  db: Database,
+  userId: string,
+  sessionId: string,
+): Promise<void> {
+  const rows = await db
+    .select({ id: companionSessions.id })
+    .from(companionSessions)
+    .where(
+      and(
+        eq(companionSessions.id, sessionId),
+        eq(companionSessions.userId, userId),
+        isNull(companionSessions.endedAt),
+      ),
+    )
+    .limit(1)
+  if (!rows[0]) throw new HttpError(404, 'NOT_FOUND', 'Sesi gak ketemu atau udah selesai')
+}
+
 export async function endCompanionSession(
   db: Database,
   userId: string,
