@@ -24,6 +24,7 @@ type SessionState = {
   startedAt: number
   silentLogger: ReturnType<typeof makeSilentLogger>
   reconnectTimer: ReturnType<typeof setTimeout> | null
+  reconnectAttempts: number
 }
 
 const sessions = new Map<string, SessionState>()
@@ -76,6 +77,7 @@ async function startSocket(db: Database, userId: string, initial: boolean): Prom
     startedAt: Date.now(),
     silentLogger,
     reconnectTimer: null,
+    reconnectAttempts: 0,
   }
   session.socket = socket
   session.mode = state.creds.registered ? 'connected' : 'pairing'
@@ -130,6 +132,7 @@ async function handleConnectionUpdate(
   if (update.connection === 'open') {
     session.qrDataUrl = null
     session.mode = 'connected'
+    session.reconnectAttempts = 0
     session.jid = session.socket?.user?.id ?? session.jid
     await db
       .update(whatsappSessions)
@@ -152,7 +155,20 @@ async function handleConnectionUpdate(
       appLogger.info({ userId }, 'wa session logout')
       return
     }
-    appLogger.warn({ userId, reason }, 'wa session putus, retry sebentar lagi')
+    session.reconnectAttempts += 1
+    if (session.reconnectAttempts > 2) {
+      sessions.delete(userId)
+      await clearAuthState(db, userId)
+      appLogger.warn(
+        { userId },
+        'wa session berhenti, max reconnect tercapai - pair ulang dari app',
+      )
+      return
+    }
+    appLogger.warn(
+      { userId, reason, attempt: session.reconnectAttempts },
+      'wa session putus, retry sebentar lagi',
+    )
     session.reconnectTimer = setTimeout(() => {
       session.reconnectTimer = null
       if (!sessions.has(userId)) return
