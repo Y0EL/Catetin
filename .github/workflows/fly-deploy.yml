@@ -1,4 +1,4 @@
-name: Fly Deploy
+name: Fly
 
 on:
   push:
@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy app
+    name: Publikasi
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
