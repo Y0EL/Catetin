@@ -30,7 +30,13 @@
       "output": "single",
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-dev-client", "expo-router", "expo-image-picker", "expo-web-browser"],
+    "plugins": [
+      "expo-dev-client",
+      "expo-router",
+      "expo-image-picker",
+      "expo-web-browser",
+      "expo-font"
+    ],
     "experiments": {
       "typedRoutes": false
     },
