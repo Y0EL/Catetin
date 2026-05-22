@@ -8,14 +8,9 @@ COPY packages/db/package.json packages/db/package.json
 COPY packages/types/package.json packages/types/package.json
 COPY packages/chat-core/package.json packages/chat-core/package.json
 COPY packages/prompts/package.json packages/prompts/package.json
-RUN pnpm install --frozen-lockfile --filter @catetin/api...
+RUN pnpm install --frozen-lockfile --filter @catetin/api... && pnpm store prune
 
-FROM node:22-alpine AS runtime
-RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+FROM deps AS runtime
 COPY apps/api ./apps/api
 COPY packages ./packages
 ENV NODE_ENV=production

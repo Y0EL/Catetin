@@ -65,10 +65,20 @@ app.route('/v1/companion', companionRouter)
 
 const bot = createTelegramBot(env.TELEGRAM_BOT_TOKEN)
 
-bot.start({
-  drop_pending_updates: true,
-  onStart: (info) => logger.info({ username: info.username }, 'Telegram bot polling started'),
-})
+bot
+  .start({
+    drop_pending_updates: true,
+    onStart: (info) => logger.info({ username: info.username }, 'Telegram bot polling started'),
+  })
+  .catch((err) => {
+    const description =
+      err instanceof Error
+        ? err.message
+        : typeof err === 'object' && err && 'description' in err
+          ? String((err as { description: unknown }).description)
+          : String(err)
+    logger.error({ description }, 'Telegram polling stopped, instance lain mungkin lagi polling')
+  })
 
 registerCrons(getDb())
 
