@@ -1,4 +1,4 @@
-name: Fly
+name: Deploy
 
 on:
   push:
@@ -6,12 +6,12 @@ on:
       - main
 
 concurrency:
-  group: fly-deploy-${{ github.ref }}
+  group: deploy-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Publikasi
+  fly:
+    name: API
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,3 +19,20 @@ jobs:
       - run: flyctl deploy --remote-only --app catetin-api
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  expo:
+    name: Mobile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @catetin/mobile exec eas update --auto --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
