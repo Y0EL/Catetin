@@ -19,6 +19,7 @@ type SessionState = {
   userId: string
   mode: Mode
   qrDataUrl: string | null
+  pairingCode: string | null
   socket: WASocket | null
   jid: string | null
   startedAt: number
@@ -54,7 +55,12 @@ async function refreshLastSeen(db: Database, userId: string) {
     .where(eq(whatsappSessions.userId, userId))
 }
 
-async function startSocket(db: Database, userId: string, initial: boolean): Promise<SessionState> {
+async function startSocket(
+  db: Database,
+  userId: string,
+  initial: boolean,
+  phoneNumber?: string,
+): Promise<SessionState> {
   const existing = sessions.get(userId)
   if (existing && existing.socket && existing.mode !== 'disconnected') return existing
 
@@ -72,12 +78,22 @@ async function startSocket(db: Database, userId: string, initial: boolean): Prom
     userId,
     mode: initial && state.creds.registered ? 'connected' : 'pairing',
     qrDataUrl: null,
+    pairingCode: null,
     socket: null,
     jid: state.creds.me?.id ?? null,
     startedAt: Date.now(),
     silentLogger,
     reconnectTimer: null,
     reconnectAttempts: 0,
+  }
+
+  if (phoneNumber && !state.creds.registered) {
+    try {
+      const code = await socket.requestPairingCode(phoneNumber)
+      session.pairingCode = code
+    } catch (err) {
+      appLogger.error({ err, userId }, 'gagal request pairing code')
+    }
   }
   session.socket = socket
   session.mode = state.creds.registered ? 'connected' : 'pairing'
@@ -183,24 +199,23 @@ export function setWhatsappDb(db: Database): void {
   dbRef = db
 }
 
-export async function startPairing(userId: string): Promise<{
-  mode: Mode
-  qr: string | null
-  jid: string | null
-}> {
+export async function startPairing(
+  userId: string,
+  phoneNumber: string,
+): Promise<{ mode: Mode; pairingCode: string | null; jid: string | null }> {
   if (!dbRef) throw new Error('WhatsApp manager belum di-init')
-  const session = await startSocket(dbRef, userId, false)
-  return { mode: session.mode, qr: session.qrDataUrl, jid: session.jid }
+  const session = await startSocket(dbRef, userId, false, phoneNumber)
+  return { mode: session.mode, pairingCode: session.pairingCode, jid: session.jid }
 }
 
 export function getPairingStatus(userId: string): {
   mode: Mode
-  qr: string | null
+  pairingCode: string | null
   jid: string | null
 } {
   const session = sessions.get(userId)
-  if (!session) return { mode: 'disconnected', qr: null, jid: null }
-  return { mode: session.mode, qr: session.qrDataUrl, jid: session.jid }
+  if (!session) return { mode: 'disconnected', pairingCode: null, jid: null }
+  return { mode: session.mode, pairingCode: session.pairingCode, jid: session.jid }
 }
 
 export async function unlinkUser(userId: string): Promise<void> {

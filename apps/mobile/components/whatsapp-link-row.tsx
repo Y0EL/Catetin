@@ -1,28 +1,38 @@
 import { Check, Phone, Unlink } from 'lucide-react-native'
 import { useEffect, useState } from 'react'
-import { ActivityIndicator, Alert, Image, Pressable, Text, View } from 'react-native'
+import { ActivityIndicator, Alert, Pressable, Text, TextInput, View } from 'react-native'
 import { useStartPairing, useUnlinkWhatsapp, useWhatsappStatus } from '~/hooks/use-whatsapp'
 import { apiErrorMessage } from '~/lib/api'
-import { useAccentColor } from '~/lib/use-accent-color'
+import { useAccentColor, useIsDark } from '~/lib/use-accent-color'
 
 export function WhatsappLinkRow() {
   const accent = useAccentColor()
+  const isDark = useIsDark()
   const [pairing, setPairing] = useState(false)
+  const [phone, setPhone] = useState('')
   const status = useWhatsappStatus(pairing)
   const start = useStartPairing()
   const unlink = useUnlinkWhatsapp()
 
   const connected = status.data?.mode === 'connected'
-  const qr = status.data?.qr ?? start.data?.qr ?? null
+  const pairingCode = start.data?.pairingCode ?? status.data?.pairingCode ?? null
 
   useEffect(() => {
     if (connected && pairing) setPairing(false)
   }, [connected, pairing])
 
-  async function onStart() {
+  async function onSubmitPhone() {
+    const digits = phone.replace(/\D/g, '')
+    if (digits.length < 8) {
+      Alert.alert(
+        'Nomor kurang valid',
+        'Masukin nomor HP lo dengan kode negara, contoh: 628123456789',
+      )
+      return
+    }
     setPairing(true)
     try {
-      await start.mutateAsync()
+      await start.mutateAsync(digits)
     } catch (err) {
       setPairing(false)
       Alert.alert('Gak bisa mulai', apiErrorMessage(err))
@@ -38,6 +48,7 @@ export function WhatsappLinkRow() {
         onPress: () => {
           unlink.mutate()
           setPairing(false)
+          setPhone('')
         },
       },
     ])
@@ -45,6 +56,7 @@ export function WhatsappLinkRow() {
 
   function onCancel() {
     setPairing(false)
+    setPhone('')
   }
 
   return (
@@ -52,8 +64,8 @@ export function WhatsappLinkRow() {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={connected ? 'Putusin WhatsApp' : 'Sambungin WhatsApp'}
-        onPress={() => (connected ? onUnlink() : onStart())}
-        disabled={start.isPending || unlink.isPending}
+        onPress={() => (connected ? onUnlink() : setPairing((v) => !v))}
+        disabled={unlink.isPending}
         className="flex-row items-center gap-3 px-4 py-3.5 active:bg-zinc-50 dark:active:bg-zinc-800"
       >
         <View className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
@@ -65,7 +77,7 @@ export function WhatsappLinkRow() {
             Catat lewat chat ke diri sendiri
           </Text>
         </View>
-        {start.isPending || unlink.isPending ? (
+        {unlink.isPending ? (
           <ActivityIndicator size="small" color={accent} />
         ) : connected ? (
           <View className="flex-row items-center gap-1 rounded-full bg-success/15 px-2.5 py-1">
@@ -81,28 +93,60 @@ export function WhatsappLinkRow() {
 
       {pairing && !connected ? (
         <View className="mx-4 mb-4 rounded-card bg-primary-50 p-4 dark:bg-primary-950">
-          <Text className="font-sans text-xs text-zinc-600 dark:text-zinc-300">
-            Buka WhatsApp lo, masuk Settings, Linked Devices, Link a Device, scan QR di bawah ini.
-          </Text>
-          <View className="mt-3 items-center rounded-xl bg-white p-4 dark:bg-zinc-800">
-            {qr ? (
-              <Image
-                source={{ uri: qr }}
-                style={{ width: 240, height: 240 }}
-                accessibilityLabel="QR code untuk scan"
+          {!pairingCode ? (
+            <>
+              <Text className="font-sans text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+                Masukkan nomor WhatsApp lo
+              </Text>
+              <Text className="mt-1 font-sans text-xs text-zinc-500 dark:text-zinc-400">
+                Format internasional, contoh: 628123456789
+              </Text>
+              <TextInput
+                value={phone}
+                onChangeText={setPhone}
+                placeholder="628123456789"
+                placeholderTextColor="#a1a1aa"
+                keyboardType="phone-pad"
+                autoFocus
+                className="mt-3 rounded-xl bg-white px-4 py-3 font-sans text-sm text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+                style={{ borderWidth: 1, borderColor: isDark ? '#3f3f46' : '#e4e4e7' }}
               />
-            ) : (
-              <View className="h-[240px] w-[240px] items-center justify-center">
-                <ActivityIndicator size="small" color={accent} />
-                <Text className="mt-3 font-sans text-xs text-zinc-500 dark:text-zinc-400">
-                  Lagi nyiapin QR
+              <Pressable
+                onPress={onSubmitPhone}
+                disabled={start.isPending || phone.replace(/\D/g, '').length < 8}
+                accessibilityRole="button"
+                className="mt-3 items-center rounded-xl bg-primary-600 py-3 active:opacity-80 disabled:opacity-40"
+              >
+                {start.isPending ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text className="font-sans text-sm font-semibold text-white">Lanjut</Text>
+                )}
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <Text className="font-sans text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+                Kode pairing WhatsApp lo
+              </Text>
+              <Text className="mt-1 font-sans text-xs text-zinc-500 dark:text-zinc-400">
+                Buka WA, Settings, Linked Devices, Link a Device, Link with Phone Number, masukkan
+                kode ini.
+              </Text>
+              <View className="mt-4 items-center rounded-xl bg-white py-5 dark:bg-zinc-800">
+                <Text
+                  selectable
+                  className="font-display text-4xl font-bold tracking-widest text-primary-600 dark:text-primary-300"
+                >
+                  {pairingCode}
                 </Text>
               </View>
-            )}
-          </View>
-          <Text className="mt-3 text-center font-sans text-xs text-zinc-500 dark:text-zinc-400">
-            QR auto refresh, scan secepat mungkin
-          </Text>
+              <Text className="mt-2 text-center font-sans text-xs text-zinc-500 dark:text-zinc-400">
+                Kode berlaku sekitar 60 detik
+              </Text>
+            </>
+          )}
+
           <Pressable
             onPress={onCancel}
             accessibilityRole="button"
