@@ -1,22 +1,19 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useFocusEffect, useRouter } from 'expo-router'
-import { ArrowDownLeft, ArrowUpRight, Bell, Camera, Plus, Sparkles } from 'lucide-react-native'
+import { ArrowDownLeft, ArrowUpRight, Camera, Plus, Sparkles } from 'lucide-react-native'
 import { useCallback, useMemo } from 'react'
-import { Linking, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native'
+import { Linking, Pressable, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { CardGlow } from '~/components/card-glow'
-import { CategoryBreakdown } from '~/components/category-breakdown'
 import { Money } from '~/components/money'
 import { NoteCard } from '~/components/note-card'
 import { ScreenFade } from '~/components/screen-fade'
 import { TransactionCard } from '~/components/transaction-card'
-import { TrendChart } from '~/components/trend-chart'
 import { useAuth } from '~/hooks/use-auth'
 import { useCategories } from '~/hooks/use-categories'
 import { useChannelStatus } from '~/hooks/use-channel-status'
 import { useSummary, currentMonth } from '~/hooks/use-summary'
 import { useTransactions } from '~/hooks/use-transactions'
-import { useTrend } from '~/hooks/use-trend'
 import { useWallets } from '~/hooks/use-wallets'
 import type { CategoryKey } from '~/lib/categories'
 import { useAccentColor } from '~/lib/use-accent-color'
@@ -44,18 +41,16 @@ export default function HomeTab() {
   const periodChip = new Date().toLocaleDateString('id-ID', { month: 'long' })
 
   const summary = useSummary(currentMonth())
-  const trend = useTrend(6)
   const transactions = useTransactions({})
   const categories = useCategories()
   const wallets = useWallets()
   const queryClient = useQueryClient()
-  const { width: windowWidth } = useWindowDimensions()
-  const chartWidth = Math.max(0, windowWidth - 64)
 
   useFocusEffect(
     useCallback(() => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
       queryClient.invalidateQueries({ queryKey: ['summary'] })
+      queryClient.invalidateQueries({ queryKey: ['trend'] })
       queryClient.invalidateQueries({ queryKey: ['channel-status'] })
     }, [queryClient]),
   )
@@ -88,11 +83,14 @@ export default function HomeTab() {
               </Text>
             </View>
             <Pressable
+              onPress={() => router.push('/analytics')}
               accessibilityRole="button"
-              accessibilityLabel="Notifikasi"
-              className="h-11 w-11 items-center justify-center rounded-full bg-white active:opacity-70 dark:bg-zinc-800"
+              accessibilityLabel="Lihat analitik"
+              className="h-11 w-11 items-center justify-center rounded-full bg-primary-600 active:opacity-70"
             >
-              <Bell size={20} color="#71717a" />
+              <Text className="font-display text-base font-bold text-white">
+                {firstName[0]?.toUpperCase() ?? 'C'}
+              </Text>
             </Pressable>
           </View>
 
@@ -153,48 +151,6 @@ export default function HomeTab() {
               label="Catat manual"
               onPress={() => router.push('/add-modal')}
             />
-          </View>
-
-          <View className="mx-4 mt-8">
-            <Text className="font-display text-lg font-bold text-zinc-900 dark:text-zinc-100">
-              Insight bulan ini
-            </Text>
-
-            <View className="mt-3 rounded-card bg-white p-4 dark:bg-zinc-800">
-              <View className="flex-row items-center justify-between">
-                <Text className="font-sans text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                  Trend 6 bulan
-                </Text>
-                <View className="flex-row gap-3">
-                  <View className="flex-row items-center gap-1.5">
-                    <View className="h-2 w-2 rounded-full bg-success" />
-                    <Text className="font-sans text-xs text-zinc-500 dark:text-zinc-400">
-                      Pemasukan
-                    </Text>
-                  </View>
-                  <View className="flex-row items-center gap-1.5">
-                    <View className="h-2 w-2 rounded-full bg-danger" />
-                    <Text className="font-sans text-xs text-zinc-500 dark:text-zinc-400">
-                      Pengeluaran
-                    </Text>
-                  </View>
-                </View>
-              </View>
-              <View className="mt-3">
-                <TrendChart data={trend.data ?? []} width={chartWidth} />
-              </View>
-            </View>
-
-            {summary.data && summary.data.byCategory.length > 0 ? (
-              <View className="mt-3 rounded-card bg-white p-4 dark:bg-zinc-800">
-                <Text className="font-sans text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                  Pengeluaran per kategori
-                </Text>
-                <View className="mt-3">
-                  <CategoryBreakdown slices={summary.data.byCategory} />
-                </View>
-              </View>
-            ) : null}
           </View>
 
           <View className="mt-8 px-4">
