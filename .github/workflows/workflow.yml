@@ -31,6 +31,8 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @catetin/mobile exec eas update --auto --non-interactive
+      - run: npm install -g eas-cli
+      - run: eas update --auto --non-interactive
+        working-directory: apps/mobile
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
