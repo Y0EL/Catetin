@@ -1,3 +1,4 @@
+import { router } from 'expo-router'
 import { Platform } from 'react-native'
 import Purchases, {
   LOG_LEVEL,
@@ -6,7 +7,6 @@ import Purchases, {
   type PurchasesOffering,
   type PurchasesPackage,
 } from 'react-native-purchases'
-import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui'
 
 export const CATETIN_PRO_ENTITLEMENT = 'Catetin Pro'
 
@@ -110,19 +110,17 @@ export async function restorePurchases(): Promise<PurchaseOutcome> {
 }
 
 export async function presentPaywall(): Promise<PaywallResult> {
-  const result = await RevenueCatUI.presentPaywall()
-  return mapPaywallResult(result)
+  router.push('/paywall')
+  return 'NOT_PRESENTED'
 }
 
 export async function presentPaywallIfNeeded(): Promise<PaywallResult> {
-  const result = await RevenueCatUI.presentPaywallIfNeeded({
-    requiredEntitlementIdentifier: CATETIN_PRO_ENTITLEMENT,
-  })
-  return mapPaywallResult(result)
+  router.push('/paywall')
+  return 'NOT_PRESENTED'
 }
 
 export async function presentCustomerCenter(): Promise<void> {
-  await RevenueCatUI.presentCustomerCenter()
+  router.push('/paywall')
 }
 
 export type ProStatus = { isPro: boolean; expiresAt: Date | null }
@@ -152,12 +150,4 @@ export function paywallResultToText(result: PaywallResult): string {
   if (result === 'CANCELLED') return 'Oke, bisa coba lagi kapan aja.'
   if (result === 'NOT_PRESENTED') return 'Lo udah Pro, gak perlu paywall.'
   return 'Ada error, coba lagi yuk.'
-}
-
-function mapPaywallResult(result: PAYWALL_RESULT): PaywallResult {
-  if (result === PAYWALL_RESULT.PURCHASED) return 'PURCHASED'
-  if (result === PAYWALL_RESULT.RESTORED) return 'RESTORED'
-  if (result === PAYWALL_RESULT.CANCELLED) return 'CANCELLED'
-  if (result === PAYWALL_RESULT.NOT_PRESENTED) return 'NOT_PRESENTED'
-  return 'ERROR'
 }
