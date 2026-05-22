@@ -76,3 +76,5 @@ scripts/*
 *.iws
 *.sln
 .vscode
+.github_token
+.npmrc
