@@ -25,6 +25,7 @@
     "expo-auth-session": "~7.0.11",
     "expo-blur": "~15.0.8",
     "expo-crypto": "~15.0.9",
+    "expo-dev-client": "~6.0.21",
     "expo-device": "^55.0.17",
     "expo-file-system": "^55.0.21",
     "expo-image": "~3.0.11",
