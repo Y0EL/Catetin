@@ -30,9 +30,13 @@ export function getFirebaseAuth(): Auth {
   if (Platform.OS === 'web') {
     firebaseAuth = getAuth(app)
   } else {
-    firebaseAuth = initializeAuth(app, {
-      persistence: getReactNativePersistence(AsyncStorage),
-    })
+    try {
+      firebaseAuth = initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage),
+      })
+    } catch {
+      firebaseAuth = getAuth(app)
+    }
   }
   return firebaseAuth
 }

@@ -8,8 +8,13 @@ import {
 import { getFirebaseAuth } from './firebase'
 import { identifyUser, signOutPurchases } from './revenuecat'
 
-export function subscribeToAuth(callback: (user: User | null) => void) {
-  return onAuthStateChanged(getFirebaseAuth(), callback)
+export function subscribeToAuth(callback: (user: User | null) => void): () => void {
+  try {
+    return onAuthStateChanged(getFirebaseAuth(), callback)
+  } catch {
+    callback(null)
+    return () => {}
+  }
 }
 
 export async function signInWithGoogleIdToken(idToken: string): Promise<User> {
