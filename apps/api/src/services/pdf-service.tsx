@@ -4,76 +4,107 @@ import { categories, transactions, users, wallets, type Database } from '@cateti
 import { formatRupiah } from '@catetin/chat-core'
 import { getMonthSummary, monthToRange } from './transaction-service'
 
+const INDIGO = '#4f46e5'
+const DARK = '#18181b'
+const MUTED = '#71717a'
+const BORDER = '#e4e4e7'
+const ZEBRA = '#f4f4f5'
+
 const styles = StyleSheet.create({
-  page: { padding: 36, fontSize: 10, fontFamily: 'Helvetica', color: '#18181b' },
+  page: {
+    paddingHorizontal: 36,
+    paddingTop: 0,
+    paddingBottom: 40,
+    fontSize: 10,
+    fontFamily: 'Helvetica',
+    color: DARK,
+  },
+  accentBar: { height: 5, backgroundColor: INDIGO, marginHorizontal: -36 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
+    paddingTop: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e4e4e7',
+    borderBottomColor: BORDER,
   },
-  brand: { fontSize: 18, fontFamily: 'Helvetica-Bold' },
-  brandSub: { fontSize: 9, color: '#71717a', marginTop: 2 },
+  brand: { fontSize: 20, fontFamily: 'Helvetica-Bold', color: INDIGO },
+  brandSub: { fontSize: 9, color: MUTED, marginTop: 3 },
   periodBox: { alignItems: 'flex-end' },
-  periodLabel: { fontSize: 9, color: '#71717a' },
-  periodValue: { fontSize: 13, fontFamily: 'Helvetica-Bold', marginTop: 2 },
-  section: { marginTop: 18 },
+  periodLabel: { fontSize: 8, color: MUTED, textTransform: 'uppercase', letterSpacing: 1 },
+  periodValue: { fontSize: 14, fontFamily: 'Helvetica-Bold', marginTop: 3 },
+  section: { marginTop: 20 },
   sectionTitle: {
-    fontSize: 9,
+    fontSize: 8,
     fontFamily: 'Helvetica-Bold',
-    color: '#52525b',
+    color: MUTED,
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 8,
+    letterSpacing: 1.2,
+    marginBottom: 10,
   },
-  summaryGrid: { flexDirection: 'row', gap: 12 },
+  summaryGrid: { flexDirection: 'row', gap: 10 },
   summaryCard: {
     flex: 1,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#e4e4e7',
-    borderRadius: 6,
+    borderColor: BORDER,
+    borderRadius: 4,
   },
-  summaryLabel: { fontSize: 9, color: '#71717a' },
-  summaryValue: { fontSize: 14, fontFamily: 'Helvetica-Bold', marginTop: 4 },
-  catRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  catBarTrack: {
-    height: 4,
-    backgroundColor: '#f4f4f5',
-    borderRadius: 2,
-    marginTop: 3,
+  summaryCardAccent: {
+    flex: 1,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: INDIGO,
+    borderRadius: 4,
+    backgroundColor: '#eef2ff',
   },
-  catBarFill: { height: 4, backgroundColor: '#18181b', borderRadius: 2 },
+  summaryLabel: { fontSize: 8, color: MUTED },
+  summaryValue: { fontSize: 13, fontFamily: 'Helvetica-Bold', marginTop: 4 },
+  summaryValueNet: { fontSize: 13, fontFamily: 'Helvetica-Bold', marginTop: 4, color: INDIGO },
+  catRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  catBarTrack: { height: 3, backgroundColor: BORDER, borderRadius: 2, marginTop: 3 },
+  catBarFill: { height: 3, backgroundColor: INDIGO, borderRadius: 2 },
   tableHead: {
     flexDirection: 'row',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#18181b',
-    fontFamily: 'Helvetica-Bold',
-    fontSize: 9,
+    paddingVertical: 7,
+    paddingHorizontal: 6,
+    backgroundColor: DARK,
+    borderRadius: 3,
   },
-  tableRow: {
+  tableHeadText: { fontFamily: 'Helvetica-Bold', fontSize: 8.5, color: '#ffffff' },
+  tableRowEven: {
     flexDirection: 'row',
-    paddingVertical: 5,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#e4e4e7',
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    backgroundColor: '#ffffff',
   },
-  colDate: { width: 60 },
-  colDesc: { flex: 1, paddingRight: 8 },
-  colCat: { width: 70 },
-  colWallet: { width: 60 },
-  colAmount: { width: 70, textAlign: 'right' },
+  tableRowOdd: {
+    flexDirection: 'row',
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    backgroundColor: ZEBRA,
+  },
+  colDate: { width: 58 },
+  colDesc: { flex: 1, paddingRight: 6 },
+  colCat: { width: 68 },
+  colType: { width: 44 },
+  colWallet: { width: 58 },
+  colAmount: { width: 72, textAlign: 'right' },
+  typeKredit: { fontSize: 9, color: '#16a34a', fontFamily: 'Helvetica-Bold' },
+  typeDebit: { fontSize: 9, color: MUTED },
   footer: {
     position: 'absolute',
-    bottom: 18,
+    bottom: 16,
     left: 36,
     right: 36,
     flexDirection: 'row',
     justifyContent: 'space-between',
     fontSize: 8,
     color: '#a1a1aa',
+    borderTopWidth: 0.5,
+    borderTopColor: BORDER,
+    paddingTop: 6,
   },
 })
 
@@ -97,6 +128,13 @@ function formatPeriod(month: string): string {
   const y = Number.parseInt(yStr ?? '0', 10)
   const m = Number.parseInt(mStr ?? '0', 10)
   return `${MONTH_NAMES[m - 1] ?? ''} ${y}`
+}
+
+function formatDate(d: Date): string {
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  return `${day}/${month}/${year}`
 }
 
 function capitalize(text: string): string {
@@ -136,10 +174,12 @@ function Statement({
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        <View style={styles.accentBar} fixed />
+
         <View style={styles.header} fixed>
           <View>
             <Text style={styles.brand}>Catetin</Text>
-            <Text style={styles.brandSub}>Laporan keuangan bulanan {userName}</Text>
+            <Text style={styles.brandSub}>Laporan keuangan bulanan — {userName}</Text>
           </View>
           <View style={styles.periodBox}>
             <Text style={styles.periodLabel}>Periode</Text>
@@ -151,16 +191,16 @@ function Statement({
           <Text style={styles.sectionTitle}>Ringkasan</Text>
           <View style={styles.summaryGrid}>
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryLabel}>Pemasukan</Text>
+              <Text style={styles.summaryLabel}>Total Kredit</Text>
               <Text style={styles.summaryValue}>{formatRupiah(income)}</Text>
             </View>
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryLabel}>Pengeluaran</Text>
+              <Text style={styles.summaryLabel}>Total Debit</Text>
               <Text style={styles.summaryValue}>{formatRupiah(expense)}</Text>
             </View>
-            <View style={styles.summaryCard}>
-              <Text style={styles.summaryLabel}>Net</Text>
-              <Text style={styles.summaryValue}>{formatRupiah(net)}</Text>
+            <View style={styles.summaryCardAccent}>
+              <Text style={styles.summaryLabel}>Selisih</Text>
+              <Text style={styles.summaryValueNet}>{formatRupiah(net)}</Text>
             </View>
           </View>
         </View>
@@ -171,10 +211,10 @@ function Statement({
             {topCats.map((c) => {
               const pct = Math.round((c.total / biggest) * 100)
               return (
-                <View key={c.name} style={{ marginBottom: 8 }}>
+                <View key={c.name} style={{ marginBottom: 9 }}>
                   <View style={styles.catRow}>
                     <Text>{capitalize(c.name)}</Text>
-                    <Text>{formatRupiah(c.total)}</Text>
+                    <Text style={{ color: MUTED }}>{formatRupiah(c.total)}</Text>
                   </View>
                   <View style={styles.catBarTrack}>
                     <View style={[styles.catBarFill, { width: `${pct}%` }]} />
@@ -186,25 +226,44 @@ function Statement({
         ) : null}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Transaksi</Text>
+          <Text style={styles.sectionTitle}>Riwayat transaksi</Text>
           <View style={styles.tableHead}>
-            <Text style={styles.colDate}>Tanggal</Text>
-            <Text style={styles.colDesc}>Deskripsi</Text>
-            <Text style={styles.colCat}>Kategori</Text>
-            <Text style={styles.colWallet}>Wallet</Text>
-            <Text style={styles.colAmount}>Nominal</Text>
+            <Text style={[styles.tableHeadText, styles.colDate]}>Tanggal</Text>
+            <Text style={[styles.tableHeadText, styles.colDesc]}>Keterangan</Text>
+            <Text style={[styles.tableHeadText, styles.colCat]}>Kategori</Text>
+            <Text style={[styles.tableHeadText, styles.colType]}>Tipe</Text>
+            <Text style={[styles.tableHeadText, styles.colWallet]}>Sumber</Text>
+            <Text style={[styles.tableHeadText, styles.colAmount]}>Nominal (Rp)</Text>
           </View>
           {rows.map((r, i) => {
-            const sign = r.kind === 'income' ? '+' : '-'
+            const isEven = i % 2 === 0
+            const isKredit = r.kind === 'income'
             const desc = r.description ?? r.merchant ?? 'Transaksi'
             return (
-              <View key={i} style={styles.tableRow} wrap={false}>
-                <Text style={styles.colDate}>{r.occurredAt.toISOString().slice(0, 10)}</Text>
-                <Text style={styles.colDesc}>{desc}</Text>
-                <Text style={styles.colCat}>{capitalize(r.categoryName)}</Text>
-                <Text style={styles.colWallet}>{r.walletName}</Text>
-                <Text style={styles.colAmount}>
-                  {sign}
+              <View key={i} style={isEven ? styles.tableRowEven : styles.tableRowOdd} wrap={false}>
+                <Text style={[{ fontSize: 9, color: MUTED }, styles.colDate]}>
+                  {formatDate(r.occurredAt)}
+                </Text>
+                <Text style={[{ fontSize: 9 }, styles.colDesc]}>{desc}</Text>
+                <Text style={[{ fontSize: 9, color: MUTED }, styles.colCat]}>
+                  {capitalize(r.categoryName)}
+                </Text>
+                <Text style={[isKredit ? styles.typeKredit : styles.typeDebit, styles.colType]}>
+                  {isKredit ? 'Kredit' : 'Debit'}
+                </Text>
+                <Text style={[{ fontSize: 9, color: MUTED }, styles.colWallet]}>
+                  {r.walletName}
+                </Text>
+                <Text
+                  style={[
+                    {
+                      fontSize: 9,
+                      fontFamily: isKredit ? 'Helvetica-Bold' : 'Helvetica',
+                      color: isKredit ? DARK : DARK,
+                    },
+                    styles.colAmount,
+                  ]}
+                >
                   {formatRupiah(r.amount)}
                 </Text>
               </View>
