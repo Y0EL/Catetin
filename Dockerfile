@@ -11,6 +11,7 @@ COPY packages/prompts/package.json packages/prompts/package.json
 RUN pnpm install --frozen-lockfile --filter @catetin/api... && pnpm store prune
 
 FROM deps AS runtime
+COPY tsconfig.base.json ./tsconfig.base.json
 COPY apps/api ./apps/api
 COPY packages ./packages
 ENV NODE_ENV=production
