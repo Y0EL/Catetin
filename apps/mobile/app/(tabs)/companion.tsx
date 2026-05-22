@@ -21,8 +21,8 @@ import {
   useStartCompanion,
 } from '~/hooks/use-companion'
 import { apiErrorMessage, apiStream } from '~/lib/api'
-import { createCompanionRecorder, type CompanionRecorder } from '~/lib/companion-audio'
-import { playTtsAudio, stopTtsAudio } from '~/lib/companion-tts'
+import { useCompanionRecorder } from '~/lib/companion-audio'
+import { useCompanionTts } from '~/lib/companion-tts'
 import { useAccentColor } from '~/lib/use-accent-color'
 
 type Tab = 'voice' | 'chat'
@@ -52,10 +52,11 @@ export default function CompanionTab() {
   // voice
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [voicePhase, setVoicePhase] = useState<VoicePhase>('idle')
-  const [isPlaying, setIsPlaying] = useState(false)
   const [elapsedSec, setElapsedSec] = useState(0)
-  const recorderRef = useRef<CompanionRecorder | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const rec = useCompanionRecorder()
+  const tts = useCompanionTts()
 
   // chat
   const [messages, setMessages] = useState<Msg[]>([])
@@ -96,8 +97,8 @@ export default function CompanionTab() {
 
   useEffect(() => {
     return () => {
-      recorderRef.current?.cancel()
-      stopTtsAudio()
+      rec.cancel()
+      tts.stop()
     }
   }, [])
 
@@ -129,9 +130,7 @@ export default function CompanionTab() {
 
   async function beginRecording(id: string) {
     try {
-      const rec = createCompanionRecorder()
       await rec.start()
-      recorderRef.current = rec
       setVoicePhase('recording')
     } catch (err) {
       setSessionId(null)
@@ -141,25 +140,17 @@ export default function CompanionTab() {
   }
 
   async function endRecordingAndSend(id: string) {
-    const rec = recorderRef.current
-    if (!rec) return
+    if (voicePhase !== 'recording') return
     setVoicePhase('thinking')
     try {
       const audio = await rec.stop()
-      recorderRef.current = null
       const res = await turn.mutateAsync({
         sessionId: id,
         audio: audio.base64,
         mimeType: audio.mimeType,
       })
       if (res.audio) {
-        setIsPlaying(true)
-        try {
-          await playTtsAudio(res.audio)
-        } catch {
-          // ignore playback errors
-        }
-        setIsPlaying(false)
+        tts.play(res.audio)
       }
       setMessages((prev) => [
         ...prev,
@@ -174,11 +165,7 @@ export default function CompanionTab() {
   }
 
   async function onVoiceToggle() {
-    if (Platform.OS !== 'web') {
-      fail('Voice masih web-only buat sekarang.')
-      return
-    }
-    if (voicePhase === 'thinking' || isPlaying) return
+    if (voicePhase === 'thinking' || tts.playing) return
     if (voicePhase === 'recording' && sessionId) {
       await endRecordingAndSend(sessionId)
       return
@@ -189,10 +176,8 @@ export default function CompanionTab() {
   }
 
   function onVoiceClose() {
-    recorderRef.current?.cancel()
-    recorderRef.current = null
-    stopTtsAudio()
-    setIsPlaying(false)
+    rec.cancel()
+    tts.stop()
     const id = sessionId
     setSessionId(null)
     setVoicePhase('idle')
@@ -257,7 +242,7 @@ export default function CompanionTab() {
       ? `Ngedengerin · ${formatMinutes(elapsedSec)}`
       : voicePhase === 'thinking'
         ? 'Lagi mikir...'
-        : isPlaying
+        : tts.playing
           ? 'Jawaban...'
           : active
             ? `Tap buat lanjut · ${formatMinutes(elapsedSec)}`
@@ -313,7 +298,7 @@ export default function CompanionTab() {
               <CatetinOrb
                 size={250}
                 active={voicePhase === 'recording'}
-                speaking={isPlaying}
+                speaking={tts.playing}
                 onPress={onVoiceToggle}
               />
               <Text className="mt-6 text-center font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">

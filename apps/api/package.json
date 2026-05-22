@@ -23,7 +23,7 @@
     "@hono/zod-validator": "^0.4.1",
     "@react-pdf/renderer": "^4.5.1",
     "baileys": "7.0.0-rc13",
-    "drizzle-orm": "^0.36.4",
+    "drizzle-orm": "^0.45.2",
     "expo-server-sdk": "^6.1.0",
     "firebase-admin": "^13.0.1",
     "grammy": "^1.32.0",

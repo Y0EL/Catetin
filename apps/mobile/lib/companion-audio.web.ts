@@ -1,3 +1,5 @@
+import { useCallback, useRef } from 'react'
+
 export type RecordedAudio = { base64: string; mimeType: string }
 
 export type CompanionRecorder = {
@@ -40,6 +42,30 @@ async function blobToBase64(blob: Blob): Promise<string> {
     reader.onerror = () => reject(reader.error ?? new Error('Gagal baca audio'))
     reader.readAsDataURL(blob)
   })
+}
+
+export function useCompanionRecorder() {
+  const recRef = useRef<CompanionRecorder | null>(null)
+
+  const start = useCallback(async () => {
+    const rec = createCompanionRecorder()
+    await rec.start()
+    recRef.current = rec
+  }, [])
+
+  const stop = useCallback(async (): Promise<RecordedAudio> => {
+    const rec = recRef.current
+    if (!rec) throw new Error('Gak lagi rekam')
+    recRef.current = null
+    return rec.stop()
+  }, [])
+
+  const cancel = useCallback(() => {
+    recRef.current?.cancel()
+    recRef.current = null
+  }, [])
+
+  return { start, stop, cancel }
 }
 
 export function createCompanionRecorder(): CompanionRecorder {
@@ -89,7 +115,7 @@ export function createCompanionRecorder(): CompanionRecorder {
       try {
         if (recorder && recorder.state !== 'inactive') recorder.stop()
       } catch {
-        // recorder already stopped, ignore
+        // already stopped
       }
       cleanup()
     },
