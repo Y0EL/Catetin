@@ -77,4 +77,3 @@ scripts/*
 *.sln
 .vscode
 .github_token
-.npmrc
