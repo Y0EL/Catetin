@@ -25,6 +25,15 @@ function extractText(msg: WAMessage): string | null {
   return null
 }
 
+function isSelfChat(socket: WASocket, msg: WAMessage): boolean {
+  const me = socket.user?.id
+  if (!me) return false
+  const meBase = me.split(':')[0]?.split('@')[0]
+  const remote = msg.key.remoteJid ?? ''
+  const remoteBase = remote.split('@')[0]
+  return !!meBase && meBase === remoteBase
+}
+
 export async function handleIncomingMessage(
   db: Database,
   userId: string,
@@ -33,11 +42,11 @@ export async function handleIncomingMessage(
 ): Promise<void> {
   pruneSent()
   if (!msg.key.id) return
-  if (msg.key.fromMe) return
   if (sentIds.has(msg.key.id)) {
     sentIds.delete(msg.key.id)
     return
   }
+  if (!isSelfChat(socket, msg)) return
   if (typeof msg.messageTimestamp === 'number') {
     const ageMs = Date.now() - msg.messageTimestamp * 1000
     if (ageMs > MESSAGE_FRESHNESS_MS) return
