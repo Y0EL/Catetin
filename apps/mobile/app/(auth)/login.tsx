@@ -12,10 +12,7 @@ function hasOAuthConfigured(): boolean {
     )
   }
   if (Platform.OS === 'android') {
-    return Boolean(
-      process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID ??
-      process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB,
-    )
+    return Boolean(process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID)
   }
   return false
 }
