@@ -143,15 +143,15 @@ importers:
       '@catetin/types':
         specifier: workspace:^
         version: link:../../packages/types
+      '@google/genai':
+        specifier: ^0.7.0
+        version: 0.7.0
       '@whiskeysockets/baileys':
         specifier: ^6.7.16
         version: 6.17.16(eslint@9.39.4(jiti@2.6.1))(qrcode-terminal@0.12.0)(typescript@5.9.3)
       pino:
         specifier: ^9.5.0
         version: 9.14.0
-      qrcode-terminal:
-        specifier: ^0.12.0
-        version: 0.12.0
     devDependencies:
       '@types/node':
         specifier: ^22.10.2
@@ -2008,6 +2008,10 @@ packages:
 
   '@google/genai@0.14.1':
     resolution: {integrity: sha512-BZ93j4XcvsLEX5RkYE1RqrXLpuzEuH5VGY0geRrHjfpLP3ijDepGePg/iJ7kMSPOTXFYNMeTruNyoTB6TXXgnA==}
+    engines: {node: '>=18.0.0'}
+
+  '@google/genai@0.7.0':
+    resolution: {integrity: sha512-r+Fwj/emnXZN5R+4JCxDXboY4AGTmTn7+Wnori5dgyJiStP0P82f9YYL0CVsCnDIumNY2i0UIcZ1zGZdtHJ34w==}
     engines: {node: '>=18.0.0'}
 
   '@google/generative-ai@0.21.0':
@@ -9466,6 +9470,16 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  '@google/genai@0.7.0':
+    dependencies:
+      google-auth-library: 9.15.1
+      ws: 8.20.1
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - supports-color
+      - utf-8-validate
+
   '@google/generative-ai@0.21.0': {}
 
   '@grammyjs/types@3.27.3': {}
@@ -14204,7 +14218,8 @@ snapshots:
 
   qrcode-terminal@0.11.0: {}
 
-  qrcode-terminal@0.12.0: {}
+  qrcode-terminal@0.12.0:
+    optional: true
 
   qrcode@1.5.4:
     dependencies:

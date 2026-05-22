@@ -12,6 +12,7 @@ import {
   Sparkles,
   Sun,
   Target,
+  Wallet,
 } from 'lucide-react-native'
 import { useState } from 'react'
 import { ActivityIndicator, Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native'
@@ -78,6 +79,13 @@ export default function SettingsTab() {
           </View>
 
           <Section title="Keuangan">
+            <Row
+              icon={<Wallet size={18} color="#71717a" />}
+              label="Kelola Wallet"
+              hint="Tambah dan atur sumber uang lo"
+              onPress={() => router.push('/wallets')}
+            />
+            <Divider />
             <Row
               icon={<Target size={18} color="#71717a" />}
               label="Budget per kategori"

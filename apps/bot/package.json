@@ -15,9 +15,9 @@
     "@catetin/chat-core": "workspace:^",
     "@catetin/db": "workspace:^",
     "@catetin/types": "workspace:^",
+    "@google/genai": "^0.7.0",
     "@whiskeysockets/baileys": "^6.7.16",
-    "pino": "^9.5.0",
-    "qrcode-terminal": "^0.12.0"
+    "pino": "^9.5.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

@@ -64,6 +64,7 @@ function AuthGate() {
       />
       <Stack.Screen name="budgets" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="analytics" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="wallets" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen
         name="paywall"
         options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
