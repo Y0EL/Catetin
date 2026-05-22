@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 type Props = {
   size?: number
   active?: boolean
+  speaking?: boolean
   onPress?: () => void
 }
 
@@ -40,16 +41,20 @@ function ensureStyles() {
       0%,100% { box-shadow: 0 0 20px 4px rgba(255,255,255,0.18), 0 0 48px 12px rgba(139,92,246,0.07); }
       50%     { box-shadow: 0 0 32px 8px rgba(255,255,255,0.30), 0 0 72px 20px rgba(139,92,246,0.11); }
     }
+    @keyframes orb-speak {
+      0%,100% { transform: scale(0.97); }
+      50%      { transform: scale(1.05); }
+    }
   `
   document.head.appendChild(el)
 }
 
-export function CatetinOrb({ size = 250, active = false, onPress }: Props) {
+export function CatetinOrb({ size = 250, active = false, speaking = false, onPress }: Props) {
   useEffect(() => {
     ensureStyles()
   }, [])
 
-  const speed = active ? 0.45 : 1
+  const speed = speaking ? 0.18 : active ? 0.45 : 1
   const blobSize = size * 0.68
 
   // Outer div: just the glow ring animation (box-shadow). No clip here.
@@ -60,8 +65,8 @@ export function CatetinOrb({ size = 250, active = false, onPress }: Props) {
     position: 'relative',
     cursor: onPress ? 'pointer' : 'default',
     flexShrink: 0,
-    animationName: 'orb-glow',
-    animationDuration: `${4 * speed}s`,
+    animationName: speaking ? 'orb-glow, orb-speak' : 'orb-glow',
+    animationDuration: speaking ? `${4 * speed}s, 0.65s` : `${4 * speed}s`,
     animationTimingFunction: 'ease-in-out',
     animationIterationCount: 'infinite',
   }

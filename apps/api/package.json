@@ -17,6 +17,7 @@
     "@catetin/db": "workspace:^",
     "@catetin/prompts": "workspace:^",
     "@catetin/types": "workspace:^",
+    "@google/genai": "^0.14.0",
     "@google/generative-ai": "^0.21.0",
     "@hono/node-server": "^1.13.7",
     "@hono/zod-validator": "^0.4.1",

@@ -15,6 +15,13 @@
       "when": 1779420374038,
       "tag": "0001_brown_gabe_jones",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779432098784,
+      "tag": "0002_worthless_firedrake",
+      "breakpoints": true
     }
   ]
 }

@@ -31,6 +31,35 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   return body as T
 }
 
+export async function apiStream(
+  path: string,
+  body: unknown,
+  onChunk: (data: string) => void,
+): Promise<void> {
+  const token = await getCurrentIdToken()
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'text/event-stream',
+  }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  const res = await fetch(`${BASE}${path}`, { method: 'POST', headers, body: JSON.stringify(body) })
+  if (!res.ok) throw new ApiError(res.status, 'STREAM_ERROR')
+  if (!res.body) return
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buf = ''
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buf += decoder.decode(value, { stream: true })
+    const lines = buf.split('\n')
+    buf = lines.pop() ?? ''
+    for (const line of lines) {
+      if (line.startsWith('data: ')) onChunk(line.slice(6))
+    }
+  }
+}
+
 export function apiErrorMessage(err: unknown): string {
   if (err instanceof ApiError) {
     if (err.code === 'UNAUTHORIZED') return 'Sesi lo abis, coba login ulang ya.'

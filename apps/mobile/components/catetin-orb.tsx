@@ -13,6 +13,7 @@ import Animated, {
 type Props = {
   size?: number
   active?: boolean
+  speaking?: boolean
   onPress?: () => void
 }
 
@@ -81,74 +82,94 @@ function Blob({
   )
 }
 
-export function CatetinOrb({ size = 250, active = false, onPress }: Props) {
-  const speed = active ? 2.2 : 1
+export function CatetinOrb({ size = 250, active = false, speaking = false, onPress }: Props) {
+  const speed = speaking ? 5 : active ? 2.2 : 1
   const bs = size * 0.68
   const half = size / 2
 
+  const scale = useSharedValue(1)
+
+  useEffect(() => {
+    if (speaking) {
+      scale.value = withRepeat(
+        withSequence(
+          withTiming(1.05, { duration: 325, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.97, { duration: 325, easing: Easing.inOut(Easing.ease) }),
+        ),
+        -1,
+      )
+    } else {
+      scale.value = withTiming(1, { duration: 200 })
+    }
+  }, [speaking])
+
+  const scaleStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }))
+
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole={onPress ? 'button' : undefined}
-      accessibilityLabel={
-        onPress ? (active ? 'Hentikan obrolan' : 'Mulai ngobrol dengan Catetin') : undefined
-      }
-      style={{ width: size, height: size }}
-    >
-      <View
-        style={{
-          width: size,
-          height: size,
-          borderRadius: half,
-          backgroundColor: '#ffffff',
-          overflow: 'hidden',
-        }}
+    <Animated.View style={[{ width: size, height: size }, scaleStyle]}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole={onPress ? 'button' : undefined}
+        accessibilityLabel={
+          onPress ? (active ? 'Hentikan obrolan' : 'Mulai ngobrol dengan Catetin') : undefined
+        }
+        style={{ width: size, height: size }}
       >
-        <Blob
-          color="#6366f1"
-          blobSize={bs}
-          duration={9}
-          delay={0}
-          speed={speed}
-          fromX={-bs * 0.18}
-          fromY={-bs * 0.22}
-          toX={bs * 0.12}
-          toY={bs * 0.18}
-        />
-        <Blob
-          color="#8b5cf6"
-          blobSize={bs * 0.88}
-          duration={11}
-          delay={300}
-          speed={speed}
-          fromX={bs * 0.22}
-          fromY={bs * 0.18}
-          toX={-bs * 0.18}
-          toY={-bs * 0.22}
-        />
-        <Blob
-          color="#3b82f6"
-          blobSize={bs * 0.74}
-          duration={13}
-          delay={600}
-          speed={speed}
-          fromX={-bs * 0.12}
-          fromY={bs * 0.28}
-          toX={bs * 0.24}
-          toY={-bs * 0.18}
-        />
-        <Blob
-          color="#ec4899"
-          blobSize={bs * 0.58}
-          duration={8}
-          delay={150}
-          speed={speed}
-          fromX={bs * 0.14}
-          fromY={-bs * 0.28}
-          toX={-bs * 0.22}
-          toY={bs * 0.22}
-        />
-      </View>
-    </Pressable>
+        <View
+          style={{
+            width: size,
+            height: size,
+            borderRadius: half,
+            backgroundColor: '#ffffff',
+            overflow: 'hidden',
+          }}
+        >
+          <Blob
+            color="#6366f1"
+            blobSize={bs}
+            duration={9}
+            delay={0}
+            speed={speed}
+            fromX={-bs * 0.18}
+            fromY={-bs * 0.22}
+            toX={bs * 0.12}
+            toY={bs * 0.18}
+          />
+          <Blob
+            color="#8b5cf6"
+            blobSize={bs * 0.88}
+            duration={11}
+            delay={300}
+            speed={speed}
+            fromX={bs * 0.22}
+            fromY={bs * 0.18}
+            toX={-bs * 0.18}
+            toY={-bs * 0.22}
+          />
+          <Blob
+            color="#3b82f6"
+            blobSize={bs * 0.74}
+            duration={13}
+            delay={600}
+            speed={speed}
+            fromX={-bs * 0.12}
+            fromY={bs * 0.28}
+            toX={bs * 0.24}
+            toY={-bs * 0.18}
+          />
+          <Blob
+            color="#ec4899"
+            blobSize={bs * 0.58}
+            duration={8}
+            delay={150}
+            speed={speed}
+            fromX={bs * 0.14}
+            fromY={-bs * 0.28}
+            toX={-bs * 0.22}
+            toY={bs * 0.22}
+          />
+        </View>
+      </Pressable>
+    </Animated.View>
   )
 }

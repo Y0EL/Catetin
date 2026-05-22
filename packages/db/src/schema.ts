@@ -150,6 +150,23 @@ export const companionSessions = pgTable('companion_sessions', {
   wasSubscribed: boolean('was_subscribed').notNull().default(false),
 })
 
+export const companionMessages = pgTable(
+  'companion_messages',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: text('role').notNull(),
+    content: text('content').notNull(),
+    source: text('source').notNull().default('chat'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userCreatedIdx: index('companion_messages_user_created_idx').on(t.userId, t.createdAt),
+  }),
+)
+
 export const whatsappSessions = pgTable('whatsapp_sessions', {
   userId: uuid('user_id')
     .primaryKey()
@@ -186,3 +203,5 @@ export type ChannelLink = typeof channelLinks.$inferSelect
 export type CompanionSession = typeof companionSessions.$inferSelect
 export type WhatsappSession = typeof whatsappSessions.$inferSelect
 export type NewWhatsappSession = typeof whatsappSessions.$inferInsert
+export type CompanionMessage = typeof companionMessages.$inferSelect
+export type NewCompanionMessage = typeof companionMessages.$inferInsert

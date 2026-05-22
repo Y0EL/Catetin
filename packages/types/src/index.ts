@@ -124,9 +124,32 @@ export type CompanionTurnInput = z.infer<typeof companionTurnSchema>
 
 export const companionTurnResponseSchema = z.object({
   text: z.string(),
+  audio: z.string().optional(),
+  mimeType: z.string().optional(),
 })
 
 export type CompanionTurnResponse = z.infer<typeof companionTurnResponseSchema>
+
+export const companionChatSchema = z.object({
+  message: z.string().min(1).max(2000),
+})
+
+export type CompanionChatInput = z.infer<typeof companionChatSchema>
+
+export const companionMessageSchema = z.object({
+  id: z.string().uuid(),
+  role: z.enum(['user', 'model']),
+  content: z.string(),
+  source: z.enum(['voice', 'chat']),
+  createdAt: z.string(),
+})
+
+export type CompanionMessageDto = z.infer<typeof companionMessageSchema>
+
+export const companionHistoryQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+  before: z.string().datetime().optional(),
+})
 
 export const ocrReceiptResponseSchema = z.object({
   merchant: z.string().nullable(),

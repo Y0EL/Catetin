@@ -1,6 +1,6 @@
-import { and, eq, gte, isNull, sql } from 'drizzle-orm'
-import { companionSessions, users, type Database } from '@catetin/db'
-import type { CompanionQuota } from '@catetin/types'
+import { and, eq, gte, isNull, lt, sql } from 'drizzle-orm'
+import { companionMessages, companionSessions, users, type Database } from '@catetin/db'
+import type { CompanionMessageDto, CompanionQuota } from '@catetin/types'
 import { HttpError } from '../errors'
 
 const FREE_DAILY_LIMIT_SEC = 600
@@ -83,6 +83,51 @@ export async function assertSessionOwnedAndActive(
     )
     .limit(1)
   if (!rows[0]) throw new HttpError(404, 'NOT_FOUND', 'Sesi gak ketemu atau udah selesai')
+}
+
+export async function saveCompanionMessages(
+  db: Database,
+  userId: string,
+  messages: Array<{ role: string; content: string; source: string }>,
+): Promise<void> {
+  if (messages.length === 0) return
+  await db.insert(companionMessages).values(
+    messages.map((m) => ({
+      userId,
+      role: m.role,
+      content: m.content,
+      source: m.source,
+    })),
+  )
+}
+
+export async function getCompanionHistory(
+  db: Database,
+  userId: string,
+  limit = 50,
+  before?: Date,
+): Promise<CompanionMessageDto[]> {
+  const conditions = [eq(companionMessages.userId, userId)]
+  if (before) conditions.push(lt(companionMessages.createdAt, before))
+
+  const rows = await db
+    .select()
+    .from(companionMessages)
+    .where(and(...conditions))
+    .orderBy(sql`${companionMessages.createdAt} desc`)
+    .limit(limit)
+
+  return rows.reverse().map((r) => ({
+    id: r.id,
+    role: r.role as 'user' | 'model',
+    content: r.content,
+    source: r.source as 'voice' | 'chat',
+    createdAt: r.createdAt.toISOString(),
+  }))
+}
+
+export async function deleteAllCompanionMessages(db: Database, userId: string): Promise<void> {
+  await db.delete(companionMessages).where(eq(companionMessages.userId, userId))
 }
 
 export async function endCompanionSession(

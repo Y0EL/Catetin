@@ -1,22 +1,41 @@
-import { Sparkles, X } from 'lucide-react-native'
+import { MessageCircle, Mic, Send, Trash2, X } from 'lucide-react-native'
 import { useEffect, useRef, useState } from 'react'
-import { Alert, Platform, Pressable, Text, View } from 'react-native'
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { CatetinOrb } from '~/components/catetin-orb'
 import { ScreenFade } from '~/components/screen-fade'
 import {
-  useCompanionQuota,
+  useClearHistory,
+  useCompanionHistory,
   useCompanionTurn,
   useEndCompanion,
   useStartCompanion,
 } from '~/hooks/use-companion'
-import { apiErrorMessage } from '~/lib/api'
+import { apiErrorMessage, apiStream } from '~/lib/api'
 import { createCompanionRecorder, type CompanionRecorder } from '~/lib/companion-audio'
-import { cancelCompanionSpeech, speakCompanionReply } from '~/lib/companion-speech'
+import { playTtsAudio, stopTtsAudio } from '~/lib/companion-tts'
 import { useAccentColor } from '~/lib/use-accent-color'
 
-type Bubble = { role: 'user' | 'catetin'; text: string }
-type Mode = 'idle' | 'recording' | 'thinking'
+type Tab = 'voice' | 'chat'
+type VoicePhase = 'idle' | 'recording' | 'thinking'
+
+type Msg = {
+  id: string
+  role: 'user' | 'model'
+  content: string
+  source: 'voice' | 'chat'
+}
+
+const STREAM_ID = '__streaming__'
 
 function formatMinutes(totalSec: number): string {
   const min = Math.floor(totalSec / 60)
@@ -28,39 +47,68 @@ function formatMinutes(totalSec: number): string {
 
 export default function CompanionTab() {
   const accent = useAccentColor()
-  const quota = useCompanionQuota()
+  const [tab, setTab] = useState<Tab>('voice')
+
+  // voice
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [voicePhase, setVoicePhase] = useState<VoicePhase>('idle')
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [elapsedSec, setElapsedSec] = useState(0)
+  const recorderRef = useRef<CompanionRecorder | null>(null)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // chat
+  const [messages, setMessages] = useState<Msg[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const [streaming, setStreaming] = useState(false)
+  const scrollRef = useRef<ScrollView>(null)
+
   const start = useStartCompanion()
   const end = useEndCompanion()
   const turn = useCompanionTurn()
-
-  const [sessionId, setSessionId] = useState<string | null>(null)
-  const [elapsedSec, setElapsedSec] = useState(0)
-  const [mode, setMode] = useState<Mode>('idle')
-  const [bubbles, setBubbles] = useState<Bubble[]>([])
-  const recorderRef = useRef<CompanionRecorder | null>(null)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const active = sessionId !== null
+  const history = useCompanionHistory()
+  const clearHistory = useClearHistory()
 
   useEffect(() => {
-    if (!active) {
+    if (history.data) {
+      setMessages(
+        history.data.map((m) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          source: m.source,
+        })),
+      )
+    }
+  }, [history.data])
+
+  useEffect(() => {
+    if (sessionId) {
+      timerRef.current = setInterval(() => setElapsedSec((s) => s + 1), 1000)
+    } else {
       if (timerRef.current) clearInterval(timerRef.current)
       timerRef.current = null
-      return
     }
-    timerRef.current = setInterval(() => setElapsedSec((s) => s + 1), 1000)
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [active])
+  }, [sessionId])
 
   useEffect(() => {
     return () => {
       recorderRef.current?.cancel()
+      stopTtsAudio()
     }
   }, [])
 
-  function fail(message: string) {
-    Alert.alert('Gak bisa', message)
+  useEffect(() => {
+    if (tab === 'chat') {
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50)
+    }
+  }, [messages, tab])
+
+  function fail(msg: string) {
+    Alert.alert('Gak bisa', msg)
   }
 
   async function startSession(): Promise<string | null> {
@@ -69,7 +117,6 @@ export default function CompanionTab() {
         onSuccess: (res) => {
           setSessionId(res.sessionId)
           setElapsedSec(0)
-          setBubbles([])
           resolve(res.sessionId)
         },
         onError: (err) => {
@@ -85,7 +132,7 @@ export default function CompanionTab() {
       const rec = createCompanionRecorder()
       await rec.start()
       recorderRef.current = rec
-      setMode('recording')
+      setVoicePhase('recording')
     } catch (err) {
       setSessionId(null)
       end.mutate(id)
@@ -96,7 +143,7 @@ export default function CompanionTab() {
   async function endRecordingAndSend(id: string) {
     const rec = recorderRef.current
     if (!rec) return
-    setMode('thinking')
+    setVoicePhase('thinking')
     try {
       const audio = await rec.stop()
       recorderRef.current = null
@@ -105,26 +152,34 @@ export default function CompanionTab() {
         audio: audio.base64,
         mimeType: audio.mimeType,
       })
-      setBubbles((prev) =>
-        (
-          [...prev, { role: 'user', text: '...' }, { role: 'catetin', text: res.text }] as Bubble[]
-        ).slice(-6),
-      )
-      speakCompanionReply(res.text)
+      if (res.audio) {
+        setIsPlaying(true)
+        try {
+          await playTtsAudio(res.audio)
+        } catch {
+          // ignore playback errors
+        }
+        setIsPlaying(false)
+      }
+      setMessages((prev) => [
+        ...prev,
+        { id: `v-u-${Date.now()}`, role: 'user', content: '[Pesan suara]', source: 'voice' },
+        { id: `v-m-${Date.now()}`, role: 'model', content: res.text, source: 'voice' },
+      ])
     } catch (err) {
       fail(apiErrorMessage(err))
     } finally {
-      setMode('idle')
+      setVoicePhase('idle')
     }
   }
 
-  async function onToggle() {
+  async function onVoiceToggle() {
     if (Platform.OS !== 'web') {
-      fail('Voice masih web-only buat sekarang, native nyusul ya.')
+      fail('Voice masih web-only buat sekarang.')
       return
     }
-    if (mode === 'thinking') return
-    if (mode === 'recording' && sessionId) {
+    if (voicePhase === 'thinking' || isPlaying) return
+    if (voicePhase === 'recording' && sessionId) {
       await endRecordingAndSend(sessionId)
       return
     }
@@ -133,137 +188,203 @@ export default function CompanionTab() {
     await beginRecording(id)
   }
 
-  function onClose() {
-    if (!sessionId) return
+  function onVoiceClose() {
     recorderRef.current?.cancel()
     recorderRef.current = null
-    cancelCompanionSpeech()
+    stopTtsAudio()
+    setIsPlaying(false)
     const id = sessionId
     setSessionId(null)
-    setMode('idle')
-    setBubbles([])
+    setVoicePhase('idle')
     setElapsedSec(0)
-    end.mutate(id)
+    if (id) end.mutate(id)
   }
 
-  const data = quota.data
-  const isPro = data?.isPro === true
-  const limit = data?.dailyLimitSec ?? 600
-  const used = (data?.usedTodaySec ?? 0) + elapsedSec
-  const remaining = isPro ? null : Math.max(0, limit - used)
-  const pct = isPro ? 100 : limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0
+  async function onSendChat() {
+    const msg = chatInput.trim()
+    if (!msg || streaming) return
+    setChatInput('')
+    setStreaming(true)
 
-  const label =
-    mode === 'recording'
+    const userMsg: Msg = { id: `c-u-${Date.now()}`, role: 'user', content: msg, source: 'chat' }
+    const modelMsg: Msg = { id: STREAM_ID, role: 'model', content: '', source: 'chat' }
+    setMessages((prev) => [...prev, userMsg, modelMsg])
+
+    try {
+      await apiStream('/v1/companion/chat', { message: msg }, (raw) => {
+        try {
+          const data = JSON.parse(raw) as { chunk?: string; done?: boolean; error?: string }
+          if (data.chunk) {
+            setMessages((prev) =>
+              prev.map((m) => (m.id === STREAM_ID ? { ...m, content: m.content + data.chunk } : m)),
+            )
+          }
+        } catch {
+          // malformed chunk
+        }
+      })
+    } catch (err) {
+      fail(apiErrorMessage(err))
+      setMessages((prev) => prev.filter((m) => m.id !== STREAM_ID))
+    } finally {
+      setStreaming(false)
+      setMessages((prev) =>
+        prev.map((m) => (m.id === STREAM_ID ? { ...m, id: `c-m-${Date.now()}` } : m)),
+      )
+      history.refetch()
+    }
+  }
+
+  function onClearHistory() {
+    Alert.alert('Hapus riwayat?', 'Semua pesan bakal dihapus permanen.', [
+      { text: 'Batal', style: 'cancel' },
+      {
+        text: 'Hapus',
+        style: 'destructive',
+        onPress: () => {
+          clearHistory.mutate(undefined, {
+            onSuccess: () => setMessages([]),
+            onError: (err) => fail(apiErrorMessage(err)),
+          })
+        },
+      },
+    ])
+  }
+
+  const active = sessionId !== null
+  const voiceLabel =
+    voicePhase === 'recording'
       ? `Ngedengerin · ${formatMinutes(elapsedSec)}`
-      : mode === 'thinking'
+      : voicePhase === 'thinking'
         ? 'Lagi mikir...'
-        : active
-          ? `Tap orb buat lanjut · ${formatMinutes(elapsedSec)}`
-          : 'Tap orb buat mulai'
-
-  const hint =
-    mode === 'recording'
-      ? 'Tap lagi kalo udah selesai ngomong.'
-      : mode === 'thinking'
-        ? 'Tunggu sebentar ya, gue lagi nyusun jawabannya.'
-        : active
-          ? 'Lanjut ngobrol atau tutup sesi pas udah cukup.'
-          : 'Curhat, minta saran budget, atau cerita aja soal duit.'
+        : isPlaying
+          ? 'Jawaban...'
+          : active
+            ? `Tap buat lanjut · ${formatMinutes(elapsedSec)}`
+            : 'Tap buat mulai'
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-50 dark:bg-zinc-950" edges={['top']}>
       <ScreenFade>
-        <View className="flex-1 px-4 pt-3">
-          <View className="flex-row items-center justify-between">
-            <View>
-              <Text className="font-sans text-sm text-zinc-500 dark:text-zinc-400">
-                Temen ngobrol
-              </Text>
-              <Text className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-                Curhat
-              </Text>
-            </View>
+        <View className="flex-1">
+          <View className="flex-row items-center justify-between px-4 pb-2 pt-3">
+            <Text className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+              Curhat
+            </Text>
             <View className="flex-row items-center gap-2">
-              {active ? (
+              {tab === 'chat' ? (
                 <Pressable
-                  onPress={onClose}
-                  className="h-9 w-9 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800"
+                  onPress={onClearHistory}
+                  className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800"
+                  accessibilityLabel="Hapus riwayat"
+                >
+                  <Trash2 size={16} color={accent} />
+                </Pressable>
+              ) : active ? (
+                <Pressable
+                  onPress={onVoiceClose}
+                  className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800"
                   accessibilityLabel="Tutup sesi"
                 >
                   <X size={16} color={accent} />
                 </Pressable>
               ) : null}
-              <View className="flex-row items-center gap-1 rounded-full bg-primary-50 px-3 py-1.5 dark:bg-primary-950">
-                <Sparkles size={12} color={accent} />
-                <Text className="font-sans text-xs font-semibold text-primary-700 dark:text-primary-300">
-                  {isPro ? 'Pro' : 'Free'}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          <View className="flex-1 items-center justify-center">
-            <CatetinOrb size={250} active={mode === 'recording'} onPress={onToggle} />
-            <Text className="mt-6 text-center font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
-              {label}
-            </Text>
-            <Text className="mt-2 max-w-[280px] text-center font-sans text-sm leading-5 text-zinc-500 dark:text-zinc-400">
-              {hint}
-            </Text>
-            {bubbles.length > 0 ? (
-              <View className="mt-6 w-full max-w-[360px] gap-2">
-                {bubbles
-                  .filter((b) => b.role === 'catetin')
-                  .slice(-2)
-                  .map((b, i) => (
-                    <View
-                      key={`reply-${i}`}
-                      className="rounded-card bg-white px-4 py-3 dark:bg-zinc-800"
-                    >
-                      <Text className="font-sans text-sm leading-5 text-zinc-800 dark:text-zinc-100">
-                        {b.text}
-                      </Text>
-                    </View>
-                  ))}
-              </View>
-            ) : null}
-          </View>
-
-          <View className="mb-28 rounded-card bg-white p-5 dark:bg-zinc-800">
-            <View className="flex-row items-center justify-between">
-              <Text className="font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-                Kuota hari ini
-              </Text>
-              <Text className="font-sans text-xs font-semibold text-primary-600 dark:text-primary-200">
-                {isPro ? 'Unlimited' : 'Free'}
-              </Text>
-            </View>
-            <View className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-700">
-              <View className="h-full rounded-full bg-primary-600" style={{ width: `${pct}%` }} />
-            </View>
-            <View className="mt-3 flex-row items-center justify-between">
-              <Text className="font-sans text-sm text-zinc-700 dark:text-zinc-200">
-                {isPro ? (
-                  <Text className="font-semibold text-zinc-900 dark:text-zinc-100">
-                    Catetin Pro aktif
-                  </Text>
-                ) : (
-                  <>
-                    <Text className="font-semibold text-zinc-900 dark:text-zinc-100">
-                      {formatMinutes(remaining ?? 0)}
-                    </Text>{' '}
-                    tersisa
-                  </>
-                )}
-              </Text>
-              {!isPro ? (
-                <Pressable className="rounded-full bg-primary-600 px-4 py-2 active:opacity-90">
-                  <Text className="font-sans text-sm font-semibold text-white">Unlimited</Text>
+              <View className="flex-row overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+                <Pressable
+                  onPress={() => setTab('voice')}
+                  className={`items-center justify-center px-4 py-2 ${tab === 'voice' ? 'bg-primary-600' : ''}`}
+                  accessibilityLabel="Mode suara"
+                >
+                  <Mic size={14} color={tab === 'voice' ? '#fff' : accent} />
                 </Pressable>
-              ) : null}
+                <Pressable
+                  onPress={() => setTab('chat')}
+                  className={`items-center justify-center px-4 py-2 ${tab === 'chat' ? 'bg-primary-600' : ''}`}
+                  accessibilityLabel="Mode chat"
+                >
+                  <MessageCircle size={14} color={tab === 'chat' ? '#fff' : accent} />
+                </Pressable>
+              </View>
             </View>
           </View>
+
+          {tab === 'voice' ? (
+            <View className="flex-1 items-center justify-center px-4">
+              <CatetinOrb
+                size={250}
+                active={voicePhase === 'recording'}
+                speaking={isPlaying}
+                onPress={onVoiceToggle}
+              />
+              <Text className="mt-6 text-center font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
+                {voiceLabel}
+              </Text>
+            </View>
+          ) : (
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              className="flex-1"
+            >
+              <ScrollView
+                ref={scrollRef}
+                className="flex-1 px-4"
+                contentContainerStyle={{ paddingBottom: 8, paddingTop: 4 }}
+              >
+                {messages.length === 0 ? (
+                  <View className="items-center justify-center py-20">
+                    <Text className="text-center font-sans text-sm text-zinc-400 dark:text-zinc-500">
+                      Belum ada pesan. Yuk mulai ngobrol!
+                    </Text>
+                  </View>
+                ) : (
+                  messages.map((m, i) => (
+                    <View
+                      key={m.id || String(i)}
+                      className={`mb-2 max-w-[80%] ${m.role === 'user' ? 'self-end' : 'self-start'}`}
+                    >
+                      <View
+                        className={`rounded-2xl px-4 py-3 ${
+                          m.role === 'user'
+                            ? 'bg-primary-600'
+                            : 'bg-white shadow-sm dark:bg-zinc-800'
+                        }`}
+                      >
+                        <Text
+                          className={`font-sans text-sm leading-5 ${
+                            m.role === 'user' ? 'text-white' : 'text-zinc-800 dark:text-zinc-100'
+                          }`}
+                        >
+                          {m.content || '...'}
+                        </Text>
+                      </View>
+                    </View>
+                  ))
+                )}
+              </ScrollView>
+              <View className="flex-row items-end gap-2 border-t border-zinc-100 px-4 py-3 dark:border-zinc-800">
+                <TextInput
+                  value={chatInput}
+                  onChangeText={setChatInput}
+                  placeholder="Ketik pesan..."
+                  placeholderTextColor="#a1a1aa"
+                  className="flex-1 rounded-2xl bg-white px-4 py-3 font-sans text-sm text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+                  multiline
+                  maxLength={2000}
+                  returnKeyType="send"
+                  blurOnSubmit={false}
+                  onSubmitEditing={onSendChat}
+                />
+                <Pressable
+                  onPress={onSendChat}
+                  disabled={!chatInput.trim() || streaming}
+                  className="h-11 w-11 items-center justify-center rounded-full bg-primary-600 active:opacity-80 disabled:opacity-40"
+                  accessibilityLabel="Kirim"
+                >
+                  <Send size={18} color="#fff" />
+                </Pressable>
+              </View>
+            </KeyboardAvoidingView>
+          )}
         </View>
       </ScreenFade>
     </SafeAreaView>

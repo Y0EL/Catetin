@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type {
+  CompanionMessageDto,
   CompanionQuota,
   CompanionTurnResponse,
   StartCompanionSessionResponse,
@@ -48,7 +49,29 @@ export function useCompanionTurn() {
         method: 'POST',
         body: JSON.stringify(input),
       })
-      return { text: res.text }
+      return { text: res.text, audio: res.audio, mimeType: res.mimeType }
     },
+  })
+}
+
+export function useCompanionHistory() {
+  return useQuery({
+    queryKey: ['companion-history'],
+    queryFn: async () => {
+      const res = await apiFetch<{ ok: true; messages: CompanionMessageDto[] }>(
+        '/v1/companion/history?limit=50',
+      )
+      return res.messages
+    },
+  })
+}
+
+export function useClearHistory() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      await apiFetch<{ ok: true }>('/v1/companion/history', { method: 'DELETE' })
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['companion-history'] }),
   })
 }
