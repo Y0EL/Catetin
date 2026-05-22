@@ -51,7 +51,7 @@ export function CatetinTabBar({ state, navigation }: BottomTabBarProps) {
       style={{ paddingBottom: Math.max(insets.bottom, 12) }}
     >
       <View
-        className="flex-row items-center gap-1 rounded-full border border-zinc-100 bg-white px-2 py-2 dark:border-zinc-800 dark:bg-zinc-900"
+        className="flex-row items-center gap-1 rounded-full border border-zinc-100 bg-white px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-900"
         style={barShadow}
       >
         {state.routes.map((route, index) => {
@@ -69,14 +69,14 @@ export function CatetinTabBar({ state, navigation }: BottomTabBarProps) {
                 onPress={() => router.push('/add-modal')}
                 style={({ pressed }) => ({
                   transform: [{ scale: pressed ? 0.9 : 1 }],
-                  marginHorizontal: 4,
+                  marginHorizontal: 6,
                 })}
               >
                 <View
-                  className="h-12 w-12 items-center justify-center rounded-full bg-zinc-900 dark:bg-white"
+                  className="h-14 w-14 items-center justify-center rounded-full bg-zinc-900 dark:bg-white"
                   style={fabShadow}
                 >
-                  <Plus size={24} color={isDark ? '#18181b' : '#ffffff'} strokeWidth={2.6} />
+                  <Plus size={26} color={isDark ? '#18181b' : '#ffffff'} strokeWidth={2.6} />
                 </View>
               </Pressable>
             )
@@ -99,17 +99,20 @@ export function CatetinTabBar({ state, navigation }: BottomTabBarProps) {
               }}
               style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
             >
-              <View
-                className={
-                  isFocused
-                    ? 'h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800'
-                    : 'h-12 w-12 items-center justify-center rounded-full'
-                }
-              >
+              <View className="h-14 w-14 items-center justify-center">
                 <Icon
-                  size={22}
+                  size={isFocused ? 25 : 23}
                   color={isFocused ? accent : '#a1a1aa'}
-                  strokeWidth={isFocused ? 2.5 : 2}
+                  strokeWidth={isFocused ? 2.5 : 1.8}
+                />
+                <View
+                  style={{
+                    height: 3,
+                    width: 3,
+                    borderRadius: 1.5,
+                    marginTop: 3,
+                    backgroundColor: isFocused ? accent : 'transparent',
+                  }}
                 />
               </View>
             </Pressable>

@@ -128,11 +128,11 @@ function Spikes({ box, count, rInner, rOuter, duration, reverse, opacity, stops 
 
 // Palette Gemini sparkle: biru ke ungu ke magenta ke koral ke oranye ke kuning.
 const blobs: BlobSpec[] = [
-  { color: '#4285f4', size: 230, from: { x: -60, y: -50 }, to: { x: 30, y: 20 }, duration: 5200 },
-  { color: '#9b72cb', size: 210, from: { x: 80, y: -30 }, to: { x: 20, y: 50 }, duration: 6400 },
-  { color: '#d96570', size: 200, from: { x: 150, y: 60 }, to: { x: 80, y: -10 }, duration: 6800 },
-  { color: '#f59e0b', size: 190, from: { x: -20, y: 90 }, to: { x: 90, y: 30 }, duration: 7600 },
-  { color: '#22d3ee', size: 170, from: { x: 120, y: 80 }, to: { x: 30, y: -20 }, duration: 8200 },
+  { color: '#4285f4', size: 380, from: { x: -100, y: -80 }, to: { x: 40, y: 30 }, duration: 5200 },
+  { color: '#9b72cb', size: 340, from: { x: 110, y: -50 }, to: { x: 20, y: 70 }, duration: 6400 },
+  { color: '#d96570', size: 320, from: { x: 160, y: 60 }, to: { x: 70, y: -20 }, duration: 6800 },
+  { color: '#f59e0b', size: 300, from: { x: -30, y: 100 }, to: { x: 100, y: 20 }, duration: 7600 },
+  { color: '#22d3ee', size: 280, from: { x: 130, y: 90 }, to: { x: 20, y: -30 }, duration: 8200 },
 ]
 
 export function CardGlow() {

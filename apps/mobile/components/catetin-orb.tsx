@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useId, useEffect } from 'react'
 import { Pressable, View } from 'react-native'
 import Animated, {
   Easing,
@@ -9,6 +9,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated'
+import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg'
 
 type Props = {
   size?: number
@@ -40,8 +41,9 @@ function Blob({
   fromY,
   toX,
   toY,
-  opacity = 0.38,
+  opacity = 0.72,
 }: BlobProps) {
+  const id = useId().replace(/:/g, '').replace(/-/g, '')
   const progress = useSharedValue(0)
 
   useEffect(() => {
@@ -66,25 +68,24 @@ function Blob({
   }))
 
   return (
-    <Animated.View
-      style={[
-        {
-          position: 'absolute',
-          width: blobSize,
-          height: blobSize,
-          borderRadius: blobSize / 2,
-          backgroundColor: color,
-          opacity,
-        },
-        style,
-      ]}
-    />
+    <Animated.View style={[{ position: 'absolute', width: blobSize, height: blobSize }, style]}>
+      <Svg width={blobSize} height={blobSize}>
+        <Defs>
+          <RadialGradient id={id} cx="50%" cy="50%" r="50%">
+            <Stop offset="0" stopColor={color} stopOpacity={String(opacity)} />
+            <Stop offset="0.4" stopColor={color} stopOpacity={String((opacity * 0.4).toFixed(2))} />
+            <Stop offset="1" stopColor={color} stopOpacity="0" />
+          </RadialGradient>
+        </Defs>
+        <Circle cx={blobSize / 2} cy={blobSize / 2} r={blobSize / 2} fill={`url(#${id})`} />
+      </Svg>
+    </Animated.View>
   )
 }
 
 export function CatetinOrb({ size = 250, active = false, speaking = false, onPress }: Props) {
   const speed = speaking ? 5 : active ? 2.2 : 1
-  const bs = size * 0.68
+  const bs = size * 0.92
   const half = size / 2
 
   const scale = useSharedValue(1)
@@ -93,8 +94,8 @@ export function CatetinOrb({ size = 250, active = false, speaking = false, onPre
     if (speaking) {
       scale.value = withRepeat(
         withSequence(
-          withTiming(1.05, { duration: 325, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0.97, { duration: 325, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.06, { duration: 340, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.96, { duration: 340, easing: Easing.inOut(Easing.ease) }),
         ),
         -1,
       )
@@ -120,8 +121,8 @@ export function CatetinOrb({ size = 250, active = false, speaking = false, onPre
             width: size,
             height: size,
             borderRadius: half,
-            backgroundColor: '#ffffff',
             overflow: 'hidden',
+            backgroundColor: 'transparent',
           }}
         >
           <Blob
@@ -130,43 +131,44 @@ export function CatetinOrb({ size = 250, active = false, speaking = false, onPre
             duration={9}
             delay={0}
             speed={speed}
-            fromX={-bs * 0.18}
-            fromY={-bs * 0.22}
-            toX={bs * 0.12}
-            toY={bs * 0.18}
+            fromX={-bs * 0.1}
+            fromY={-bs * 0.12}
+            toX={bs * 0.08}
+            toY={bs * 0.1}
           />
           <Blob
             color="#8b5cf6"
-            blobSize={bs * 0.88}
+            blobSize={bs * 0.9}
             duration={11}
             delay={300}
             speed={speed}
-            fromX={bs * 0.22}
-            fromY={bs * 0.18}
-            toX={-bs * 0.18}
-            toY={-bs * 0.22}
+            fromX={bs * 0.12}
+            fromY={bs * 0.1}
+            toX={-bs * 0.1}
+            toY={-bs * 0.12}
           />
           <Blob
             color="#3b82f6"
-            blobSize={bs * 0.74}
+            blobSize={bs * 0.82}
             duration={13}
             delay={600}
             speed={speed}
-            fromX={-bs * 0.12}
-            fromY={bs * 0.28}
-            toX={bs * 0.24}
-            toY={-bs * 0.18}
+            fromX={-bs * 0.08}
+            fromY={bs * 0.14}
+            toX={bs * 0.12}
+            toY={-bs * 0.1}
           />
           <Blob
-            color="#ec4899"
-            blobSize={bs * 0.58}
+            color="#a855f7"
+            blobSize={bs * 0.72}
             duration={8}
             delay={150}
             speed={speed}
-            fromX={bs * 0.14}
-            fromY={-bs * 0.28}
-            toX={-bs * 0.22}
-            toY={bs * 0.22}
+            fromX={bs * 0.1}
+            fromY={-bs * 0.14}
+            toX={-bs * 0.12}
+            toY={bs * 0.1}
+            opacity={0.55}
           />
         </View>
       </Pressable>

@@ -1,15 +1,17 @@
 import { Paperclip } from 'lucide-react-native'
+import { useColorScheme } from 'nativewind'
 import { View } from 'react-native'
 
 export function NoteCard({
   children,
   className = '',
-  clipColor = '#18181b',
 }: {
   children: React.ReactNode
   className?: string
-  clipColor?: string
 }) {
+  const { colorScheme } = useColorScheme()
+  const clipColor = colorScheme === 'dark' ? '#ffffff' : '#18181b'
+
   return (
     <View className="relative">
       <View
