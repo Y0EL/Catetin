@@ -23,19 +23,7 @@
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#09090b"
       },
-      "permissions": ["android.permission.RECORD_AUDIO"],
-      "intentFilters": [
-        {
-          "action": "VIEW",
-          "autoVerify": true,
-          "data": [
-            {
-              "scheme": "com.googleusercontent.apps.180750897143-414ob9chmge9skqn13n4j9d05lnujp33"
-            }
-          ],
-          "category": ["BROWSABLE", "DEFAULT"]
-        }
-      ]
+      "permissions": ["android.permission.RECORD_AUDIO"]
     },
     "web": {
       "bundler": "metro",
