@@ -158,7 +158,7 @@ export default function CompanionTab() {
         {
           id: `v-u-${Date.now()}`,
           role: 'user',
-          content: res.transcript || '[Pesan suara]',
+          content: res.transcript ?? '[Pesan suara]',
           source: 'voice',
         },
         { id: `v-m-${Date.now()}`, role: 'model', content: res.text, source: 'voice' },

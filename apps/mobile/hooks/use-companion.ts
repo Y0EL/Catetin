@@ -49,7 +49,12 @@ export function useCompanionTurn() {
         method: 'POST',
         body: JSON.stringify(input),
       })
-      return { text: res.text, audio: res.audio, mimeType: res.mimeType }
+      return {
+        text: res.text,
+        audio: res.audio,
+        mimeType: res.mimeType,
+        transcript: res.transcript,
+      }
     },
   })
 }
