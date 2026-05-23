@@ -265,6 +265,28 @@ export const trendItemSchema = z.object({
 
 export type TrendItem = z.infer<typeof trendItemSchema>
 
+export const flexTrendItemSchema = z.object({
+  label: z.string(),
+  income: z.number().int().nonnegative(),
+  expense: z.number().int().nonnegative(),
+})
+
+export type FlexTrendItem = z.infer<typeof flexTrendItemSchema>
+
+export const flexTrendQuerySchema = z.object({
+  period: z.enum(['daily', 'weekly', 'monthly', 'yearly']).default('monthly'),
+  from: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  to: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+})
+
+export type FlexTrendQuery = z.infer<typeof flexTrendQuerySchema>
+
 export const userProfileSchema = z.object({
   id: z.string().uuid(),
   email: z.string().nullable(),

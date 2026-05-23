@@ -2,6 +2,7 @@ import { and, desc, eq, gte, ilike, inArray, lt, lte, or, sql, type SQL } from '
 import { categories, transactions, wallets, type Database, type Transaction } from '@catetin/db'
 import type {
   CreateTransactionInput,
+  FlexTrendItem,
   ListTransactionsQuery,
   MonthSummary,
   TrendItem,
@@ -258,4 +259,81 @@ export async function getMonthlyTrend(
     else if (row.kind === 'expense') bucket.expense = value
   }
   return Array.from(map, ([month, vals]) => ({ month, income: vals.income, expense: vals.expense }))
+}
+
+export async function getFlexTrend(
+  db: Database,
+  userId: string,
+  period: 'daily' | 'weekly' | 'monthly' | 'yearly',
+  from: string,
+  to: string,
+): Promise<FlexTrendItem[]> {
+  const fromDate = new Date(`${from}T00:00:00Z`)
+  const toDate = new Date(`${to}T23:59:59Z`)
+
+  const truncSql =
+    period === 'daily'
+      ? sql`date_trunc('day', ${transactions.occurredAt} AT TIME ZONE 'UTC')`
+      : period === 'weekly'
+        ? sql`date_trunc('week', ${transactions.occurredAt} AT TIME ZONE 'UTC')`
+        : sql`date_trunc('month', ${transactions.occurredAt} AT TIME ZONE 'UTC')`
+
+  const labelSql =
+    period === 'daily'
+      ? sql<string>`to_char(date_trunc('day', ${transactions.occurredAt} AT TIME ZONE 'UTC'), 'YYYY-MM-DD')`
+      : period === 'weekly'
+        ? sql<string>`to_char(date_trunc('week', ${transactions.occurredAt} AT TIME ZONE 'UTC'), 'YYYY-MM-DD')`
+        : sql<string>`to_char(date_trunc('month', ${transactions.occurredAt} AT TIME ZONE 'UTC'), 'YYYY-MM')`
+
+  const rows = await db
+    .select({
+      label: labelSql,
+      kind: transactions.kind,
+      total: sql<string>`coalesce(sum(${transactions.amount}), 0)::bigint`,
+    })
+    .from(transactions)
+    .where(
+      and(
+        eq(transactions.userId, userId),
+        gte(transactions.occurredAt, fromDate),
+        lte(transactions.occurredAt, toDate),
+      ),
+    )
+    .groupBy(truncSql, transactions.kind)
+    .orderBy(truncSql)
+
+  const map = new Map<string, { income: number; expense: number }>()
+
+  if (period === 'daily') {
+    const cur = new Date(fromDate)
+    while (cur <= toDate) {
+      map.set(cur.toISOString().slice(0, 10), { income: 0, expense: 0 })
+      cur.setUTCDate(cur.getUTCDate() + 1)
+    }
+  } else if (period === 'weekly') {
+    const cur = new Date(fromDate)
+    const dow = cur.getUTCDay()
+    cur.setUTCDate(cur.getUTCDate() - (dow === 0 ? 6 : dow - 1))
+    while (cur <= toDate) {
+      map.set(cur.toISOString().slice(0, 10), { income: 0, expense: 0 })
+      cur.setUTCDate(cur.getUTCDate() + 7)
+    }
+  } else {
+    const cur = new Date(Date.UTC(fromDate.getUTCFullYear(), fromDate.getUTCMonth(), 1))
+    const end = new Date(Date.UTC(toDate.getUTCFullYear(), toDate.getUTCMonth(), 1))
+    while (cur <= end) {
+      map.set(cur.toISOString().slice(0, 7), { income: 0, expense: 0 })
+      cur.setUTCMonth(cur.getUTCMonth() + 1)
+    }
+  }
+
+  for (const row of rows) {
+    const bucket = map.get(row.label)
+    if (!bucket) continue
+    const value = Number(row.total)
+    if (row.kind === 'income') bucket.income = value
+    else if (row.kind === 'expense') bucket.expense = value
+  }
+
+  return Array.from(map, ([label, vals]) => ({ label, income: vals.income, expense: vals.expense }))
 }

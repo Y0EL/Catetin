@@ -1,12 +1,12 @@
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
-import { summaryQuerySchema, trendQuerySchema } from '@catetin/types'
+import { flexTrendQuerySchema, summaryQuerySchema } from '@catetin/types'
 import type { AppEnv } from '../context'
 import { getDb } from '../db'
 import { requireAuth } from '../middleware/auth'
 import { buildMonthlyCsv } from '../services/csv-service'
 import { buildMonthlyPdf } from '../services/pdf-service'
-import { getMonthlyTrend, getMonthSummary } from '../services/transaction-service'
+import { getFlexTrend, getMonthSummary } from '../services/transaction-service'
 
 export const reportsRouter = new Hono<AppEnv>()
 reportsRouter.use('*', requireAuth)
@@ -18,10 +18,34 @@ reportsRouter.get('/summary', zValidator('query', summaryQuerySchema), async (c)
   return c.json({ ok: true, summary })
 })
 
-reportsRouter.get('/trend', zValidator('query', trendQuerySchema), async (c) => {
+reportsRouter.get('/trend', zValidator('query', flexTrendQuerySchema), async (c) => {
   const db = getDb()
-  const { months } = c.req.valid('query')
-  const trend = await getMonthlyTrend(db, c.get('userId'), months)
+  const { period, from, to } = c.req.valid('query')
+
+  const now = new Date()
+  const cy = now.getUTCFullYear()
+  const cm = now.getUTCMonth() + 1
+
+  let resolvedFrom = from
+  let resolvedTo = to
+
+  if (!resolvedFrom || !resolvedTo) {
+    if (period === 'daily' || period === 'weekly') {
+      const lastDay = new Date(Date.UTC(cy, cm, 0)).getUTCDate()
+      resolvedFrom = `${cy}-${String(cm).padStart(2, '0')}-01`
+      resolvedTo = `${cy}-${String(cm).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+    } else if (period === 'monthly') {
+      const lastDay = new Date(Date.UTC(cy, cm, 0)).getUTCDate()
+      const fd = new Date(Date.UTC(cy, cm - 7, 1))
+      resolvedFrom = `${fd.getUTCFullYear()}-${String(fd.getUTCMonth() + 1).padStart(2, '0')}-01`
+      resolvedTo = `${cy}-${String(cm).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+    } else {
+      resolvedFrom = `${cy}-01-01`
+      resolvedTo = `${cy}-12-31`
+    }
+  }
+
+  const trend = await getFlexTrend(db, c.get('userId'), period, resolvedFrom, resolvedTo)
   return c.json({ ok: true, trend })
 })
 

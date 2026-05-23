@@ -1,13 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
-import type { TrendItem } from '@catetin/types'
+import type { FlexTrendItem } from '@catetin/types'
 import { apiFetch } from '~/lib/api'
 
-export function useTrend(months = 6) {
+export type TrendPeriod = 'daily' | 'weekly' | 'monthly' | 'yearly'
+
+export function useFlexTrend(period: TrendPeriod, from: string, to: string) {
   return useQuery({
-    queryKey: ['trend', months],
+    queryKey: ['flex-trend', period, from, to],
+    enabled: !!from && !!to,
     queryFn: async () => {
-      const res = await apiFetch<{ ok: true; trend: TrendItem[] }>(
-        `/v1/reports/trend?months=${months}`,
+      const res = await apiFetch<{ ok: true; trend: FlexTrendItem[] }>(
+        `/v1/reports/trend?period=${period}&from=${from}&to=${to}`,
       )
       return res.trend
     },

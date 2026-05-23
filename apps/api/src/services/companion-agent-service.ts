@@ -271,10 +271,11 @@ export async function runCompanionTurn(turn: CompanionTurnInput): Promise<Compan
     const text = result.response.text().trim()
     sessionHistories.set(turn.sessionId, stripInlineData(await chat.getHistory()))
     const transcript = await transcriptPromise
-    return {
+    const out: CompanionTurnResult = {
       text: text.length > 0 ? text : 'Hmm gue gak nangkep, coba ulangin?',
-      transcript: transcript || undefined,
     }
+    if (transcript) out.transcript = transcript
+    return out
   } catch (err) {
     logger.error({ err, sessionId: turn.sessionId }, 'companion turn failed')
     throw err
