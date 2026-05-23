@@ -205,6 +205,21 @@ export type CompanionTurnResult = {
   transcript?: string
 }
 
+async function withGeminiRetry<T>(fn: () => Promise<T>, maxAttempts = 3): Promise<T> {
+  let lastErr: unknown
+  for (let i = 0; i < maxAttempts; i += 1) {
+    try {
+      return await fn()
+    } catch (err) {
+      lastErr = err
+      const status = (err as { status?: number }).status
+      if (status !== 503 && status !== 529) throw err
+      if (i < maxAttempts - 1) await new Promise((r) => setTimeout(r, 1500 * (i + 1)))
+    }
+  }
+  throw lastErr
+}
+
 async function transcribeAudio(data: string, mimeType: string): Promise<string> {
   try {
     const model = getGenAI().getGenerativeModel({ model: COMPANION_MODEL })
@@ -236,7 +251,7 @@ export async function runCompanionTurn(turn: CompanionTurnInput): Promise<Compan
   const transcriptPromise = transcribeAudio(turn.audio.data, turn.audio.mimeType)
 
   try {
-    let result = await chat.sendMessage(parts)
+    let result = await withGeminiRetry(() => chat.sendMessage(parts))
     for (let hop = 0; hop < MAX_TOOL_HOPS; hop += 1) {
       const calls = result.response.functionCalls()
       if (!calls || calls.length === 0) break
