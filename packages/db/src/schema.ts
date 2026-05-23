@@ -26,6 +26,7 @@ export const transactionSourceEnum = pgEnum('transaction_source', [
   'ocr_photo',
   'ocr_video',
   'manual_chat',
+  'split_bill',
 ])
 export const confidenceEnum = pgEnum('confidence', ['high', 'medium', 'low'])
 export const budgetPeriodEnum = pgEnum('budget_period', ['monthly', 'weekly'])

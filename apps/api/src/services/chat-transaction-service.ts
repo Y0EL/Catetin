@@ -6,7 +6,12 @@ import { checkBudgetAlerts } from './budget-alert-service'
 import { ensureUserDefaults } from './seed-service'
 
 export type ChatSource = 'telegram' | 'whatsapp'
-export type TransactionSource = ChatSource | 'ocr_photo' | 'ocr_video' | 'manual_chat'
+export type TransactionSource =
+  | ChatSource
+  | 'ocr_photo'
+  | 'ocr_video'
+  | 'manual_chat'
+  | 'split_bill'
 
 export type RecordedChatTransaction = {
   kind: 'expense' | 'income'

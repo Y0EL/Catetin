@@ -33,6 +33,7 @@ export const transactionSourceSchema = z.enum([
   'ocr_photo',
   'ocr_video',
   'manual_chat',
+  'split_bill',
 ])
 export const confidenceSchema = z.enum(['high', 'medium', 'low'])
 export const budgetPeriodSchema = z.enum(['monthly', 'weekly'])

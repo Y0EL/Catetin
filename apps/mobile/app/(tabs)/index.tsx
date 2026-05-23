@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useFocusEffect, useRouter } from 'expo-router'
-import { ArrowDownLeft, ArrowUpRight, Camera, Plus, Sparkles } from 'lucide-react-native'
+import { ArrowDownLeft, ArrowUpRight, Camera, Plus, Sparkles, Users } from 'lucide-react-native'
 import { useCallback, useMemo } from 'react'
 import { Linking, Pressable, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -150,6 +150,13 @@ export default function HomeTab() {
               icon={<Plus size={20} color={accent} />}
               label="Catat manual"
               onPress={() => router.push('/add-modal')}
+            />
+          </View>
+          <View className="mx-4 mt-3">
+            <QuickAction
+              icon={<Users size={20} color={accent} />}
+              label="Split tagihan"
+              onPress={() => router.push('/split-bill')}
             />
           </View>
 

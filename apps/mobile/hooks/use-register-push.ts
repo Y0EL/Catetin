@@ -1,3 +1,4 @@
+import Constants from 'expo-constants'
 import * as Device from 'expo-device'
 import * as Notifications from 'expo-notifications'
 import { useEffect, useRef } from 'react'
@@ -33,7 +34,10 @@ async function getExpoPushToken(): Promise<string | null> {
     })
   }
 
-  const token = await Notifications.getExpoPushTokenAsync()
+  const projectId =
+    (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)?.eas?.projectId ??
+    Constants.easConfig?.projectId
+  const token = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined)
   return token.data
 }
 
