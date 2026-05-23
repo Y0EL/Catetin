@@ -7,7 +7,6 @@ import {
   type WASocket,
 } from 'baileys'
 import { eq, isNotNull } from 'drizzle-orm'
-import QRCode from 'qrcode'
 import { whatsappSessions, type Database } from '@catetin/db'
 import { logger as appLogger } from '../logger'
 import { clearAuthState, makeDbAuthState } from './auth-state'
@@ -20,6 +19,7 @@ type SessionState = {
   mode: Mode
   qrDataUrl: string | null
   pairingCode: string | null
+  pendingPhoneNumber: string | null
   socket: WASocket | null
   jid: string | null
   startedAt: number
@@ -79,6 +79,7 @@ async function startSocket(
     mode: initial && state.creds.registered ? 'connected' : 'pairing',
     qrDataUrl: null,
     pairingCode: null,
+    pendingPhoneNumber: null,
     socket: null,
     jid: state.creds.me?.id ?? null,
     startedAt: Date.now(),
@@ -88,12 +89,8 @@ async function startSocket(
   }
 
   if (phoneNumber && !state.creds.registered) {
-    try {
-      const code = await socket.requestPairingCode(phoneNumber)
-      session.pairingCode = code
-    } catch (err) {
-      appLogger.error({ err, userId }, 'gagal request pairing code')
-    }
+    session.pendingPhoneNumber = phoneNumber
+    session.pairingCode = null
   }
   session.socket = socket
   session.mode = state.creds.registered ? 'connected' : 'pairing'
@@ -137,11 +134,17 @@ async function handleConnectionUpdate(
   if (!session) return
 
   if (update.qr) {
-    try {
-      session.qrDataUrl = await QRCode.toDataURL(update.qr, { width: 320, margin: 1 })
-      session.mode = 'pairing'
-    } catch (err) {
-      appLogger.error({ err, userId }, 'gagal generate QR image')
+    if (session.pendingPhoneNumber && session.socket) {
+      const phone = session.pendingPhoneNumber
+      session.pendingPhoneNumber = null
+      try {
+        const code = await session.socket.requestPairingCode(phone)
+        session.pairingCode = code
+        session.mode = 'pairing'
+        appLogger.info({ userId }, 'pairing code didapat')
+      } catch (err) {
+        appLogger.error({ err, userId }, 'gagal request pairing code')
+      }
     }
   }
 
