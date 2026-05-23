@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Money } from '~/components/money'
 import { ScreenFade } from '~/components/screen-fade'
 import { apiFetch, apiErrorMessage, apiStream } from '~/lib/api'
+import { useT } from '~/lib/lang-context'
 import { useAccentColor } from '~/lib/use-accent-color'
 
 type Msg = { id: string; role: 'user' | 'model'; content: string }
@@ -26,6 +27,7 @@ const STREAM_ID = '__streaming__'
 export default function SplitBillScreen() {
   const router = useRouter()
   const accent = useAccentColor()
+  const t = useT()
   const scrollRef = useRef<ScrollView>(null)
 
   const [messages, setMessages] = useState<Msg[]>([])
@@ -45,9 +47,9 @@ export default function SplitBillScreen() {
       }),
     onSuccess: () => {
       setSplitResult(null)
-      Alert.alert('Tercatat', 'Bagian lo sudah disimpan ke catatan.')
+      Alert.alert(t('split_saved_title'), t('split_saved_body'))
     },
-    onError: (err) => Alert.alert('Gagal', apiErrorMessage(err)),
+    onError: (err) => Alert.alert(t('common_error'), apiErrorMessage(err)),
   })
 
   async function onSend() {
@@ -84,7 +86,7 @@ export default function SplitBillScreen() {
         }
       })
     } catch (err) {
-      Alert.alert('Gagal', apiErrorMessage(err))
+      Alert.alert(t('common_error'), apiErrorMessage(err))
       setMessages((prev) => prev.filter((m) => m.id !== STREAM_ID))
     } finally {
       setStreaming(false)
@@ -103,12 +105,12 @@ export default function SplitBillScreen() {
           <Pressable
             onPress={() => router.back()}
             className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800"
-            accessibilityLabel="Kembali"
+            accessibilityLabel={t('common_back')}
           >
             <ArrowLeft size={18} color={accent} />
           </Pressable>
           <Text className="font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
-            Split Tagihan
+            {t('split_title')}
           </Text>
         </View>
 
@@ -124,10 +126,10 @@ export default function SplitBillScreen() {
                   <Users size={28} color={accent} />
                 </View>
                 <Text className="mt-4 text-center font-display text-base font-bold text-zinc-900 dark:text-zinc-100">
-                  Bagi tagihan bareng
+                  {t('split_empty_title')}
                 </Text>
                 <Text className="mt-1 max-w-[260px] text-center font-sans text-sm leading-5 text-zinc-500 dark:text-zinc-400">
-                  Cerita aja, misal: "Kita bertiga habis 300rb, gimana baginya?"
+                  {t('split_empty_body')}
                 </Text>
               </View>
             ) : (
@@ -158,7 +160,7 @@ export default function SplitBillScreen() {
             {splitResult ? (
               <View className="mx-4 mt-3 rounded-2xl bg-white px-4 py-4 dark:bg-zinc-800">
                 <Text className="font-display text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                  Pembagian tagihan
+                  {t('split_result_title')}
                 </Text>
                 <View className="mt-2 gap-1.5">
                   {splitResult.hasil.map((h, i) => (
@@ -171,7 +173,7 @@ export default function SplitBillScreen() {
                         }`}
                       >
                         {h.nama}
-                        {h.aku ? ' (Lo)' : ''}
+                        {h.aku ? t('split_you') : ''}
                       </Text>
                       <Money value={h.jumlah} size="sm" tone={h.aku ? 'expense' : 'default'} />
                     </View>
@@ -184,10 +186,10 @@ export default function SplitBillScreen() {
                     }
                     disabled={record.isPending}
                     className="mt-4 items-center rounded-full bg-primary-600 py-2.5 active:opacity-80 disabled:opacity-40"
-                    accessibilityLabel="Catat bagian gue"
+                    accessibilityLabel={t('split_log_share')}
                   >
                     <Text className="font-sans text-sm font-semibold text-white">
-                      {record.isPending ? 'Menyimpan...' : 'Catat bagian gue'}
+                      {record.isPending ? t('common_saving') : t('split_log_share')}
                     </Text>
                   </Pressable>
                 ) : null}
@@ -198,7 +200,7 @@ export default function SplitBillScreen() {
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder="Ketik pesan..."
+                placeholder={t('split_placeholder')}
                 placeholderTextColor="#a1a1aa"
                 className="flex-1 rounded-2xl bg-white px-4 py-3 font-sans text-sm text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
                 multiline
@@ -211,7 +213,7 @@ export default function SplitBillScreen() {
                 onPress={onSend}
                 disabled={!input.trim() || streaming}
                 className="h-11 w-11 items-center justify-center rounded-full bg-primary-600 active:opacity-80 disabled:opacity-40"
-                accessibilityLabel="Kirim"
+                accessibilityLabel={t('split_send')}
               >
                 <Send size={18} color="#fff" />
               </Pressable>

@@ -22,6 +22,7 @@ import {
 import { apiErrorMessage, apiStream } from '~/lib/api'
 import { useCompanionRecorder } from '~/lib/companion-audio'
 import { useCompanionTts } from '~/lib/companion-tts'
+import { useT } from '~/lib/lang-context'
 import { useAccentColor } from '~/lib/use-accent-color'
 
 type Tab = 'voice' | 'chat'
@@ -47,6 +48,7 @@ function formatMinutes(totalSec: number): string {
 export default function CompanionTab() {
   const accent = useAccentColor()
   const insets = useSafeAreaInsets()
+  const t = useT()
   const [tab, setTab] = useState<Tab>('voice')
 
   // voice
@@ -109,7 +111,7 @@ export default function CompanionTab() {
   }, [messages, tab])
 
   function fail(msg: string) {
-    Alert.alert('Gak bisa', msg)
+    Alert.alert(t('companion_error_title'), msg)
   }
 
   async function startSession(): Promise<string | null> {
@@ -135,7 +137,7 @@ export default function CompanionTab() {
     } catch (err) {
       setSessionId(null)
       end.mutate(id)
-      fail(err instanceof Error ? err.message : 'Gagal mulai rekam.')
+      fail(err instanceof Error ? err.message : t('companion_record_failed'))
     }
   }
 
@@ -157,7 +159,7 @@ export default function CompanionTab() {
         {
           id: `v-u-${Date.now()}`,
           role: 'user',
-          content: res.transcript ?? '[Pesan suara]',
+          content: res.transcript ?? t('companion_voice_msg'),
           source: 'voice',
         },
         { id: `v-m-${Date.now()}`, role: 'model', content: res.text, source: 'voice' },
@@ -226,10 +228,10 @@ export default function CompanionTab() {
   }
 
   function onClearHistory() {
-    Alert.alert('Hapus riwayat?', 'Semua pesan bakal dihapus permanen.', [
-      { text: 'Batal', style: 'cancel' },
+    Alert.alert(t('companion_clear_confirm_title'), t('companion_clear_confirm_body'), [
+      { text: t('common_cancel'), style: 'cancel' },
       {
-        text: 'Hapus',
+        text: t('common_delete'),
         style: 'destructive',
         onPress: () => {
           clearHistory.mutate(undefined, {
@@ -244,14 +246,14 @@ export default function CompanionTab() {
   const active = sessionId !== null
   const voiceLabel =
     voicePhase === 'recording'
-      ? `Ngedengerin · ${formatMinutes(elapsedSec)}`
+      ? t('companion_listening', { time: formatMinutes(elapsedSec) })
       : voicePhase === 'thinking'
-        ? 'Lagi mikir...'
+        ? t('companion_thinking')
         : tts.playing
-          ? 'Jawaban...'
+          ? t('companion_answering')
           : active
-            ? `Tap buat lanjut · ${formatMinutes(elapsedSec)}`
-            : 'Tap buat mulai'
+            ? t('companion_tap_continue', { time: formatMinutes(elapsedSec) })
+            : t('companion_tap_start')
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-50 dark:bg-zinc-950" edges={['top']}>
@@ -259,14 +261,14 @@ export default function CompanionTab() {
         <View className="flex-1" style={{ paddingBottom: Math.max(insets.bottom, 12) + 76 }}>
           <View className="flex-row items-center justify-between px-4 pb-2 pt-3">
             <Text className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-              Curhat
+              {t('companion_title')}
             </Text>
             <View className="flex-row items-center gap-2">
               {tab === 'chat' ? (
                 <Pressable
                   onPress={onClearHistory}
                   className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800"
-                  accessibilityLabel="Hapus riwayat"
+                  accessibilityLabel={t('companion_clear_history')}
                 >
                   <Trash2 size={16} color={accent} />
                 </Pressable>
@@ -274,7 +276,7 @@ export default function CompanionTab() {
                 <Pressable
                   onPress={onVoiceClose}
                   className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800"
-                  accessibilityLabel="Tutup sesi"
+                  accessibilityLabel={t('companion_end_session')}
                 >
                   <X size={16} color={accent} />
                 </Pressable>
@@ -283,14 +285,14 @@ export default function CompanionTab() {
                 <Pressable
                   onPress={() => setTab('voice')}
                   className={`items-center justify-center px-4 py-2 ${tab === 'voice' ? 'bg-primary-600' : ''}`}
-                  accessibilityLabel="Mode suara"
+                  accessibilityLabel={t('companion_voice_mode')}
                 >
                   <Mic size={14} color={tab === 'voice' ? '#fff' : accent} />
                 </Pressable>
                 <Pressable
                   onPress={() => setTab('chat')}
                   className={`items-center justify-center px-4 py-2 ${tab === 'chat' ? 'bg-primary-600' : ''}`}
-                  accessibilityLabel="Mode chat"
+                  accessibilityLabel={t('companion_chat_mode')}
                 >
                   <MessageCircle size={14} color={tab === 'chat' ? '#fff' : accent} />
                 </Pressable>
@@ -320,7 +322,7 @@ export default function CompanionTab() {
                 {messages.length === 0 ? (
                   <View className="items-center justify-center py-20">
                     <Text className="text-center font-sans text-sm text-zinc-400 dark:text-zinc-500">
-                      Belum ada pesan. Yuk mulai ngobrol!
+                      {t('companion_empty')}
                     </Text>
                   </View>
                 ) : (
@@ -352,7 +354,7 @@ export default function CompanionTab() {
                 <TextInput
                   value={chatInput}
                   onChangeText={setChatInput}
-                  placeholder="Ketik pesan..."
+                  placeholder={t('common_type_message')}
                   placeholderTextColor="#a1a1aa"
                   className="flex-1 rounded-2xl bg-white px-4 py-3 font-sans text-sm text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
                   multiline
@@ -365,7 +367,7 @@ export default function CompanionTab() {
                   onPress={onSendChat}
                   disabled={!chatInput.trim() || streaming}
                   className="h-11 w-11 items-center justify-center rounded-full bg-primary-600 active:opacity-80 disabled:opacity-40"
-                  accessibilityLabel="Kirim"
+                  accessibilityLabel={t('common_send')}
                 >
                   <Send size={18} color="#fff" />
                 </Pressable>

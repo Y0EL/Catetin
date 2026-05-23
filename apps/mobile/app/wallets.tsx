@@ -8,17 +8,11 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { NoteCard } from '~/components/note-card'
 import { ScreenFade } from '~/components/screen-fade'
 import { useArchiveWallet, useCreateWallet, useWallets } from '~/hooks/use-wallets'
+import { useLang, useT } from '~/lib/lang-context'
+import { WALLET_TYPE_KEYS } from '~/lib/translations'
 import { useAccentColor } from '~/lib/use-accent-color'
 
 type WalletType = 'cash' | 'bank' | 'ewallet' | 'credit' | 'other'
-
-const TYPE_LABELS: Record<WalletType, string> = {
-  cash: 'Tunai',
-  bank: 'Bank',
-  ewallet: 'E-Wallet',
-  credit: 'Kartu Kredit',
-  other: 'Lainnya',
-}
 
 const PALETTE = [
   '#6366f1',
@@ -34,6 +28,15 @@ const PALETTE = [
 export default function WalletsScreen() {
   const router = useRouter()
   const accent = useAccentColor()
+  const t = useT()
+  const { lang } = useLang()
+  const TYPE_LABELS: Record<WalletType, string> = {
+    cash: WALLET_TYPE_KEYS.cash[lang],
+    bank: WALLET_TYPE_KEYS.bank[lang],
+    ewallet: WALLET_TYPE_KEYS.ewallet[lang],
+    credit: WALLET_TYPE_KEYS.credit[lang],
+    other: WALLET_TYPE_KEYS.other[lang],
+  }
   const { data: walletList = [] } = useWallets()
   const create = useCreateWallet()
   const archive = useArchiveWallet()
@@ -61,14 +64,10 @@ export default function WalletsScreen() {
   }
 
   function onArchive(id: string, walletName: string) {
-    Alert.alert(
-      'Hapus wallet?',
-      `"${walletName}" akan dihapus. Transaksi yang ada tidak terpengaruh.`,
-      [
-        { text: 'Batal', style: 'cancel' },
-        { text: 'Hapus', style: 'destructive', onPress: () => archive.mutate(id) },
-      ],
-    )
+    Alert.alert(t('wallets_delete_title'), t('wallets_delete_body', { name: walletName }), [
+      { text: t('common_cancel'), style: 'cancel' },
+      { text: t('common_delete'), style: 'destructive', onPress: () => archive.mutate(id) },
+    ])
   }
 
   return (
@@ -78,17 +77,17 @@ export default function WalletsScreen() {
           <Pressable
             onPress={() => router.back()}
             className="h-11 w-11 items-center justify-center rounded-full active:opacity-60"
-            accessibilityLabel="Kembali"
+            accessibilityLabel={t('common_back')}
           >
             <ChevronLeft size={24} color={accent} />
           </Pressable>
           <Text className="font-display text-lg font-bold text-zinc-900 dark:text-zinc-100">
-            Wallet
+            {t('wallets_title')}
           </Text>
           <Pressable
             onPress={() => setShowForm(true)}
             className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 active:opacity-70 dark:bg-zinc-800"
-            accessibilityLabel="Tambah wallet"
+            accessibilityLabel={t('wallets_add')}
           >
             <Plus size={18} color={accent} />
           </Pressable>
@@ -102,13 +101,13 @@ export default function WalletsScreen() {
           {showForm && (
             <NoteCard className="gap-3 p-4">
               <Text className="font-sans text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                Tambah Wallet
+                {t('wallets_add_title')}
               </Text>
 
               <TextInput
                 value={name}
                 onChangeText={setName}
-                placeholder="Nama wallet (contoh: BCA, GoPay)"
+                placeholder={t('wallets_name_placeholder')}
                 placeholderTextColor="#a1a1aa"
                 className="rounded-xl bg-zinc-100 px-4 py-3 font-sans text-sm text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100"
               />
@@ -140,7 +139,7 @@ export default function WalletsScreen() {
               <TextInput
                 value={balance}
                 onChangeText={setBalance}
-                placeholder="Saldo awal (opsional)"
+                placeholder={t('wallets_balance_placeholder')}
                 placeholderTextColor="#a1a1aa"
                 keyboardType="numeric"
                 className="rounded-xl bg-zinc-100 px-4 py-3 font-sans text-sm text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100"
@@ -168,7 +167,7 @@ export default function WalletsScreen() {
                   className="flex-1 items-center rounded-xl bg-zinc-100 py-3 dark:bg-zinc-700"
                 >
                   <Text className="font-sans text-sm font-semibold text-zinc-600 dark:text-zinc-300">
-                    Batal
+                    {t('common_cancel')}
                   </Text>
                 </Pressable>
                 <Pressable
@@ -177,7 +176,7 @@ export default function WalletsScreen() {
                   className="flex-1 items-center rounded-xl bg-primary-600 py-3 disabled:opacity-50"
                 >
                   <Text className="font-sans text-sm font-semibold text-white">
-                    {create.isPending ? 'Menyimpan...' : 'Simpan'}
+                    {create.isPending ? t('common_saving') : t('common_save')}
                   </Text>
                 </Pressable>
               </View>
@@ -186,9 +185,9 @@ export default function WalletsScreen() {
 
           {walletList.length === 0 && !showForm ? (
             <View className="items-center py-16">
-              <Text className="font-sans text-sm text-zinc-400">Belum ada wallet</Text>
+              <Text className="font-sans text-sm text-zinc-400">{t('wallets_empty')}</Text>
               <Text className="mt-1 font-sans text-xs text-zinc-400">
-                Tap + di atas untuk tambah
+                {t('wallets_empty_hint')}
               </Text>
             </View>
           ) : (

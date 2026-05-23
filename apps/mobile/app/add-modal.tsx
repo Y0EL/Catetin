@@ -25,6 +25,7 @@ import { useWallets } from '~/hooks/use-wallets'
 import { apiErrorMessage } from '~/lib/api'
 import { getCategoryMeta, type CategoryKey } from '~/lib/categories'
 import { useEditTransaction } from '~/lib/edit-store'
+import { useT } from '~/lib/lang-context'
 
 const MAX_AMOUNT_DIGITS = 13
 const BIG_AMOUNT_THRESHOLD = 1_000_000_000
@@ -55,6 +56,7 @@ function titleCase(text: string): string {
 
 export default function AddModal() {
   const router = useRouter()
+  const t = useT()
   const wallets = useWallets()
   const categories = useCategories()
   const createTx = useCreateTransaction()
@@ -116,7 +118,7 @@ export default function AddModal() {
       if (useCamera) {
         const perm = await ImagePicker.requestCameraPermissionsAsync()
         if (!perm.granted) {
-          Alert.alert('Izin kamera', 'Catetin butuh akses kamera buat scan struk.')
+          Alert.alert(t('add_camera_perm_title'), t('add_camera_perm_body'))
           return
         }
       }
@@ -126,7 +128,7 @@ export default function AddModal() {
       const asset = result.assets[0]
       const base64 = asset?.base64
       if (!base64) {
-        Alert.alert('Gagal ambil gambar', 'Coba lagi ya.')
+        Alert.alert(t('add_img_failed_title'), t('common_try_again'))
         return
       }
       const draft = await ocr.mutateAsync({
@@ -135,7 +137,7 @@ export default function AddModal() {
       })
       setDraftPreview(draft)
     } catch (err) {
-      Alert.alert('Gagal scan struk', apiErrorMessage(err))
+      Alert.alert(t('add_scan_failed'), apiErrorMessage(err))
     }
   }
 
@@ -156,11 +158,11 @@ export default function AddModal() {
 
   function onSave() {
     if (amount <= 0) {
-      Alert.alert('Nominal kosong', 'Isi dulu jumlah duitnya ya.')
+      Alert.alert(t('add_no_amount_title'), t('add_no_amount_body'))
       return
     }
     if (!effectiveWalletId || !effectiveCategoryId) {
-      Alert.alert('Sebentar ya', 'Wallet atau kategori belum siap. Coba lagi sebentar.')
+      Alert.alert(t('add_not_ready_title'), t('add_not_ready_body'))
       return
     }
     if (amount >= BIG_AMOUNT_THRESHOLD) {
@@ -187,7 +189,7 @@ export default function AddModal() {
         },
         {
           onSuccess: close,
-          onError: (err) => Alert.alert('Gagal update', apiErrorMessage(err)),
+          onError: (err) => Alert.alert(t('add_update_failed'), apiErrorMessage(err)),
         },
       )
       return
@@ -204,7 +206,7 @@ export default function AddModal() {
       },
       {
         onSuccess: close,
-        onError: (err) => Alert.alert('Gagal nyimpen', apiErrorMessage(err)),
+        onError: (err) => Alert.alert(t('add_save_failed'), apiErrorMessage(err)),
       },
     )
   }
@@ -217,11 +219,11 @@ export default function AddModal() {
 
       <View className="flex-row items-center justify-between px-4 pt-4">
         <Text className="font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
-          {isEditing ? 'Edit transaksi' : 'Catat cepat'}
+          {isEditing ? t('add_edit_title') : t('add_quick_title')}
         </Text>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Tutup"
+          accessibilityLabel={t('common_close')}
           onPress={close}
           className="h-10 w-10 items-center justify-center rounded-full bg-white active:opacity-70 dark:bg-zinc-800"
         >
@@ -239,21 +241,23 @@ export default function AddModal() {
           <View className="overflow-hidden rounded-card bg-primary-600 p-4">
             <View className="flex-row items-center gap-2">
               <Sparkles size={16} color="#ffffff" />
-              <Text className="font-display text-sm font-bold text-white">Scan struk lo</Text>
+              <Text className="font-display text-sm font-bold text-white">
+                {t('add_scan_card_title')}
+              </Text>
             </View>
             <Text className="mt-1 font-sans text-xs leading-5 text-primary-100">
-              Foto struknya, Catetin baca total dan kategorinya otomatis.
+              {t('add_scan_card_body')}
             </Text>
             <View className="mt-3 flex-row gap-2">
               <ScanButton
                 icon={<Camera size={16} color="#18181b" />}
-                label="Kamera"
+                label={t('add_camera')}
                 onPress={() => scanReceipt(true)}
                 disabled={ocr.isPending}
               />
               <ScanButton
                 icon={<Images size={16} color="#18181b" />}
-                label="Galeri"
+                label={t('add_gallery')}
                 onPress={() => scanReceipt(false)}
                 disabled={ocr.isPending}
               />
@@ -266,21 +270,21 @@ export default function AddModal() {
             active={kind === 'expense'}
             onPress={() => setKind('expense')}
             icon={<ArrowDownLeft size={16} color={kind === 'expense' ? '#ffffff' : '#dc2626'} />}
-            label="Keluar"
+            label={t('add_kind_out')}
             activeClass="bg-danger"
           />
           <KindToggle
             active={kind === 'income'}
             onPress={() => setKind('income')}
             icon={<ArrowUpRight size={16} color={kind === 'income' ? '#ffffff' : '#16a34a'} />}
-            label="Masuk"
+            label={t('add_kind_in')}
             activeClass="bg-success"
           />
         </View>
 
         <View className="rounded-3xl bg-primary-600 p-6">
           <Text className="font-sans text-xs font-medium uppercase tracking-widest text-primary-200">
-            Jumlah
+            {t('add_amount_label')}
           </Text>
           <View className="mt-2 flex-row items-baseline gap-2">
             <Text className="font-display text-2xl font-bold text-primary-200">Rp</Text>
@@ -302,7 +306,7 @@ export default function AddModal() {
         </View>
 
         <View>
-          <Label>Kategori</Label>
+          <Label>{t('common_category')}</Label>
           <View className="mt-3 flex-row flex-wrap gap-2">
             {catList.map((c) => {
               const meta = getCategoryMeta(c.name as CategoryKey)
@@ -313,7 +317,7 @@ export default function AddModal() {
                   key={c.id}
                   onPress={() => setCategoryId(c.id)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Kategori ${c.name}`}
+                  accessibilityLabel={`${t('common_category')} ${c.name}`}
                   className={
                     active
                       ? 'flex-row items-center gap-2 rounded-full bg-primary-600 px-4 py-2.5'
@@ -337,7 +341,7 @@ export default function AddModal() {
         </View>
 
         <View>
-          <Label>Wallet</Label>
+          <Label>{t('common_wallet')}</Label>
           <View className="mt-3 flex-row flex-wrap gap-2">
             {walletList.map((w) => {
               const active = w.id === effectiveWalletId
@@ -346,7 +350,7 @@ export default function AddModal() {
                   key={w.id}
                   onPress={() => setWalletId(w.id)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Wallet ${w.name}`}
+                  accessibilityLabel={`${t('common_wallet')} ${w.name}`}
                   className={
                     active
                       ? 'rounded-full bg-zinc-900 px-5 py-2.5 dark:bg-zinc-100'
@@ -369,16 +373,16 @@ export default function AddModal() {
         </View>
 
         <View>
-          <Label>Catatan</Label>
+          <Label>{t('add_note_label')}</Label>
           <TextInput
             value={description}
             onChangeText={applyTextHint}
-            placeholder='Contoh: "kopi 25rb di starbucks"'
+            placeholder={t('add_note_placeholder')}
             placeholderTextColor="#a1a1aa"
             className="mt-3 rounded-input bg-white px-4 py-3.5 font-sans text-base text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
           />
           <Text className="mt-2 font-sans text-xs leading-5 text-zinc-500 dark:text-zinc-400">
-            Tulis bebas, Catetin coba detect angka dan kategori otomatis.
+            {t('add_note_hint')}
           </Text>
         </View>
       </ScrollView>
@@ -386,17 +390,17 @@ export default function AddModal() {
       <View className="absolute bottom-0 left-0 right-0 border-t border-zinc-200 bg-zinc-50 px-4 pb-8 pt-3 dark:border-zinc-800 dark:bg-zinc-950">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={isEditing ? 'Simpan perubahan' : 'Catat sekarang'}
+          accessibilityLabel={isEditing ? t('add_save_changes') : t('add_log_now')}
           disabled={createTx.isPending || updateTx.isPending}
           onPress={onSave}
           className="items-center rounded-full bg-primary-600 py-4 active:opacity-90 disabled:opacity-50"
         >
           <Text className="font-sans text-base font-semibold text-white">
             {createTx.isPending || updateTx.isPending
-              ? 'Nyimpen'
+              ? t('add_saving')
               : isEditing
-                ? 'Simpan perubahan'
-                : 'Catat sekarang'}
+                ? t('add_save_changes')
+                : t('add_log_now')}
           </Text>
         </Pressable>
       </View>
@@ -413,14 +417,10 @@ export default function AddModal() {
               <Skull size={30} color="#dc2626" />
             </View>
             <Text className="mt-4 text-center font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
-              Hmm, gede banget cok
+              {t('add_big_title')}
             </Text>
             <Text className="mt-2 text-center font-sans text-sm leading-5 text-zinc-500 dark:text-zinc-400">
-              Lo beneran mau catat{' '}
-              <Text className="font-semibold text-zinc-900 dark:text-zinc-100">
-                Rp {amountText}
-              </Text>
-              ? Itu angka beneran apa kepencet bjir?
+              {t('add_big_body', { amount: amountText })}
             </Text>
             <View className="mt-6 gap-2">
               <Pressable
@@ -428,7 +428,9 @@ export default function AddModal() {
                 onPress={doSave}
                 className="items-center rounded-full bg-primary-600 py-3.5 active:opacity-90"
               >
-                <Text className="font-sans text-sm font-semibold text-white">Yakin, gas catat</Text>
+                <Text className="font-sans text-sm font-semibold text-white">
+                  {t('add_big_confirm')}
+                </Text>
               </Pressable>
               <Pressable
                 accessibilityRole="button"
@@ -436,7 +438,7 @@ export default function AddModal() {
                 className="items-center rounded-full bg-zinc-100 py-3.5 active:opacity-70 dark:bg-zinc-800"
               >
                 <Text className="font-sans text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                  Eh, ralat dulu
+                  {t('add_big_cancel')}
                 </Text>
               </Pressable>
             </View>
@@ -455,24 +457,24 @@ export default function AddModal() {
             <View className="w-full items-center rounded-3xl bg-white p-6 dark:bg-zinc-900">
               <LoadingLottie size={140} />
               <Text className="mt-2 font-display text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                Catetin Manager lagi nyatet
+                {t('add_ocr_loading_title')}
               </Text>
               <Text className="mt-1 text-center font-sans text-sm leading-5 text-zinc-500 dark:text-zinc-400">
-                Bentar yak..
+                {t('add_ocr_loading_body')}
               </Text>
             </View>
           ) : draftPreview ? (
             <View className="w-full rounded-3xl bg-white p-6 dark:bg-zinc-900">
               <View className="flex-row items-center justify-between">
                 <Text className="font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
-                  Hasil scan struk
+                  {t('add_ocr_result_title')}
                 </Text>
                 <ConfidenceBadge confidence={draftPreview.confidence} />
               </View>
 
               <View className="mt-5">
                 <Text className="font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-                  Total
+                  {t('add_ocr_total')}
                 </Text>
                 <Text
                   className="mt-1 font-display text-3xl font-extrabold text-zinc-900 dark:text-zinc-100"
@@ -482,25 +484,30 @@ export default function AddModal() {
                 </Text>
                 {draftPreview.total === 0 ? (
                   <Text className="mt-1 font-sans text-xs text-danger">
-                    Total gak kebaca. Ralat manual aja.
+                    {t('add_ocr_total_failed')}
                   </Text>
                 ) : null}
               </View>
 
               <View className="mt-4 gap-2">
                 {draftPreview.merchant ? (
-                  <DraftRow label="Merchant" value={draftPreview.merchant} />
+                  <DraftRow label={t('common_merchant')} value={draftPreview.merchant} />
                 ) : null}
-                {draftPreview.date ? <DraftRow label="Tanggal" value={draftPreview.date} /> : null}
+                {draftPreview.date ? (
+                  <DraftRow label={t('add_ocr_date')} value={draftPreview.date} />
+                ) : null}
                 {draftPreview.items[0]?.category ? (
-                  <DraftRow label="Kategori" value={titleCase(draftPreview.items[0].category)} />
+                  <DraftRow
+                    label={t('common_category')}
+                    value={titleCase(draftPreview.items[0].category)}
+                  />
                 ) : null}
               </View>
 
               {draftPreview.items.length > 0 ? (
                 <View className="mt-4 rounded-card bg-zinc-50 p-3 dark:bg-zinc-800">
                   <Text className="font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-                    Item kebaca
+                    {t('add_ocr_items_title')}
                   </Text>
                   <View className="mt-2 gap-1.5">
                     {draftPreview.items.slice(0, 6).map((it, i) => (
@@ -519,7 +526,7 @@ export default function AddModal() {
                     ))}
                     {draftPreview.items.length > 6 ? (
                       <Text className="mt-1 font-sans text-xs text-zinc-500">
-                        +{draftPreview.items.length - 6} item lain
+                        {t('add_ocr_more_items', { n: draftPreview.items.length - 6 })}
                       </Text>
                     ) : null}
                   </View>
@@ -535,7 +542,9 @@ export default function AddModal() {
                   }}
                   className="items-center rounded-full bg-primary-600 py-3.5 active:opacity-90"
                 >
-                  <Text className="font-sans text-sm font-semibold text-white">Pakai ini</Text>
+                  <Text className="font-sans text-sm font-semibold text-white">
+                    {t('add_ocr_use')}
+                  </Text>
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
@@ -543,7 +552,7 @@ export default function AddModal() {
                   className="items-center rounded-full bg-zinc-100 py-3.5 active:opacity-70 dark:bg-zinc-800"
                 >
                   <Text className="font-sans text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                    Ralat manual
+                    {t('add_ocr_manual')}
                   </Text>
                 </Pressable>
               </View>
@@ -572,26 +581,27 @@ function DraftRow({ label, value }: { label: string; value: string }) {
 }
 
 function ConfidenceBadge({ confidence }: { confidence: 'high' | 'medium' | 'low' }) {
+  const t = useT()
   const cfg =
     confidence === 'high'
       ? {
           bg: 'bg-success/15',
           text: 'text-success',
           icon: <CheckCircle2 size={14} color="#16a34a" />,
-          label: 'Yakin',
+          label: t('add_confidence_high'),
         }
       : confidence === 'low'
         ? {
             bg: 'bg-danger/15',
             text: 'text-danger',
             icon: <AlertCircle size={14} color="#dc2626" />,
-            label: 'Ragu',
+            label: t('add_confidence_low'),
           }
         : {
             bg: 'bg-warning/15',
             text: 'text-warning',
             icon: <AlertCircle size={14} color="#f59e0b" />,
-            label: 'Agak ragu',
+            label: t('add_confidence_medium'),
           }
   return (
     <View className={`flex-row items-center gap-1 rounded-full px-2.5 py-1 ${cfg.bg}`}>

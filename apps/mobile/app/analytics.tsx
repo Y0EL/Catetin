@@ -15,28 +15,9 @@ import { useFlexTrend, type TrendPeriod } from '~/hooks/use-trend'
 import { downloadAndShareReport } from '~/hooks/use-download-report'
 import { useAccentColor } from '~/lib/use-accent-color'
 import { getCategoryMeta, type CategoryKey } from '~/lib/categories'
+import { useLang, useT } from '~/lib/lang-context'
+import { MONTHS_SHORT } from '~/lib/translations'
 import { useRouter } from 'expo-router'
-
-const MONTH_ABBR = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'Mei',
-  'Jun',
-  'Jul',
-  'Agu',
-  'Sep',
-  'Okt',
-  'Nov',
-  'Des',
-]
-const PERIODS: { key: TrendPeriod; label: string }[] = [
-  { key: 'daily', label: 'Hari' },
-  { key: 'weekly', label: 'Minggu' },
-  { key: 'monthly', label: 'Bulan' },
-  { key: 'yearly', label: 'Tahun' },
-]
 
 function getRange(period: TrendPeriod, anchor: string): { from: string; to: string } {
   if (period === 'daily' || period === 'weekly') {
@@ -62,14 +43,14 @@ function getRange(period: TrendPeriod, anchor: string): { from: string; to: stri
   return { from: `${anchor}-01-01`, to: `${anchor}-12-31` }
 }
 
-function getNavLabel(period: TrendPeriod, anchor: string): string {
+function getNavLabel(period: TrendPeriod, anchor: string, monthAbbr: string[]): string {
   if (period === 'yearly') return anchor
   if (period === 'monthly') {
     const { from, to } = getRange(period, anchor)
     const fp = from.split('-').map(Number)
     const tp = to.split('-').map(Number)
-    const fromLabel = `${MONTH_ABBR[(fp[1] ?? 1) - 1]} ${fp[0]}`
-    const toLabel = `${MONTH_ABBR[(tp[1] ?? 1) - 1]} ${tp[0]}`
+    const fromLabel = `${monthAbbr[(fp[1] ?? 1) - 1]} ${fp[0]}`
+    const toLabel = `${monthAbbr[(tp[1] ?? 1) - 1]} ${tp[0]}`
     return `${fromLabel} - ${toLabel}`
   }
   const parts = anchor.split('-').map(Number)
@@ -108,6 +89,16 @@ export default function AnalyticsScreen() {
   const accent = useAccentColor()
   const { width } = useWindowDimensions()
   const chartWidth = Math.max(0, width - 64)
+  const t = useT()
+  const { lang } = useLang()
+  const monthAbbr = MONTHS_SHORT[lang]
+
+  const PERIODS: { key: TrendPeriod; label: string }[] = [
+    { key: 'daily', label: t('analytics_period_day') },
+    { key: 'weekly', label: t('analytics_period_week') },
+    { key: 'monthly', label: t('analytics_period_month') },
+    { key: 'yearly', label: t('analytics_period_year') },
+  ]
 
   const isDark = useIsDark()
   const [period, setPeriod] = useState<TrendPeriod>('monthly')
@@ -139,7 +130,7 @@ export default function AnalyticsScreen() {
     try {
       await downloadAndShareReport('pdf', summaryMonth)
     } catch {
-      Alert.alert('Gagal', 'PDF gagal dibuat.')
+      Alert.alert(t('common_error'), t('analytics_pdf_failed'))
     }
   }
 
@@ -147,7 +138,7 @@ export default function AnalyticsScreen() {
     try {
       await downloadAndShareReport('csv', summaryMonth)
     } catch {
-      Alert.alert('Gagal', 'CSV gagal diekspor.')
+      Alert.alert(t('common_error'), t('analytics_csv_failed'))
     }
   }
 
@@ -165,25 +156,25 @@ export default function AnalyticsScreen() {
           <Pressable
             onPress={() => router.back()}
             className="h-11 w-11 items-center justify-center rounded-full active:opacity-60"
-            accessibilityLabel="Kembali"
+            accessibilityLabel={t('common_back')}
           >
             <ChevronLeft size={24} color={accent} />
           </Pressable>
           <Text className="font-display text-lg font-bold text-zinc-900 dark:text-zinc-100">
-            Analitik
+            {t('analytics_title')}
           </Text>
           <View className="flex-row gap-1 pr-2">
             <Pressable
               onPress={exportPdf}
               className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 active:opacity-70 dark:bg-zinc-800"
-              accessibilityLabel="Unduh PDF"
+              accessibilityLabel={t('analytics_dl_pdf')}
             >
               <FileText size={17} color={accent} />
             </Pressable>
             <Pressable
               onPress={exportCsv}
               className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 active:opacity-70 dark:bg-zinc-800"
-              accessibilityLabel="Unduh CSV"
+              accessibilityLabel={t('analytics_dl_csv')}
             >
               <Sheet size={17} color={accent} />
             </Pressable>
@@ -226,7 +217,7 @@ export default function AnalyticsScreen() {
             <ChevronLeft size={20} color={accent} />
           </Pressable>
           <Text className="w-48 text-center font-sans text-sm font-semibold capitalize text-zinc-700 dark:text-zinc-200">
-            {getNavLabel(period, anchor)}
+            {getNavLabel(period, anchor, monthAbbr)}
           </Text>
           <Pressable
             onPress={() => setAnchor(navigate(period, anchor, 1))}
@@ -245,7 +236,7 @@ export default function AnalyticsScreen() {
           {/* Summary card */}
           <NoteCard className="p-5">
             <Text className="font-sans text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
-              Net
+              {t('analytics_net')}
             </Text>
             <View className="mt-1">
               <Money value={net} size="hero" tone={net >= 0 ? 'income' : 'expense'} compact />
@@ -253,7 +244,7 @@ export default function AnalyticsScreen() {
             <View className="mt-4 flex-row items-stretch">
               <View className="flex-1">
                 <Text className="font-sans text-xs text-zinc-400 dark:text-zinc-500">
-                  Pemasukan
+                  {t('common_income')}
                 </Text>
                 <View className="mt-1">
                   <Money value={income} size="lg" tone="income" compact />
@@ -262,7 +253,7 @@ export default function AnalyticsScreen() {
               <View className="mx-4 w-px bg-zinc-100 dark:bg-zinc-700" />
               <View className="flex-1">
                 <Text className="font-sans text-xs text-zinc-400 dark:text-zinc-500">
-                  Pengeluaran
+                  {t('common_expense')}
                 </Text>
                 <View className="mt-1">
                   <Money value={expense} size="lg" tone="expense" compact />
@@ -275,16 +266,20 @@ export default function AnalyticsScreen() {
           <NoteCard className="p-4">
             <View className="flex-row items-center justify-between">
               <Text className="font-sans text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                Tren
+                {t('analytics_trend')}
               </Text>
               <View className="flex-row gap-4">
                 <View className="flex-row items-center gap-1.5">
                   <View className="h-2 w-2 rounded-full bg-success" />
-                  <Text className="font-sans text-xs text-zinc-500 dark:text-zinc-400">Masuk</Text>
+                  <Text className="font-sans text-xs text-zinc-500 dark:text-zinc-400">
+                    {t('analytics_trend_in')}
+                  </Text>
                 </View>
                 <View className="flex-row items-center gap-1.5">
                   <View className="h-2 w-2 rounded-full bg-danger" />
-                  <Text className="font-sans text-xs text-zinc-500 dark:text-zinc-400">Keluar</Text>
+                  <Text className="font-sans text-xs text-zinc-500 dark:text-zinc-400">
+                    {t('analytics_trend_out')}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -297,7 +292,7 @@ export default function AnalyticsScreen() {
           {donutSlices.length > 0 ? (
             <NoteCard className="p-4">
               <Text className="mb-3 font-sans text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                Pengeluaran per kategori
+                {t('analytics_by_category')}
               </Text>
               <View className="flex-row items-center gap-4">
                 <DonutChart slices={donutSlices} total={expense} />
@@ -334,7 +329,7 @@ export default function AnalyticsScreen() {
           {budgets.data && budgets.data.length > 0 ? (
             <NoteCard className="p-4">
               <Text className="font-sans text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                Budget bulan ini
+                {t('analytics_budget_month')}
               </Text>
               <View className="mt-3 gap-4">
                 {budgets.data.map((b) => {
@@ -359,8 +354,12 @@ export default function AnalyticsScreen() {
                         />
                       </View>
                       <Text className="mt-0.5 font-sans text-xs text-zinc-400 dark:text-zinc-500">
-                        {pct}% terpakai
-                        {over ? ', lewat budget' : alertPct ? ', hampir habis' : ''}
+                        {t('analytics_pct_used', { pct })}
+                        {over
+                          ? `, ${t('analytics_over_budget')}`
+                          : alertPct
+                            ? `, ${t('analytics_almost_full')}`
+                            : ''}
                       </Text>
                     </View>
                   )

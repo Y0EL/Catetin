@@ -21,6 +21,7 @@ import { useWallets } from '~/hooks/use-wallets'
 import { apiErrorMessage } from '~/lib/api'
 import type { CategoryKey } from '~/lib/categories'
 import { useEditTransaction } from '~/lib/edit-store'
+import { useT } from '~/lib/lang-context'
 
 function formatTxnTime(iso: string): string {
   const d = new Date(iso)
@@ -31,6 +32,7 @@ function formatTxnTime(iso: string): string {
 
 export default function TransactionsTab() {
   const router = useRouter()
+  const t = useT()
   const { setEditing } = useEditTransaction()
   const del = useDeleteTransaction()
   const bulkDel = useBulkDeleteTransactions()
@@ -90,7 +92,7 @@ export default function TransactionsTab() {
         onSuccess: () => setConfirm(null),
         onError: (err) => {
           setConfirm(null)
-          Alert.alert('Gagal hapus', apiErrorMessage(err))
+          Alert.alert(t('txn_delete_failed'), apiErrorMessage(err))
         },
       })
       return
@@ -102,7 +104,7 @@ export default function TransactionsTab() {
       },
       onError: (err) => {
         setConfirm(null)
-        Alert.alert('Gagal hapus', apiErrorMessage(err))
+        Alert.alert(t('txn_delete_failed'), apiErrorMessage(err))
       },
     })
   }
@@ -132,28 +134,28 @@ export default function TransactionsTab() {
             <View className="flex-row items-center justify-between gap-2 px-4 pt-3">
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Batal pilih"
+                accessibilityLabel={t('txn_cancel_select')}
                 onPress={cancelSelection}
                 className="h-10 w-10 items-center justify-center rounded-full bg-white active:opacity-70 dark:bg-zinc-800"
               >
                 <X size={18} color="#71717a" />
               </Pressable>
               <Text className="flex-1 font-display text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                {selected.size} dipilih
+                {t('txn_n_selected', { n: selected.size })}
               </Text>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={allSelected ? 'Kosongin pilihan' : 'Pilih semua'}
+                accessibilityLabel={allSelected ? t('txn_deselect') : t('txn_select_all')}
                 onPress={allSelected ? cancelSelection : selectAll}
                 className="rounded-full bg-zinc-100 px-3 py-2 active:opacity-70 dark:bg-zinc-800"
               >
                 <Text className="font-sans text-xs font-semibold text-zinc-700 dark:text-zinc-200">
-                  {allSelected ? 'Kosongin' : 'Semua'}
+                  {allSelected ? t('txn_deselect') : t('txn_select_all')}
                 </Text>
               </Pressable>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Hapus ${selected.size} transaksi`}
+                accessibilityLabel={t('txn_delete_n_label', { n: selected.size })}
                 onPress={bulkDelete}
                 disabled={selected.size === 0 || bulkDel.isPending}
                 className="flex-row items-center gap-1 rounded-full bg-danger px-3 py-2 active:opacity-80 disabled:opacity-40"
@@ -165,21 +167,23 @@ export default function TransactionsTab() {
           ) : (
             <View className="flex-row items-end justify-between px-4 pt-3">
               <View>
-                <Text className="font-sans text-sm text-zinc-500 dark:text-zinc-400">Catatan</Text>
+                <Text className="font-sans text-sm text-zinc-500 dark:text-zinc-400">
+                  {t('txn_subtitle')}
+                </Text>
                 <Text className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-                  Riwayat
+                  {t('txn_title')}
                 </Text>
               </View>
               {rows.length > 0 ? (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Pilih banyak"
+                  accessibilityLabel={t('txn_multi_select')}
                   onPress={() => setSelecting(true)}
                   className="flex-row items-center gap-1 rounded-full bg-white px-3 py-2 active:opacity-70 dark:bg-zinc-800"
                 >
                   <CheckSquare size={14} color="#71717a" />
                   <Text className="font-sans text-xs font-semibold text-zinc-700 dark:text-zinc-200">
-                    Pilih
+                    {t('txn_select')}
                   </Text>
                 </Pressable>
               ) : null}
@@ -191,7 +195,7 @@ export default function TransactionsTab() {
             <TextInput
               value={search}
               onChangeText={setSearch}
-              placeholder="Cari deskripsi atau merchant"
+              placeholder={t('txn_search_placeholder')}
               placeholderTextColor="#a1a1aa"
               className="flex-1 font-sans text-sm text-zinc-900 dark:text-zinc-100"
             />
@@ -199,13 +203,13 @@ export default function TransactionsTab() {
 
           <View className="mx-4 mt-5 rounded-3xl bg-primary-600 p-5">
             <Text className="font-sans text-xs font-medium uppercase tracking-widest text-primary-200">
-              Net bulan ini
+              {t('txn_net_month')}
             </Text>
             <View className="mt-2">
               <Money value={total} size="lg" tone="onDark" compact />
             </View>
             <Text className="mt-2 font-sans text-xs text-primary-100">
-              {rows.length} transaksi dimuat
+              {t('txn_loaded', { n: rows.length })}
             </Text>
           </View>
 
@@ -266,7 +270,7 @@ export default function TransactionsTab() {
             ) : (
               <View className="items-center rounded-card bg-white px-6 py-10 dark:bg-zinc-800">
                 <Text className="font-sans text-sm text-zinc-400">
-                  {search.trim() ? 'Gak ada yang cocok.' : 'Belum ada transaksi.'}
+                  {search.trim() ? t('txn_no_match') : t('txn_empty')}
                 </Text>
               </View>
             )}
@@ -278,7 +282,7 @@ export default function TransactionsTab() {
                 className="mt-4 items-center rounded-full bg-white py-3 active:opacity-70 dark:bg-zinc-800"
               >
                 <Text className="font-sans text-sm font-semibold text-primary-600 dark:text-primary-200">
-                  {transactions.isFetchingNextPage ? 'Memuat' : 'Muat lagi'}
+                  {transactions.isFetchingNextPage ? t('common_loading') : t('txn_load_more')}
                 </Text>
               </Pressable>
             ) : null}
@@ -299,13 +303,11 @@ export default function TransactionsTab() {
             </View>
             <Text className="mt-4 font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
               {confirm?.kind === 'bulk'
-                ? `Hapus ${confirm.ids.length} transaksi?`
-                : 'Hapus transaksi?'}
+                ? t('txn_delete_title_bulk', { n: confirm.ids.length })
+                : t('txn_delete_title_single')}
             </Text>
             <Text className="mt-1 font-sans text-sm leading-5 text-zinc-500 dark:text-zinc-400">
-              {confirm?.kind === 'bulk'
-                ? 'Catatan-catatan ini bakal ilang permanen, gak bisa balik lagi.'
-                : 'Catatan ini bakal ilang permanen, gak bisa balik lagi.'}
+              {confirm?.kind === 'bulk' ? t('txn_delete_body_bulk') : t('txn_delete_body_single')}
             </Text>
             <View className="mt-5 gap-2">
               <Pressable
@@ -316,7 +318,7 @@ export default function TransactionsTab() {
                 className="items-center rounded-full bg-danger py-3.5 active:opacity-90 disabled:opacity-50"
               >
                 <Text className="font-sans text-sm font-semibold text-white">
-                  {del.isPending || bulkDel.isPending ? 'Lagi ngehapus' : 'Iya, hapus'}
+                  {del.isPending || bulkDel.isPending ? t('txn_deleting') : t('txn_confirm_delete')}
                 </Text>
               </Pressable>
               <Pressable
@@ -326,7 +328,7 @@ export default function TransactionsTab() {
                 className="items-center rounded-full bg-zinc-100 py-3.5 active:opacity-70 dark:bg-zinc-800"
               >
                 <Text className="font-sans text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                  Eh, batal
+                  {t('txn_cancel_delete')}
                 </Text>
               </Pressable>
             </View>
@@ -347,6 +349,7 @@ function SwipeableRow({
   onDelete: () => void
 }) {
   const ref = useRef<SwipeableMethods>(null)
+  const t = useT()
   return (
     <ReanimatedSwipeable
       ref={ref}
@@ -356,7 +359,7 @@ function SwipeableRow({
       renderLeftActions={() => (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Hapus transaksi"
+          accessibilityLabel={t('txn_delete_title_single')}
           onPress={() => {
             ref.current?.close()
             onDelete()
@@ -364,13 +367,15 @@ function SwipeableRow({
           className="w-24 flex-col items-center justify-center bg-danger active:opacity-80"
         >
           <Trash2 size={20} color="#ffffff" />
-          <Text className="mt-1 font-sans text-xs font-semibold text-white">Hapus</Text>
+          <Text className="mt-1 font-sans text-xs font-semibold text-white">
+            {t('common_delete')}
+          </Text>
         </Pressable>
       )}
       renderRightActions={() => (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Edit transaksi"
+          accessibilityLabel={t('common_edit')}
           onPress={() => {
             ref.current?.close()
             onEdit()
@@ -378,7 +383,9 @@ function SwipeableRow({
           className="w-24 flex-col items-center justify-center bg-primary-600 active:opacity-80"
         >
           <Pencil size={20} color="#ffffff" />
-          <Text className="mt-1 font-sans text-xs font-semibold text-white">Edit</Text>
+          <Text className="mt-1 font-sans text-xs font-semibold text-white">
+            {t('common_edit')}
+          </Text>
         </Pressable>
       )}
     >

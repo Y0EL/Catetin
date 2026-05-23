@@ -16,6 +16,7 @@ import { useSummary, currentMonth } from '~/hooks/use-summary'
 import { useTransactions } from '~/hooks/use-transactions'
 import { useWallets } from '~/hooks/use-wallets'
 import type { CategoryKey } from '~/lib/categories'
+import { useT } from '~/lib/lang-context'
 import { useAccentColor } from '~/lib/use-accent-color'
 
 const cardShadow = {
@@ -37,6 +38,7 @@ export default function HomeTab() {
   const { user } = useAuth()
   const router = useRouter()
   const accent = useAccentColor()
+  const t = useT()
   const firstName = user?.displayName?.split(' ')[0] ?? 'kamu'
   const periodChip = new Date().toLocaleDateString('id-ID', { month: 'long' })
 
@@ -76,7 +78,7 @@ export default function HomeTab() {
           <View className="flex-row items-center justify-between px-4 pt-3">
             <View>
               <Text className="font-sans text-sm text-zinc-500 dark:text-zinc-400">
-                Halo lagi, {firstName}
+                {t('home_greeting', { name: firstName })}
               </Text>
               <Text className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
                 Catetin
@@ -85,7 +87,7 @@ export default function HomeTab() {
             <Pressable
               onPress={() => router.push('/analytics')}
               accessibilityRole="button"
-              accessibilityLabel="Lihat analitik"
+              accessibilityLabel={t('home_analytics_btn')}
               className="h-11 w-11 items-center justify-center rounded-full bg-primary-600 active:opacity-70"
             >
               <Text className="font-display text-base font-bold text-white">
@@ -101,7 +103,7 @@ export default function HomeTab() {
             <CardGlow />
             <View className="flex-row items-center justify-between">
               <Text className="font-sans text-sm text-primary-200 dark:text-zinc-500">
-                Pengeluaran bulan ini
+                {t('home_spending_month')}
               </Text>
               <View className="rounded-full bg-white/15 px-2.5 py-1 dark:bg-zinc-100">
                 <Text className="font-sans text-xs font-medium text-primary-100 dark:text-zinc-600">
@@ -118,7 +120,7 @@ export default function HomeTab() {
                 <View className="flex-row items-center gap-1.5">
                   <ArrowDownLeft size={14} color="#a1a1aa" />
                   <Text className="font-sans text-xs text-primary-100 dark:text-zinc-500">
-                    Pemasukan
+                    {t('common_income')}
                   </Text>
                 </View>
                 <View className="mt-1">
@@ -130,7 +132,7 @@ export default function HomeTab() {
                 <View className="flex-row items-center gap-1.5">
                   <ArrowUpRight size={14} color="#a1a1aa" />
                   <Text className="font-sans text-xs text-primary-100 dark:text-zinc-500">
-                    Pengeluaran
+                    {t('common_expense')}
                   </Text>
                 </View>
                 <View className="mt-1">
@@ -143,19 +145,19 @@ export default function HomeTab() {
           <View className="mx-4 mt-4 flex-row gap-3">
             <QuickAction
               icon={<Camera size={20} color={accent} />}
-              label="Scan struk"
+              label={t('home_scan')}
               onPress={() => router.push('/add-modal?scan=camera')}
             />
             <QuickAction
               icon={<Plus size={20} color={accent} />}
-              label="Catat manual"
+              label={t('home_add_manual')}
               onPress={() => router.push('/add-modal')}
             />
           </View>
           <View className="mx-4 mt-3">
             <QuickAction
               icon={<Users size={20} color={accent} />}
-              label="Split tagihan"
+              label={t('home_split')}
               onPress={() => router.push('/split-bill')}
             />
           </View>
@@ -163,7 +165,7 @@ export default function HomeTab() {
           <View className="mt-8 px-4">
             <View className="flex-row items-center justify-between">
               <Text className="font-display text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                Transaksi terbaru
+                {t('home_recent')}
               </Text>
               {recent.length > 0 ? (
                 <Pressable
@@ -171,7 +173,7 @@ export default function HomeTab() {
                   className="active:opacity-60"
                 >
                   <Text className="font-sans text-sm font-semibold text-primary-600 dark:text-primary-200">
-                    Lihat semua
+                    {t('home_see_all')}
                   </Text>
                 </Pressable>
               ) : null}
@@ -200,16 +202,18 @@ export default function HomeTab() {
                     <Sparkles size={24} color={accent} />
                   </View>
                   <Text className="mt-4 font-display text-base font-bold text-zinc-900 dark:text-zinc-100">
-                    Belum ada cerita bulan ini
+                    {t('home_empty_title')}
                   </Text>
                   <Text className="mt-1 max-w-[260px] text-center font-sans text-sm leading-5 text-zinc-500 dark:text-zinc-400">
-                    Catat satu pengeluaran biar Catetin bisa mulai bantu lihat polanya.
+                    {t('home_empty_body')}
                   </Text>
                   <Pressable
                     onPress={() => router.push('/add-modal')}
                     className="mt-5 rounded-full bg-primary-600 px-5 py-2.5 active:opacity-90"
                   >
-                    <Text className="font-sans text-sm font-semibold text-white">Mulai catat</Text>
+                    <Text className="font-sans text-sm font-semibold text-white">
+                      {t('home_start')}
+                    </Text>
                   </Pressable>
                 </NoteCard>
               </View>
@@ -218,11 +222,11 @@ export default function HomeTab() {
 
           <View className="mt-8 px-4">
             <Text className="font-display text-lg font-bold text-zinc-900 dark:text-zinc-100">
-              Catat lewat chat
+              {t('home_chat_section')}
             </Text>
             <View className="mt-3 gap-3">
               <TelegramChannelCard onSambungin={() => router.push('/(tabs)/settings')} />
-              <ChannelCard name="WhatsApp" handle="Coming soon" muted />
+              <ChannelCard name="WhatsApp" handle={t('home_coming_soon')} muted />
             </View>
           </View>
         </ScrollView>
@@ -260,6 +264,7 @@ function QuickAction({
 function TelegramChannelCard({ onSambungin }: { onSambungin: () => void }) {
   const status = useChannelStatus()
   const linked = status.data?.telegram === true
+  const t = useT()
 
   function openBot() {
     Linking.openURL('https://t.me/catetindobot').catch(() => {})
@@ -279,22 +284,22 @@ function TelegramChannelCard({ onSambungin }: { onSambungin: () => void }) {
         <Pressable
           onPress={openBot}
           accessibilityRole="button"
-          accessibilityLabel="Buka chat Telegram"
+          accessibilityLabel={t('home_tg_chat_label')}
           className="rounded-full bg-zinc-900 px-4 py-2 active:opacity-80 dark:bg-white"
         >
           <Text className="font-sans text-sm font-semibold text-white dark:text-zinc-900">
-            Chat
+            {t('home_chat')}
           </Text>
         </Pressable>
       ) : (
         <Pressable
           onPress={onSambungin}
           accessibilityRole="button"
-          accessibilityLabel="Sambungin Telegram"
+          accessibilityLabel={t('home_tg_connect_label')}
           className="rounded-full bg-primary-50 px-4 py-2 active:opacity-70 dark:bg-primary-950"
         >
           <Text className="font-sans text-sm font-semibold text-primary-600 dark:text-primary-300">
-            Sambungin
+            {t('home_connect')}
           </Text>
         </Pressable>
       )}
@@ -313,6 +318,7 @@ function ChannelCard({
   cta?: string
   muted?: boolean
 }) {
+  const t = useT()
   return (
     <View
       className={
@@ -334,7 +340,7 @@ function ChannelCard({
           </Text>
         </Pressable>
       ) : (
-        <Text className="font-sans text-xs text-zinc-400">Segera</Text>
+        <Text className="font-sans text-xs text-zinc-400">{t('home_soon')}</Text>
       )}
     </View>
   )

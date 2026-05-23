@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { setAudioModeAsync, useAudioPlayer } from 'expo-audio'
 import { useRouter } from 'expo-router'
 import { BarChart2, Camera, Mic, Sparkles, Users } from 'lucide-react-native'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import Animated, {
   Easing,
@@ -12,6 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { useLang } from '~/lib/lang-context'
 import { useAccentColor } from '~/lib/use-accent-color'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -48,13 +49,6 @@ const audioZhStep5 = require('../assets/audio/onboarding-zh-5.wav') as number
 export const ONBOARDING_KEY = 'catetin.onboarding.done'
 
 type Lang = 'id' | 'en' | 'zh'
-
-function detectLang(): Lang {
-  const locale = Intl.DateTimeFormat().resolvedOptions().locale.toLowerCase()
-  if (locale.startsWith('id') || locale.startsWith('ms')) return 'id'
-  if (locale.startsWith('zh')) return 'zh'
-  return 'en'
-}
 
 const AUDIO: Record<Lang, [number, number, number, number, number]> = {
   id: [audioIdStep1, audioIdStep2, audioIdStep3, audioIdStep4, audioIdStep5],
@@ -115,7 +109,7 @@ const TOTAL = STEPS.length
 export default function OnboardingScreen() {
   const router = useRouter()
   const accent = useAccentColor()
-  const lang = useMemo(() => detectLang(), [])
+  const { lang } = useLang()
   const [step, setStep] = useState(0)
 
   const player = useAudioPlayer(AUDIO[lang][0])

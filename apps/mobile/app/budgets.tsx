@@ -8,6 +8,7 @@ import type { BudgetWithStatus, Category } from '@catetin/types'
 import { useBudgets, useCreateBudget, useDeleteBudget, useUpdateBudget } from '~/hooks/use-budgets'
 import { useCategories } from '~/hooks/use-categories'
 import { apiErrorMessage } from '~/lib/api'
+import { useT } from '~/lib/lang-context'
 
 type EditingState = { mode: 'new' } | { mode: 'edit'; budget: BudgetWithStatus } | null
 
@@ -38,6 +39,7 @@ function todayUtcDate(): string {
 
 export default function BudgetsScreen() {
   const router = useRouter()
+  const t = useT()
   const budgetsQuery = useBudgets()
   const categoriesQuery = useCategories()
   const [editing, setEditing] = useState<EditingState>(null)
@@ -49,18 +51,18 @@ export default function BudgetsScreen() {
       <View className="flex-row items-center justify-between px-4 pt-3">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Kembali"
+          accessibilityLabel={t('common_back')}
           onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/settings'))}
           className="h-10 w-10 items-center justify-center rounded-full bg-white active:opacity-70 dark:bg-zinc-800"
         >
           <ChevronLeft size={20} color="#71717a" />
         </Pressable>
         <Text className="font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
-          Budget
+          {t('budgets_title')}
         </Text>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Tambah budget"
+          accessibilityLabel={t('budgets_add')}
           onPress={() => setEditing({ mode: 'new' })}
           className="h-10 w-10 items-center justify-center rounded-full bg-primary-600 active:opacity-90"
         >
@@ -79,10 +81,10 @@ export default function BudgetsScreen() {
               <Target size={26} color="#4f46e5" />
             </View>
             <Text className="mt-4 font-display text-lg font-bold text-zinc-900 dark:text-zinc-100">
-              Belum ada budget
+              {t('budgets_empty_title')}
             </Text>
             <Text className="mt-1 text-center font-sans text-sm leading-5 text-zinc-500 dark:text-zinc-400">
-              Tetapin batas pengeluaran per kategori biar gak boncos. Tap + di pojok kanan.
+              {t('budgets_empty_body')}
             </Text>
           </View>
         ) : (
@@ -106,11 +108,12 @@ export default function BudgetsScreen() {
 }
 
 function BudgetCard({ budget, onPress }: { budget: BudgetWithStatus; onPress: () => void }) {
+  const t = useT()
   const ratio = budget.amount > 0 ? budget.spent / budget.amount : 0
   const pct = Math.min(100, Math.round(ratio * 100))
   const color = progressColor(ratio, budget.alertThreshold)
   const remaining = Math.max(0, budget.amount - budget.spent)
-  const periodLabel = budget.period === 'monthly' ? 'Bulanan' : 'Mingguan'
+  const periodLabel = budget.period === 'monthly' ? t('budgets_monthly') : t('budgets_weekly')
 
   return (
     <Pressable
@@ -131,19 +134,17 @@ function BudgetCard({ budget, onPress }: { budget: BudgetWithStatus; onPress: ()
       </View>
       <View className="mt-2.5 flex-row items-end justify-between">
         <Text className="font-sans text-sm text-zinc-600 dark:text-zinc-300">
-          Terpakai{' '}
-          <Text className="font-bold text-zinc-900 dark:text-zinc-100">
-            {formatRupiah(budget.spent)}
-          </Text>{' '}
-          dari{' '}
-          <Text className="text-zinc-500 dark:text-zinc-400">{formatRupiah(budget.amount)}</Text>
+          {t('budgets_used_of', {
+            spent: formatRupiah(budget.spent),
+            total: formatRupiah(budget.amount),
+          })}
         </Text>
         <Text className="font-sans text-xs font-semibold" style={{ color }}>
           {pct}%
         </Text>
       </View>
       <Text className="mt-1 font-sans text-xs text-zinc-500 dark:text-zinc-400">
-        Sisa {formatRupiah(remaining)}
+        {t('budgets_remaining', { amount: formatRupiah(remaining) })}
       </Text>
     </Pressable>
   )
@@ -161,6 +162,7 @@ function BudgetEditor({
   const create = useCreateBudget()
   const update = useUpdateBudget()
   const del = useDeleteBudget()
+  const t = useT()
 
   const isEdit = state?.mode === 'edit'
   const expenseCats = useMemo(() => categories.filter((c) => c.kind === 'expense'), [categories])
@@ -190,11 +192,11 @@ function BudgetEditor({
 
   function onSave() {
     if (!categoryId) {
-      Alert.alert('Pilih kategori', 'Kategorinya belum dipilih.')
+      Alert.alert(t('budgets_no_category_title'), t('budgets_no_category_body'))
       return
     }
     if (amount <= 0) {
-      Alert.alert('Nominal kosong', 'Isi dulu jumlah budgetnya.')
+      Alert.alert(t('budgets_no_amount_title'), t('budgets_no_amount_body'))
       return
     }
     if (state?.mode === 'edit') {
@@ -205,7 +207,7 @@ function BudgetEditor({
         },
         {
           onSuccess: onClose,
-          onError: (err) => Alert.alert('Gagal update', apiErrorMessage(err)),
+          onError: (err) => Alert.alert(t('budgets_update_failed'), apiErrorMessage(err)),
         },
       )
     } else {
@@ -219,7 +221,7 @@ function BudgetEditor({
         },
         {
           onSuccess: onClose,
-          onError: (err) => Alert.alert('Gagal nyimpen', apiErrorMessage(err)),
+          onError: (err) => Alert.alert(t('budgets_save_failed'), apiErrorMessage(err)),
         },
       )
     }
@@ -228,15 +230,15 @@ function BudgetEditor({
   function onDelete() {
     if (state?.mode !== 'edit') return
     const id = state.budget.id
-    Alert.alert('Hapus budget?', 'Budget ini bakal ilang. Yakin?', [
-      { text: 'Batal', style: 'cancel' },
+    Alert.alert(t('budgets_delete_title'), t('budgets_delete_body'), [
+      { text: t('common_cancel'), style: 'cancel' },
       {
-        text: 'Hapus',
+        text: t('common_delete'),
         style: 'destructive',
         onPress: () =>
           del.mutate(id, {
             onSuccess: onClose,
-            onError: (err) => Alert.alert('Gagal hapus', apiErrorMessage(err)),
+            onError: (err) => Alert.alert(t('budgets_delete_failed'), apiErrorMessage(err)),
           }),
       },
     ])
@@ -250,11 +252,11 @@ function BudgetEditor({
             <View className="h-1.5 w-10 rounded-full bg-zinc-300 dark:bg-zinc-700" />
           </View>
           <Text className="font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
-            {isEdit ? 'Atur budget' : 'Budget baru'}
+            {isEdit ? t('budgets_edit_title') : t('budgets_new_title')}
           </Text>
 
           <Text className="mt-4 font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-            Kategori
+            {t('common_category')}
           </Text>
           <ScrollView
             horizontal
@@ -289,7 +291,7 @@ function BudgetEditor({
           </ScrollView>
 
           <Text className="mt-4 font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-            Periode
+            {t('budgets_period')}
           </Text>
           <View className="mt-2 flex-row gap-1 rounded-full bg-zinc-100 p-1 dark:bg-zinc-800">
             {(['monthly', 'weekly'] as const).map((p) => {
@@ -311,7 +313,7 @@ function BudgetEditor({
                         : 'font-sans text-xs font-medium text-zinc-600 dark:text-zinc-300'
                     }
                   >
-                    {p === 'monthly' ? 'Bulanan' : 'Mingguan'}
+                    {p === 'monthly' ? t('budgets_monthly') : t('budgets_weekly')}
                   </Text>
                 </Pressable>
               )
@@ -319,7 +321,7 @@ function BudgetEditor({
           </View>
 
           <Text className="mt-4 font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-            Nominal
+            {t('budgets_amount_label')}
           </Text>
           <View className="mt-2 flex-row items-center gap-2 rounded-card bg-zinc-100 px-4 py-3 dark:bg-zinc-800">
             <Text className="font-sans text-sm text-zinc-500 dark:text-zinc-400">Rp</Text>
@@ -335,7 +337,7 @@ function BudgetEditor({
           </View>
 
           <Text className="mt-4 font-sans text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-            Alert pas terpakai (%)
+            {t('budgets_alert_threshold')}
           </Text>
           <View className="mt-2 flex-row items-center gap-2 rounded-card bg-zinc-100 px-4 py-3 dark:bg-zinc-800">
             <TextInput
@@ -356,7 +358,7 @@ function BudgetEditor({
               className="items-center rounded-full bg-primary-600 py-3.5 active:opacity-90 disabled:opacity-50"
             >
               <Text className="font-sans text-sm font-semibold text-white">
-                {isEdit ? 'Simpan perubahan' : 'Simpan budget'}
+                {isEdit ? t('budgets_save_changes') : t('budgets_save_new')}
               </Text>
             </Pressable>
             {isEdit ? (
@@ -366,7 +368,9 @@ function BudgetEditor({
                 className="flex-row items-center justify-center gap-1.5 rounded-full bg-danger/10 py-3.5 active:opacity-70"
               >
                 <Trash2 size={16} color="#dc2626" />
-                <Text className="font-sans text-sm font-semibold text-danger">Hapus budget</Text>
+                <Text className="font-sans text-sm font-semibold text-danger">
+                  {t('budgets_delete')}
+                </Text>
               </Pressable>
             ) : null}
             <Pressable
@@ -374,7 +378,7 @@ function BudgetEditor({
               className="items-center rounded-full bg-zinc-100 py-3.5 active:opacity-70 dark:bg-zinc-800"
             >
               <Text className="font-sans text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                Batal
+                {t('common_cancel')}
               </Text>
             </Pressable>
           </View>

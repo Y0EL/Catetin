@@ -6,6 +6,7 @@ import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { CatetinOrb } from '~/components/catetin-orb'
 import { useSubscription } from '~/hooks/use-subscription'
+import { useT } from '~/lib/lang-context'
 import {
   getCurrentOffering,
   pickPackage,
@@ -13,22 +14,23 @@ import {
   restorePurchases,
 } from '~/lib/revenuecat'
 
-const FEATURES = [
-  { title: 'Scan struk unlimited', desc: 'Gratis tidak bisa scan' },
-  { title: 'Voice tanpa timer', desc: 'Gratis 10 menit/hari' },
-  { title: 'Semua wallet', desc: 'Gratis hanya 1 wallet' },
-  { title: 'Budget + alert', desc: 'Notif sebelum jebol' },
-  { title: 'Export PDF & CSV', desc: 'Gaya bank statement' },
-  { title: 'Akses fitur duluan', desc: 'Release Pro lebih awal' },
-]
-
 export default function PaywallScreen() {
   const router = useRouter()
   const { colorScheme } = useColorScheme()
   const isDark = colorScheme === 'dark'
   const { isPro } = useSubscription()
+  const t = useT()
   const [buying, setBuying] = useState(false)
   const [restoring, setRestoring] = useState(false)
+
+  const FEATURES = [
+    { title: t('paywall_f1_title'), desc: t('paywall_f1_desc') },
+    { title: t('paywall_f2_title'), desc: t('paywall_f2_desc') },
+    { title: t('paywall_f3_title'), desc: t('paywall_f3_desc') },
+    { title: t('paywall_f4_title'), desc: t('paywall_f4_desc') },
+    { title: t('paywall_f5_title'), desc: t('paywall_f5_desc') },
+    { title: t('paywall_f6_title'), desc: t('paywall_f6_desc') },
+  ]
 
   async function onBuy() {
     if (buying) return
@@ -37,14 +39,14 @@ export default function PaywallScreen() {
       const offering = await getCurrentOffering()
       const pkg = pickPackage(offering, 'monthly')
       if (!pkg) {
-        Alert.alert('Belum tersedia', 'Pembelian belum tersedia di perangkat ini.')
+        Alert.alert(t('paywall_not_available_title'), t('paywall_not_available_body'))
         return
       }
       const result = await purchasePackage(pkg)
       if (result.ok) {
         router.back()
       } else if (!result.userCancelled) {
-        Alert.alert('Gagal', result.message)
+        Alert.alert(t('common_error'), result.message)
       }
     } finally {
       setBuying(false)
@@ -57,11 +59,11 @@ export default function PaywallScreen() {
     try {
       const result = await restorePurchases()
       if (result.ok) {
-        Alert.alert('Berhasil', 'Akses Pro lo udah dipulihkan.', [
-          { text: 'Lanjut', onPress: () => router.back() },
+        Alert.alert(t('paywall_restored_title'), t('paywall_restored_body'), [
+          { text: t('paywall_continue'), onPress: () => router.back() },
         ])
       } else {
-        Alert.alert('Tidak ditemukan', 'Gak ada pembelian yang bisa dipulihkan.')
+        Alert.alert(t('paywall_not_found_title'), t('paywall_not_found_body'))
       }
     } finally {
       setRestoring(false)
@@ -78,17 +80,17 @@ export default function PaywallScreen() {
           <CatetinOrb size={140} active={false} />
           <View className="items-center gap-2">
             <Text className="font-display text-2xl font-bold text-zinc-950 dark:text-white text-center">
-              Lo sudah Pro!
+              {t('paywall_already_pro_title')}
             </Text>
             <Text className="font-sans text-sm text-zinc-500 text-center leading-5">
-              Semua fitur premium sudah aktif di akun lo.
+              {t('paywall_already_pro_body')}
             </Text>
           </View>
           <Pressable
             onPress={() => router.back()}
             className="rounded-full bg-primary-600 px-8 py-3.5 active:opacity-90"
           >
-            <Text className="font-sans text-base font-semibold text-white">Kembali</Text>
+            <Text className="font-sans text-base font-semibold text-white">{t('common_back')}</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -106,7 +108,7 @@ export default function PaywallScreen() {
         <Pressable
           onPress={() => router.back()}
           className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 active:opacity-70"
-          accessibilityLabel="Tutup"
+          accessibilityLabel={t('common_close')}
         >
           <X size={16} color={isDark ? '#a1a1aa' : '#71717a'} />
         </Pressable>
@@ -120,7 +122,7 @@ export default function PaywallScreen() {
             Catetin Pro
           </Text>
           <Text className="font-sans text-sm text-zinc-500 text-center">
-            Kontrol keuangan penuh, tanpa batasan.
+            {t('paywall_tagline')}
           </Text>
         </View>
 
@@ -149,9 +151,9 @@ export default function PaywallScreen() {
         <View className="gap-2.5">
           <View className="flex-row items-center justify-between rounded-2xl border border-primary-200 bg-primary-50 dark:border-primary-800 dark:bg-primary-950 px-5 py-4">
             <View>
-              <Text className="font-sans text-xs text-zinc-500">per bulan</Text>
+              <Text className="font-sans text-xs text-zinc-500">{t('paywall_per_month')}</Text>
               <Text className="font-sans text-xs text-zinc-400 dark:text-zinc-600 mt-0.5">
-                Batalkan kapan aja
+                {t('paywall_cancel_anytime')}
               </Text>
             </View>
             <View className="flex-row items-baseline gap-1">
@@ -166,12 +168,14 @@ export default function PaywallScreen() {
             disabled={buying}
             className="w-full items-center justify-center rounded-full bg-primary-600 py-4 active:opacity-90 disabled:opacity-60"
             accessibilityRole="button"
-            accessibilityLabel="Berlangganan Catetin Pro"
+            accessibilityLabel={t('paywall_subscribe_label')}
           >
             {buying ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text className="font-sans text-base font-semibold text-white">Mulai Sekarang</Text>
+              <Text className="font-sans text-base font-semibold text-white">
+                {t('paywall_cta')}
+              </Text>
             )}
           </Pressable>
 
@@ -181,16 +185,16 @@ export default function PaywallScreen() {
               disabled={restoring}
               className="active:opacity-60"
               accessibilityRole="button"
-              accessibilityLabel="Pulihkan pembelian"
+              accessibilityLabel={t('paywall_restore')}
             >
               {restoring ? (
                 <ActivityIndicator size="small" color="#71717a" />
               ) : (
-                <Text className="font-sans text-xs text-zinc-500">Pulihkan pembelian</Text>
+                <Text className="font-sans text-xs text-zinc-500">{t('paywall_restore')}</Text>
               )}
             </Pressable>
             <Text className="font-sans text-xs text-zinc-300 dark:text-zinc-700">·</Text>
-            <Text className="font-sans text-xs text-zinc-500">Syarat berlaku</Text>
+            <Text className="font-sans text-xs text-zinc-500">{t('paywall_terms')}</Text>
           </View>
         </View>
       </View>

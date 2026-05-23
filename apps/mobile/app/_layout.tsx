@@ -15,6 +15,7 @@ import { useRegisterPush } from '~/hooks/use-register-push'
 import { getFirebaseAuth } from '~/lib/firebase'
 import { configurePurchases } from '~/lib/revenuecat'
 import { EditTransactionProvider } from '~/lib/edit-store'
+import { LangProvider } from '~/lib/lang-context'
 import { ThemeProvider } from '~/lib/theme'
 import { ONBOARDING_KEY } from './onboarding'
 
@@ -101,17 +102,19 @@ export default function RootLayout() {
   }, [])
 
   return (
-    <ThemeProvider>
-      <EditTransactionProvider>
-        <QueryClientProvider client={queryClient}>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <SafeAreaProvider>
-              <AuthGate />
-              <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-            </SafeAreaProvider>
-          </GestureHandlerRootView>
-        </QueryClientProvider>
-      </EditTransactionProvider>
-    </ThemeProvider>
+    <LangProvider>
+      <ThemeProvider>
+        <EditTransactionProvider>
+          <QueryClientProvider client={queryClient}>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <SafeAreaProvider>
+                <AuthGate />
+                <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+              </SafeAreaProvider>
+            </GestureHandlerRootView>
+          </QueryClientProvider>
+        </EditTransactionProvider>
+      </ThemeProvider>
+    </LangProvider>
   )
 }

@@ -25,11 +25,19 @@ import { useAuth } from '~/hooks/use-auth'
 import { useNotifPrefs, useTestNotif, useUpdateNotifPrefs } from '~/hooks/use-notif-prefs'
 import { downloadAndShareReport } from '~/hooks/use-download-report'
 import { signOutUser } from '~/lib/auth'
+import { useLang, useT, type Lang } from '~/lib/lang-context'
 import { useTheme, type ThemePref } from '~/lib/theme'
+
+const LANG_OPTIONS: { key: Lang; label: string }[] = [
+  { key: 'id', label: 'ID' },
+  { key: 'en', label: 'EN' },
+  { key: 'zh', label: '中' },
+]
 
 export default function SettingsTab() {
   const router = useRouter()
   const { user } = useAuth()
+  const t = useT()
   const initial = (user?.displayName ?? user?.email ?? 'C').charAt(0).toUpperCase()
 
   return (
@@ -41,9 +49,11 @@ export default function SettingsTab() {
           showsVerticalScrollIndicator={false}
         >
           <View className="px-4 pt-3">
-            <Text className="font-sans text-sm text-zinc-500 dark:text-zinc-400">Akun lo</Text>
+            <Text className="font-sans text-sm text-zinc-500 dark:text-zinc-400">
+              {t('settings_account_label')}
+            </Text>
             <Text className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-              Pengaturan
+              {t('settings_title')}
             </Text>
           </View>
 
@@ -55,7 +65,7 @@ export default function SettingsTab() {
             </View>
             <View className="flex-1">
               <Text className="font-sans text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                {user?.displayName ?? 'Tamu Catetin'}
+                {user?.displayName ?? t('settings_guest')}
               </Text>
               {user?.email ? (
                 <Text className="mt-0.5 font-sans text-sm text-zinc-500 dark:text-zinc-400">
@@ -71,25 +81,25 @@ export default function SettingsTab() {
               <Text className="font-display text-base font-bold text-white">Catetin Pro</Text>
             </View>
             <Text className="mt-1 font-sans text-sm leading-5 text-primary-100">
-              Voice unlimited, PDF bulanan, multi wallet. Rp 39.000 per bulan.
+              {t('settings_pro_tagline')}
             </Text>
             <View className="mt-4">
               <PaywallButton />
             </View>
           </View>
 
-          <Section title="Keuangan">
+          <Section title={t('settings_section_finance')}>
             <Row
               icon={<Wallet size={18} color="#71717a" />}
-              label="Kelola Wallet"
-              hint="Tambah dan atur sumber uang lo"
+              label={t('settings_wallet_label')}
+              hint={t('settings_wallet_hint')}
               onPress={() => router.push('/wallets')}
             />
             <Divider />
             <Row
               icon={<Target size={18} color="#71717a" />}
-              label="Budget per kategori"
-              hint="Atur batas bulanan atau mingguan"
+              label={t('settings_budget_label')}
+              hint={t('settings_budget_hint')}
               onPress={() => router.push('/budgets')}
             />
             <Divider />
@@ -98,35 +108,37 @@ export default function SettingsTab() {
             <ExportRow kind="csv" />
           </Section>
 
-          <Section title="Channel">
+          <Section title={t('settings_section_channel')}>
             <TelegramLinkRow />
             <Divider />
             <WhatsappLinkRow />
           </Section>
 
-          <Section title="Notifikasi">
+          <Section title={t('settings_section_notif')}>
             <NotifPrefsSection />
           </Section>
 
-          <Section title="Aplikasi">
+          <Section title={t('settings_section_app')}>
             <ThemeSelector />
             <Divider />
-            <Row icon={<Globe size={18} color="#71717a" />} label="Bahasa" hint="Indonesia" />
+            <LangSelector />
           </Section>
 
-          <Section title="Tentang">
-            <Row icon={<Shield size={18} color="#71717a" />} label="Kebijakan privasi" />
+          <Section title={t('settings_section_about')}>
+            <Row icon={<Shield size={18} color="#71717a" />} label={t('settings_privacy')} />
           </Section>
 
           <View className="mx-4 mt-6">
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Keluar dari Catetin"
+              accessibilityLabel={t('settings_signout')}
               onPress={() => signOutUser().catch(() => {})}
               className="flex-row items-center justify-center gap-2 rounded-card bg-white py-3.5 active:opacity-80 dark:bg-zinc-800"
             >
               <LogOut size={16} color="#dc2626" />
-              <Text className="font-sans text-sm font-semibold text-danger">Keluar</Text>
+              <Text className="font-sans text-sm font-semibold text-danger">
+                {t('settings_signout')}
+              </Text>
             </Pressable>
             <Text className="mt-5 text-center font-sans text-xs text-zinc-400">Catetin v0.1.0</Text>
           </View>
@@ -136,14 +148,67 @@ export default function SettingsTab() {
   )
 }
 
+function LangSelector() {
+  const { lang, setLang } = useLang()
+  const t = useT()
+
+  return (
+    <View className="px-4 py-3.5">
+      <View className="flex-row items-center gap-3">
+        <View className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+          <Globe size={18} color="#71717a" />
+        </View>
+        <Text className="font-sans text-base text-zinc-900 dark:text-zinc-100">
+          {t('settings_language')}
+        </Text>
+      </View>
+      <View className="mt-3 flex-row gap-1 rounded-full bg-zinc-100 p-1 dark:bg-zinc-800">
+        {LANG_OPTIONS.map((opt) => {
+          const active = lang === opt.key
+          return (
+            <Pressable
+              key={opt.key}
+              onPress={() => setLang(opt.key)}
+              accessibilityRole="button"
+              accessibilityLabel={opt.label}
+              className={
+                active
+                  ? 'flex-1 items-center rounded-full bg-primary-600 py-2'
+                  : 'flex-1 items-center rounded-full py-2 active:opacity-60'
+              }
+            >
+              <Text
+                className={
+                  active
+                    ? 'font-sans text-xs font-semibold text-white'
+                    : 'font-sans text-xs font-medium text-zinc-600 dark:text-zinc-300'
+                }
+              >
+                {opt.label}
+              </Text>
+            </Pressable>
+          )
+        })}
+      </View>
+    </View>
+  )
+}
+
 const themeOptions: { key: ThemePref; label: string; icon: typeof Sun }[] = [
-  { key: 'light', label: 'Terang', icon: Sun },
-  { key: 'dark', label: 'Gelap', icon: Moon },
-  { key: 'system', label: 'Sistem', icon: Monitor },
+  { key: 'light', label: 'light', icon: Sun },
+  { key: 'dark', label: 'dark', icon: Moon },
+  { key: 'system', label: 'system', icon: Monitor },
 ]
 
 function ThemeSelector() {
   const { pref, setPref } = useTheme()
+  const t = useT()
+
+  const themeLabel: Record<ThemePref, string> = {
+    light: t('settings_theme_light'),
+    dark: t('settings_theme_dark'),
+    system: t('settings_theme_system'),
+  }
 
   return (
     <View className="px-4 py-3.5">
@@ -151,17 +216,20 @@ function ThemeSelector() {
         <View className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
           <Moon size={18} color="#71717a" />
         </View>
-        <Text className="font-sans text-base text-zinc-900 dark:text-zinc-100">Tema</Text>
+        <Text className="font-sans text-base text-zinc-900 dark:text-zinc-100">
+          {t('settings_theme')}
+        </Text>
       </View>
       <View className="mt-3 flex-row gap-1 rounded-full bg-zinc-100 p-1 dark:bg-zinc-800">
         {themeOptions.map((opt) => {
           const active = pref === opt.key
           const Icon = opt.icon
+          const label = themeLabel[opt.key]
           return (
             <Pressable
               key={opt.key}
               accessibilityRole="button"
-              accessibilityLabel={`Tema ${opt.label}`}
+              accessibilityLabel={`${t('settings_theme')} ${label}`}
               accessibilityState={active ? { selected: true } : {}}
               onPress={() => setPref(opt.key)}
               className={
@@ -178,7 +246,7 @@ function ThemeSelector() {
                     : 'font-sans text-xs font-medium text-zinc-600 dark:text-zinc-300'
                 }
               >
-                {opt.label}
+                {label}
               </Text>
             </Pressable>
           )
@@ -251,6 +319,7 @@ function Row({
 
 function ExportRow({ kind }: { kind: 'pdf' | 'csv' }) {
   const [loading, setLoading] = useState(false)
+  const t = useT()
 
   function currentMonth(): string {
     const d = new Date()
@@ -263,14 +332,14 @@ function ExportRow({ kind }: { kind: 'pdf' | 'csv' }) {
     try {
       await downloadAndShareReport(kind, currentMonth())
     } catch {
-      Alert.alert('Gagal export', 'Coba lagi ya.')
+      Alert.alert(t('settings_export_failed_title'), t('common_try_again'))
     } finally {
       setLoading(false)
     }
   }
 
-  const label = kind === 'pdf' ? 'Laporan PDF bulan ini' : 'CSV bulan ini'
-  const hint = kind === 'pdf' ? 'Bank statement ala fintech' : 'Spreadsheet semua transaksi'
+  const label = kind === 'pdf' ? t('settings_pdf_label') : t('settings_csv_label')
+  const hint = kind === 'pdf' ? t('settings_pdf_hint') : t('settings_csv_hint')
   const icon =
     kind === 'pdf' ? <FileText size={18} color="#71717a" /> : <Sheet size={18} color="#71717a" />
 
@@ -301,6 +370,7 @@ function NotifPrefsSection() {
   const prefs = useNotifPrefs()
   const update = useUpdateNotifPrefs()
   const test = useTestNotif()
+  const t = useT()
   const data = prefs.data
   const tokenReady = data?.hasPushToken === true
 
@@ -312,24 +382,24 @@ function NotifPrefsSection() {
     <View>
       <ToggleRow
         icon={<Bell size={18} color="#71717a" />}
-        label="Reminder harian"
-        hint="Tiap jam 8 malem kalo belum nyatet"
+        label={t('settings_daily_label')}
+        hint={t('settings_daily_hint')}
         value={data?.dailyReminder ?? true}
         onChange={(v) => toggle('dailyReminder', v)}
       />
       <Divider />
       <ToggleRow
         icon={<Bell size={18} color="#71717a" />}
-        label="Rekap mingguan"
-        hint="Senin pagi summary minggu lalu"
+        label={t('settings_weekly_label')}
+        hint={t('settings_weekly_hint')}
         value={data?.weeklyRecap ?? true}
         onChange={(v) => toggle('weeklyRecap', v)}
       />
       <Divider />
       <ToggleRow
         icon={<Bell size={18} color="#71717a" />}
-        label="Alert budget"
-        hint="Pas pengeluaran tembus threshold"
+        label={t('settings_budget_alert_label')}
+        hint={t('settings_budget_alert_hint')}
         value={data?.budgetAlerts ?? true}
         onChange={(v) => toggle('budgetAlerts', v)}
       />
@@ -337,15 +407,13 @@ function NotifPrefsSection() {
       <Pressable
         onPress={() => {
           if (!tokenReady) {
-            Alert.alert(
-              'Belum aktif',
-              'Buka app di HP dulu dan kasih izin notifikasi biar gue bisa kirim.',
-            )
+            Alert.alert(t('settings_notif_inactive_title'), t('settings_notif_inactive_body'))
             return
           }
           test.mutate(undefined, {
-            onSuccess: () => Alert.alert('Tes terkirim', 'Cek notifikasi HP lo.'),
-            onError: () => Alert.alert('Gagal', 'Coba lagi.'),
+            onSuccess: () =>
+              Alert.alert(t('settings_test_sent_title'), t('settings_test_sent_body')),
+            onError: () => Alert.alert(t('common_error'), t('common_try_again')),
           })
         }}
         className="flex-row items-center gap-3 px-4 py-3.5 active:bg-zinc-50 dark:active:bg-zinc-800"
@@ -355,10 +423,10 @@ function NotifPrefsSection() {
         </View>
         <View className="flex-1">
           <Text className="font-sans text-base text-zinc-900 dark:text-zinc-100">
-            Coba kirim notif
+            {t('settings_test_notif_label')}
           </Text>
           <Text className="mt-0.5 font-sans text-xs text-zinc-500 dark:text-zinc-400">
-            {tokenReady ? 'Tap buat tes' : 'Aktifin izin notif dulu di HP'}
+            {tokenReady ? t('settings_test_notif_ready') : t('settings_test_notif_not_ready')}
           </Text>
         </View>
       </Pressable>
