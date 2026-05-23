@@ -1,6 +1,7 @@
 import { formatRupiah } from '@catetin/chat-core'
 import { ChevronLeft, ChevronRight, FileText, Sheet } from 'lucide-react-native'
 import { useState } from 'react'
+import { useIsDark } from '~/lib/use-accent-color'
 import { Alert, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { DonutChart } from '~/components/donut-chart'
@@ -108,6 +109,7 @@ export default function AnalyticsScreen() {
   const { width } = useWindowDimensions()
   const chartWidth = Math.max(0, width - 64)
 
+  const isDark = useIsDark()
   const [period, setPeriod] = useState<TrendPeriod>('monthly')
   const [anchor, setAnchor] = useState<string>(currentMonth())
 
@@ -202,7 +204,9 @@ export default function AnalyticsScreen() {
                 <Text
                   className={
                     active
-                      ? 'font-sans text-sm font-semibold text-white'
+                      ? isDark
+                        ? 'font-sans text-sm font-semibold text-zinc-900'
+                        : 'font-sans text-sm font-semibold text-white'
                       : 'font-sans text-sm font-medium text-zinc-500 dark:text-zinc-400'
                   }
                 >
@@ -235,7 +239,7 @@ export default function AnalyticsScreen() {
 
         <ScrollView
           className="flex-1"
-          contentContainerClassName="px-4 pb-32 gap-5"
+          contentContainerClassName="px-4 pb-32 pt-4 gap-5"
           showsVerticalScrollIndicator={false}
         >
           {/* Summary card */}

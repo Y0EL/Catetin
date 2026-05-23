@@ -16,7 +16,7 @@ export function NoteCard({
       <View
         pointerEvents="none"
         className="absolute -top-3 left-6 z-10"
-        style={{ transform: [{ rotate: '-16deg' }] }}
+        style={{ transform: [{ rotate: '-16deg' }], elevation: 10 }}
       >
         <Paperclip size={24} color={accent} strokeWidth={2.25} />
       </View>

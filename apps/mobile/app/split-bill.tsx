@@ -5,7 +5,6 @@ import { useRef, useState } from 'react'
 import {
   Alert,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -113,10 +112,7 @@ export default function SplitBillScreen() {
           </Text>
         </View>
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          className="flex-1"
-        >
+        <KeyboardAvoidingView behavior="padding" className="flex-1">
           <ScrollView
             ref={scrollRef}
             className="flex-1 px-4"
