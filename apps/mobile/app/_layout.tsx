@@ -1,10 +1,11 @@
 import '~/lib/reanimated-init'
 import '../global.css'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { colorScheme, useColorScheme } from 'nativewind'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { ActivityIndicator, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -15,6 +16,7 @@ import { getFirebaseAuth } from '~/lib/firebase'
 import { configurePurchases } from '~/lib/revenuecat'
 import { EditTransactionProvider } from '~/lib/edit-store'
 import { ThemeProvider } from '~/lib/theme'
+import { ONBOARDING_KEY } from './onboarding'
 
 colorScheme.set('system')
 
@@ -30,23 +32,38 @@ function AuthGate() {
   const { user, loading } = useAuth()
   const segments = useSegments()
   const router = useRouter()
+  const [onboardingReady, setOnboardingReady] = useState(false)
+  const [onboardingDone, setOnboardingDone] = useState(false)
 
   useBootstrapSession(Boolean(user))
   useRegisterPush()
 
   useEffect(() => {
-    if (loading) return
+    AsyncStorage.getItem(ONBOARDING_KEY)
+      .then((v) => setOnboardingDone(v === '1'))
+      .catch(() => {})
+      .finally(() => setOnboardingReady(true))
+  }, [])
+
+  useEffect(() => {
+    if (loading || !onboardingReady) return
     const inAuthGroup = segments[0] === '(auth)'
+    const inOnboarding = segments[0] === 'onboarding'
+
     if (!user && !inAuthGroup) {
       router.replace('/(auth)/login')
       return
     }
-    if (user && inAuthGroup) {
+    if (user && !onboardingDone && !inOnboarding) {
+      router.replace('/onboarding')
+      return
+    }
+    if (user && onboardingDone && (inAuthGroup || inOnboarding)) {
       router.replace('/(tabs)/index')
     }
-  }, [user, loading, segments, router])
+  }, [user, loading, segments, router, onboardingReady, onboardingDone])
 
-  if (loading) {
+  if (loading || !onboardingReady) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-zinc-950">
         <ActivityIndicator size="large" color="#18181b" />
@@ -58,6 +75,7 @@ function AuthGate() {
     <Stack screenOptions={{ headerShown: false, animation: 'fade', animationDuration: 200 }}>
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
       <Stack.Screen
         name="add-modal"
         options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
